@@ -41,7 +41,7 @@ struct nssinfo_subsystem_info nssinfo_subsystem_array[NSS_NLCMN_SUBSYS_MAX] = {
 	{.subsystem_name = "c2c_tx",		.init = NULL,	.deinit = NULL},
 	{.subsystem_name = "dynamic_interface",	.init = NULL,	.deinit = NULL},
 	{.subsystem_name = "edma",		.init = NULL,	.deinit = NULL},
-	{.subsystem_name = "eth_rx",		.init = NULL,	.deinit = NULL},
+	{.subsystem_name = "eth_rx",		.init = nssinfo_eth_rx_init,	.deinit = nssinfo_eth_rx_deinit},
 	{.subsystem_name = "ipv4",		.init = nssinfo_ipv4_init,	.deinit = nssinfo_ipv4_deinit},
 	{.subsystem_name = "ipv4_reasm",	.init = NULL,	.deinit = NULL},
 	{.subsystem_name = "ipv6",		.init = NULL,	.deinit = NULL},
