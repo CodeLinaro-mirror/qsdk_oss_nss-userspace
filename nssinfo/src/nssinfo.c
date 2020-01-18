@@ -39,7 +39,7 @@ struct nssinfo_subsystem_info nssinfo_subsystem_array[NSS_NLCMN_SUBSYS_MAX] = {
 	{.subsystem_name = "capwap",		.init = nssinfo_capwap_init,	.deinit = nssinfo_capwap_deinit},
 	{.subsystem_name = "c2c_rx",		.init = NULL,	.deinit = NULL},
 	{.subsystem_name = "c2c_tx",		.init = NULL,	.deinit = NULL},
-	{.subsystem_name = "dynamic_interface",	.init = NULL,	.deinit = NULL},
+	{.subsystem_name = "dynamic_interface",	.init = nssinfo_dynamic_interface_init,	.deinit = nssinfo_dynamic_interface_deinit},
 	{.subsystem_name = "edma",		.init = NULL,	.deinit = NULL},
 	{.subsystem_name = "eth_rx",		.init = nssinfo_eth_rx_init,	.deinit = nssinfo_eth_rx_deinit},
 	{.subsystem_name = "ipv4",		.init = nssinfo_ipv4_init,	.deinit = nssinfo_ipv4_deinit},
