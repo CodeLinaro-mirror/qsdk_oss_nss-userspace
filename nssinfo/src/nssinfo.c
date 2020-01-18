@@ -36,7 +36,7 @@ struct node *nodes[NSS_MAX_CORES][NSS_MAX_NET_INTERFACES];
  *   defined in qca-nss-clients/netlink/include/nss_nlcmn_if.h.
  */
 struct nssinfo_subsystem_info nssinfo_subsystem_array[NSS_NLCMN_SUBSYS_MAX] = {
-	{.subsystem_name = "capwap",		.init = NULL,	.deinit = NULL},
+	{.subsystem_name = "capwap",		.init = nssinfo_capwap_init,	.deinit = nssinfo_capwap_deinit},
 	{.subsystem_name = "c2c_rx",		.init = NULL,	.deinit = NULL},
 	{.subsystem_name = "c2c_tx",		.init = NULL,	.deinit = NULL},
 	{.subsystem_name = "dynamic_interface",	.init = NULL,	.deinit = NULL},

@@ -22,6 +22,7 @@
 #include "nssinfo_ipv4.h"
 #include "nssinfo_ethrx.h"
 #include "nssinfo_n2h.h"
+#include "nssinfo_capwap.h"
 #include "nss_api_if.h"
 #include "nss_dynamic_interface.h"
 #include "nss_stats_public.h"
