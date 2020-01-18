@@ -49,7 +49,7 @@ struct nssinfo_subsystem_info nssinfo_subsystem_array[NSS_NLCMN_SUBSYS_MAX] = {
 	{.subsystem_name = "l2tpv2",		.init = NULL,	.deinit = NULL},
 	{.subsystem_name = "lso_rx",		.init = NULL,	.deinit = NULL},
 	{.subsystem_name = "map_t",		.init = NULL,	.deinit = NULL},
-	{.subsystem_name = "n2h",		.init = NULL,	.deinit = NULL},
+	{.subsystem_name = "n2h",		.init = nssinfo_n2h_init,	.deinit = nssinfo_n2h_deinit},
 	{.subsystem_name = "pppoe",		.init = NULL,	.deinit = NULL},
 	{.subsystem_name = "pptp",		.init = NULL,	.deinit = NULL},
 	{.subsystem_name = "wifili",		.init = NULL,	.deinit = NULL},
