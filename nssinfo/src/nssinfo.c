@@ -50,7 +50,7 @@ struct nssinfo_subsystem_info nssinfo_subsystem_array[NSS_NLCMN_SUBSYS_MAX] = {
 	{.subsystem_name = "lso_rx",		.init = nssinfo_lso_rx_init,	.deinit = nssinfo_lso_rx_deinit},
 	{.subsystem_name = "map_t",		.init = nssinfo_map_t_init,	.deinit = nssinfo_map_t_deinit},
 	{.subsystem_name = "n2h",		.init = nssinfo_n2h_init,	.deinit = nssinfo_n2h_deinit},
-	{.subsystem_name = "pppoe",		.init = NULL,	.deinit = NULL},
+	{.subsystem_name = "pppoe",		.init = nssinfo_pppoe_init,	.deinit = nssinfo_pppoe_deinit},
 	{.subsystem_name = "pptp",		.init = NULL,	.deinit = NULL},
 	{.subsystem_name = "wifili",		.init = NULL,	.deinit = NULL},
 };
