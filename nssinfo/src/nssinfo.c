@@ -40,7 +40,7 @@ struct nssinfo_subsystem_info nssinfo_subsystem_array[NSS_NLCMN_SUBSYS_MAX] = {
 	{.subsystem_name = "c2c_rx",		.init = nssinfo_c2c_rx_init,	.deinit = nssinfo_c2c_rx_deinit},
 	{.subsystem_name = "c2c_tx",		.init = nssinfo_c2c_tx_init,	.deinit = nssinfo_c2c_tx_deinit},
 	{.subsystem_name = "dynamic_interface",	.init = nssinfo_dynamic_interface_init,	.deinit = nssinfo_dynamic_interface_deinit},
-	{.subsystem_name = "edma",		.init = NULL,	.deinit = NULL},
+	{.subsystem_name = "edma",		.init = nssinfo_edma_init,	.deinit = nssinfo_edma_deinit},
 	{.subsystem_name = "eth_rx",		.init = nssinfo_eth_rx_init,	.deinit = nssinfo_eth_rx_deinit},
 	{.subsystem_name = "ipv4",		.init = nssinfo_ipv4_init,	.deinit = nssinfo_ipv4_deinit},
 	{.subsystem_name = "ipv4_reasm",	.init = nssinfo_ipv4_reasm_init,.deinit = nssinfo_ipv4_reasm_deinit},
@@ -350,6 +350,7 @@ static void *nssinfo_stats_display(void *arg)
 	char mesg[]="NSS STATS";
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+
 	for (;;) {
 		nssinfo_stats_print("\t\t\t%s\n", mesg);
 

@@ -34,6 +34,7 @@
 #include "nssinfo_map_t.h"
 #include "nssinfo_pppoe.h"
 #include "nssinfo_wifili.h"
+#include "nssinfo_edma.h"
 #include "nss_api_if.h"
 #include "nss_dynamic_interface.h"
 #include "nss_stats_public.h"
