@@ -52,7 +52,7 @@ struct nssinfo_subsystem_info nssinfo_subsystem_array[NSS_NLCMN_SUBSYS_MAX] = {
 	{.subsystem_name = "n2h",		.init = nssinfo_n2h_init,	.deinit = nssinfo_n2h_deinit},
 	{.subsystem_name = "pppoe",		.init = nssinfo_pppoe_init,	.deinit = nssinfo_pppoe_deinit},
 	{.subsystem_name = "pptp",		.init = NULL,	.deinit = NULL},
-	{.subsystem_name = "wifili",		.init = NULL,	.deinit = NULL},
+	{.subsystem_name = "wifili",		.init = nssinfo_wifili_init,	.deinit = nssinfo_wifili_deinit},
 };
 
 char *nssinfo_summary_fmt = "%-12s %-13s %-13s %-9s %-9s\n";
