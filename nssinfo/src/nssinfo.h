@@ -27,6 +27,7 @@
 #include "nssinfo_c2c_tx.h"
 #include "nssinfo_c2c_rx.h"
 #include "nssinfo_ipv4_reasm.h"
+#include "nssinfo_ipv6_reasm.h"
 #include "nss_api_if.h"
 #include "nss_dynamic_interface.h"
 #include "nss_stats_public.h"
