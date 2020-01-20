@@ -25,6 +25,7 @@
 #include "nssinfo_capwap.h"
 #include "nssinfo_dynamic_interface.h"
 #include "nssinfo_c2c_tx.h"
+#include "nssinfo_c2c_rx.h"
 #include "nss_api_if.h"
 #include "nss_dynamic_interface.h"
 #include "nss_stats_public.h"
