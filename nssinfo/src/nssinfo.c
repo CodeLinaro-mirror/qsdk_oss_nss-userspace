@@ -46,7 +46,7 @@ struct nssinfo_subsystem_info nssinfo_subsystem_array[NSS_NLCMN_SUBSYS_MAX] = {
 	{.subsystem_name = "ipv4_reasm",	.init = nssinfo_ipv4_reasm_init,.deinit = nssinfo_ipv4_reasm_deinit},
 	{.subsystem_name = "ipv6",		.init = nssinfo_ipv6_init,	.deinit = nssinfo_ipv6_deinit},
 	{.subsystem_name = "ipv6_reasm",	.init = nssinfo_ipv6_reasm_init,.deinit = nssinfo_ipv6_reasm_deinit},
-	{.subsystem_name = "l2tpv2",		.init = NULL,	.deinit = NULL},
+	{.subsystem_name = "l2tpv2",		.init = nssinfo_l2tpv2_init,	.deinit = nssinfo_l2tpv2_deinit},
 	{.subsystem_name = "lso_rx",		.init = NULL,	.deinit = NULL},
 	{.subsystem_name = "map_t",		.init = NULL,	.deinit = NULL},
 	{.subsystem_name = "n2h",		.init = nssinfo_n2h_init,	.deinit = nssinfo_n2h_deinit},
