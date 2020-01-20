@@ -30,6 +30,7 @@
 #include "nssinfo_ipv6_reasm.h"
 #include "nssinfo_ipv6.h"
 #include "nssinfo_l2tpv2.h"
+#include "nssinfo_lso_rx.h"
 #include "nss_api_if.h"
 #include "nss_dynamic_interface.h"
 #include "nss_stats_public.h"
