@@ -60,6 +60,7 @@
 #include <nss_dtls_cmn.h>
 #include <nss_dtlsmgr.h>
 #include <nss_capwap.h>
+#include <nss_udp_st.h>
 #include <nss_nl_if.h>
 #include <nss_nlsock_api.h>
 #include <nss_nlcapwap_if.h>
@@ -76,4 +77,6 @@
 #include <nss_nlgre_redir_if.h>
 #include <nss_nlgre_redir_api.h>
 #include <nss_nlmcast_api.h>
+#include <nss_nludp_st_if.h>
+#include <nss_nludp_st_api.h>
 #endif /* !__NSS_NLBASE_H__*/
