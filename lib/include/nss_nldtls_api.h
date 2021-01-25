@@ -17,87 +17,103 @@
 #ifndef __NSS_NLDTLS_API_H__
 #define __NSS_NLDTLS_API_H__
 
-/*
- * @addtogroup libnss_nl
- * @{
+/** @addtogroup chapter_nldtls
+ This chapter describes Data Transport Layer Security (DTLS) APIs in the user space.
+ These APIs are wrapper functions for DTLS family specific operations.
  */
 
-/*
- * @file nss_nldtls_api.h
- *	This file declares the NSS NL dtls API(s) for userspace. These
- *	API(s) are wrapper functions for dtls family specific operation.
- */
+/** @addtogroup nss_nldtls_datatypes @{ */
 
-/*
- * @brief response callback function
+/**
+ * Response callback for DTLS.
  *
- * @param user_ctx[IN] user context, provided at socket open
- * @param rule[IN] dtls rule associated with the response
- * @param resp_ctx[IN] data that the user wants per callback
+ * @param[in] user_ctx User context (provided at socket open).
+ * @param[in] rule DTLS rule.
+ * @param[in] resp_ctx User data per callback.
+ *
+ * @return
+ * None.
  */
 typedef void (*nss_nldtls_resp_t)(void *user_ctx, struct nss_nldtls_rule *rule, void *resp_ctx);
 
-/*
- * @brief event callback function
+/**
+ * Event callback for DTLS.
  *
- * @param user_ctx[IN] user context, provided at socket open
- * @param rule[IN] dtls rule associated with the event
+ * @param[in] user_ctx User context (provided at socket open).
+ * @param[in] rule DTLS rule.
+ *
+ * @return
+ * None.
  */
 typedef void (*nss_nldtls_event_t)(void *user_ctx, struct nss_nldtls_rule *rule);
 
-/*
- * @brief NSS NL dtls response
+/**
+ * NSS NL DTLS response.
  */
 struct nss_nldtls_resp {
-	void *data;		/**< response context */
-	nss_nldtls_resp_t cb;	/**< response callback */
+	void *data;		/**< Response context. */
+	nss_nldtls_resp_t cb;	/**< Response callback. */
 };
 
-/*
- * @brief NSS dtls context
+/**
+ * NSS NL DTLS context.
  */
 struct nss_nldtls_ctx {
-	struct nss_nlsock_ctx sock;	/**< NSS socket context */
-	nss_nldtls_event_t event;	/**< NSS event callback function */
+	struct nss_nlsock_ctx sock;	/**< NSS socket context. */
+	nss_nldtls_event_t event;	/**< NSS event callback function. */
 };
 
-/*
- * @brief Open NSS dtls NL socket
+/** @} *//* end_addtogroup nss_nldtls_datatypes */
+/** @addtogroup nss_nldtls_functions @{ */
+
+/**
+ * Opens NSS NL DTLS socket.
  *
- * @param ctx[IN] NSS NL socket context, allocated by the caller
- * @param user_ctx[IN] user context stored per socket
- * @param event_cb[IN] event callback handler
+ * @param[in] ctx NSS NL socket context allocated by the caller.
+ * @param[in] user_ctx User context stored per socket.
+ * @param[in] event_cb Event callback handler.
  *
- * @return status of the open call
+ * @return
+ * Status of the open call.
  */
 int nss_nldtls_sock_open(struct nss_nldtls_ctx *ctx, void *user_ctx, nss_nldtls_event_t event_cb);
 
-/*
- * @brief Close NSS dtls NL socket
+/**
+ * Closes NSS NL DTLS socket.
  *
- * @param ctx[IN] NSS NL context
+ * @param[in] ctx NSS NL context.
+ *
+ * @return
+ * None.
  */
 void nss_nldtls_sock_close(struct nss_nldtls_ctx *ctx);
 
-/*
- * @brief send an dtls rule synchronously to the NSS NETLINK
+/**
+ * Send a DTLS rule synchronously to NSS NL NETLINK.
  *
- * @param ctx[IN] NSS dtls NL context
- * @param rule[IN] dtls rule to use
- * @param cb[IN] response callback handler
- * @param data[IN] data received from sender
+ * @param[in] ctx NSS DTLS NL context.
+ * @param[in] rule DTLS rule.
+ * @param[in] cb Response callback handler.
+ * @param[in] data Data received from sender.
  *
- * @return status of send, where '0' is success and -ve means failure
+ * @return
+ * Send status:
+ * - 0 -- Success.
+ * - Negative version error (-ve) -- Failure.
  */
 int nss_nldtls_sock_send(struct nss_nldtls_ctx *ctx, struct nss_nldtls_rule *rule, nss_nldtls_resp_t cb, void *data);
 
-/*
- * @brief initialize the create rule message
+/**
+ * Initializes create rule message.
  *
- * @param rule[IN] dtls rule
- * @param type[IN] type of command
+ * @param[in] rule DTLS rule.
+ * @param[in] type Type of command.
+ *
+ * @return
+ * None.
  */
 void nss_nldtls_init_rule(struct nss_nldtls_rule *rule, enum nss_nldtls_cmd_type type);
 
-/**}@*/
-#endif /* !__NSS_NLDTLS_API_H__*/
+/** @} *//* end_addtogroup nss_nldtls_functions */
+
+#endif /* __NSS_NLDTLS_API_H__ */

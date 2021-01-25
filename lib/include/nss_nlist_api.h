@@ -17,28 +17,27 @@
 #ifndef __NSS_NLIST_H__
 #define __NSS_NLIST_H__
 
-/**
- * @addtogroup libnss_nl
- * @{
- */
+/** @addtogroup chapter_nlist
+ This chapter describes Netlink list APIs in the user space.
+*/
 
-/**
- * @file nss_nlist.h
- * 	This file declares the NSS NL list API(s) for user space
- */
-
-/**
- * @brief list node
+/** @ingroup nss_nlist_datatypes
+ * 	List node
  */
 struct nss_nlist {
-	struct nss_nlist *next;	/**< next node */
-	struct nss_nlist *prev;	/**< previous node */
+	struct nss_nlist *next;	/**< Next node. */
+	struct nss_nlist *prev;	/**< Previous node. */
 };
 
+/** @addtogroup nss_nlist_functions @{ */
+
 /**
- * @brief initialize the list node
+ * Initializes the list node.
  *
- * @param node[IN] list node
+ * @param[in] node List node.
+ *
+ * @return
+ * None.
  */
 static inline void nss_nlist_init(struct nss_nlist *node)
 {
@@ -46,11 +45,12 @@ static inline void nss_nlist_init(struct nss_nlist *node)
 }
 
 /**
- * @brief get the previous of the node
+ * Gets the previous node.
  *
- * @param node[IN] node
+ * @param[in] node Previous node.
  *
- * @return previous node or head node
+ * @return
+ * Previous node or head node.
  */
 static inline struct nss_nlist *nss_nlist_prev(struct nss_nlist *node)
 {
@@ -58,11 +58,12 @@ static inline struct nss_nlist *nss_nlist_prev(struct nss_nlist *node)
 }
 
 /**
- * @brief get next of the node
+ * Gets the next node.
  *
- * @param node[IN] node
+ * @param[in] node Next node.
  *
- * @return next node or head node
+ * @return
+ * Next node or head node.
  */
 static inline struct nss_nlist *nss_nlist_next(struct nss_nlist *node)
 {
@@ -70,9 +71,12 @@ static inline struct nss_nlist *nss_nlist_next(struct nss_nlist *node)
 }
 
 /**
- * @brief initialize the head node
+ * Initializes the head node.
  *
- * @param head[IN] head of list
+ * @param[in] head Head of list.
+ *
+ * @return
+ * None.
  */
 static inline void nss_nlist_init_head(struct nss_nlist *head)
 {
@@ -80,11 +84,12 @@ static inline void nss_nlist_init_head(struct nss_nlist *head)
 }
 
 /**
- * @brief return the first node in the list
+ * Returns first node in the list.
  *
- * @param head[IN] list head
+ * @param[in] head List head.
  *
- * @return first node
+ * @return
+ * First node.
  */
 static inline struct nss_nlist *nss_nlist_first(struct nss_nlist *head)
 {
@@ -92,11 +97,12 @@ static inline struct nss_nlist *nss_nlist_first(struct nss_nlist *head)
 }
 
 /**
- * @brief return the last node in the list
+ * Returns last node in the list.
  *
- * @param head[IN] list head
+ * @param[in] head List head.
  *
- * @return last node
+ * @return
+ * Last node.
  */
 static inline struct nss_nlist *nss_nlist_last(struct nss_nlist *head)
 {
@@ -104,11 +110,12 @@ static inline struct nss_nlist *nss_nlist_last(struct nss_nlist *head)
 }
 
 /**
- * @brief check if the list is empty
+ * Checks if list is empty.
  *
- * @param head[IN] list head
+ * @param[in] head List head.
  *
- * @return true if empty
+ * @return
+ * TRUE if empty.
  */
 static inline bool nss_nlist_isempty(struct nss_nlist *head)
 {
@@ -118,12 +125,13 @@ static inline bool nss_nlist_isempty(struct nss_nlist *head)
 }
 
 /**
- * @brief check if this the last node
+ * Checks if corresponding node is the last node.
  *
- * @param head[IN] head node
- * @param node[IN] node to check
+ * @param[in] head Head node.
+ * @param[in] node Node to check.
  *
- * @return true if it is the last node
+ * @return
+ * TRUE if it is the last node.
  */
 static inline bool nss_nlist_islast(struct nss_nlist *head, struct nss_nlist *node)
 {
@@ -133,10 +141,13 @@ static inline bool nss_nlist_islast(struct nss_nlist *head, struct nss_nlist *no
 }
 
 /**
- * @brief add node to head of the list
+ * Adds node to head of the list.
  *
- * @param head[IN] list head
- * @param node[IN] node to add
+ * @param[in] head List head.
+ * @param[in] node Node to add.
+ *
+ * @return
+ * None.
  */
 static inline void nss_nlist_add_head(struct nss_nlist *head, struct nss_nlist *node)
 {
@@ -151,10 +162,13 @@ static inline void nss_nlist_add_head(struct nss_nlist *head, struct nss_nlist *
 }
 
 /**
- * @brief add node to tail of the list
+ * Adds node to tail of the list.
  *
- * @param head[IN] list head
- * @param node[IN] node to add
+ * @param[in] head List head.
+ * @param[in] node Node to add.
+ *
+ * @return
+ * None.
  */
 static inline void nss_nlist_add_tail(struct nss_nlist *head, struct nss_nlist *node)
 {
@@ -168,9 +182,12 @@ static inline void nss_nlist_add_tail(struct nss_nlist *head, struct nss_nlist *
 }
 
 /**
- * @brief unlink the node from the list
+ * Unlinks node from the list.
  *
- * @param node[IN] node to unlink
+ * @param[in] node Node to unlink.
+ *
+ * @return
+ * None.
  */
 static inline void nss_nlist_unlink(struct nss_nlist *node)
 {
@@ -183,15 +200,21 @@ static inline void nss_nlist_unlink(struct nss_nlist *node)
 	nss_nlist_init(node);
 }
 
-/**
- * @brief list node iterator
+/** @} *//* end_addtogroup nss_nlist_functions */
+
+/** @ingroup nss_nlist_macros
+ * 	Lists node iterator.
  *
- * @param _tmp[IN] a temp node for assignment
- * @param _head[IN] head node to start
+ * @hideinitializer
+ * @param[in] _tmp Temporary node for assignment.
+ * @param[in] _head Head node to start.
+ *
+ * @return
+ * None.
  */
 #define nss_nlist_iterate(_tmp, _head)			\
 	for ((_tmp) = nss_nlist_first((_head));		\
 		!nss_nlist_islast((_head), (_tmp));	\
 		(_tmp) = nss_nlist_next((_tmp))
-/**}@*/
-#endif /* !__NSS_NLIST_H__*/
+
+#endif /* __NSS_NLIST_H__ */

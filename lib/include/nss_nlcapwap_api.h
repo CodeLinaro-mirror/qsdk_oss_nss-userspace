@@ -17,87 +17,103 @@
 #ifndef __NSS_NLCAPWAP_API_H__
 #define __NSS_NLCAPWAP_API_H__
 
-/*
- * @addtogroup libnss_nl
- * @{
- */
+/** @addtogroup chapter_nlcapwap
+ This chapter describes APIs for Control and Provisioning of Wireless Access Points (CAPWAP)
+ in the user space. These APIs are wrapper functions for CAPWAP family specific operations.
+*/
 
-/*
- * @file nss_nlcapwap_api.h
- *	This file declares the NSS NL capwap API(s) for userspace. These
- *	API(s) are wrapper functions for capwap family specific operation.
- */
+/** @addtogroup nss_nlcapwap_datatypes @{ */
 
-/*
- * @brief response callback function
+/**
+ * Response callback for CAPWAP.
  *
- * @param user_ctx[IN] user context, provided at socket open
- * @param rule[IN] capwap rule associated with the response
- * @param resp_ctx[IN] data that the user wants per callback
+ * @param[in] user_ctx User context (provided at socket open).
+ * @param[in] rule CAPWAP rule.
+ * @param[in] resp_ctx  User data per callback.
+ *
+ * @return
+ * None.
  */
 typedef void (*nss_nlcapwap_resp_t)(void *user_ctx, struct nss_nlcapwap_rule *rule, void *resp_ctx);
 
-/*
- * @brief event callback function
+/**
+ * Event callback for CAPWAP.
  *
- * @param user_ctx[IN] user context, provided at socket open
- * @param rule[IN] capwap rule associated with the event
+ * @param[in] user_ctx User context (provided at socket open).
+ * @param[in] rule CAPWAP rule.
+ *
+ * @return
+ * None.
  */
 typedef void (*nss_nlcapwap_event_t)(void *user_ctx, struct nss_nlcapwap_rule *rule);
 
-/*
- * @brief NSS NL capwap response
+/**
+ * NSS NL CAPWAP response.
  */
 struct nss_nlcapwap_resp {
-	void *data;			/**< response context */
-	nss_nlcapwap_resp_t cb;	/**< response callback */
+	void *data;			/**< Response context. */
+	nss_nlcapwap_resp_t cb;		/**< Response callback. */
 };
 
-/*
- * @brief NSS capwap context
+/**
+ * NSS NL CAPWAP context.
  */
 struct nss_nlcapwap_ctx {
-	struct nss_nlsock_ctx sock;	/**< NSS socket context */
-	nss_nlcapwap_event_t event;	/**< NSS event callback function */
+	struct nss_nlsock_ctx sock;	/**< NSS socket context. */
+	nss_nlcapwap_event_t event;	/**< NSS event callback function. */
 };
 
-/*
- * @brief Open NSS capwap NL socket
+/** @} *//* end_addtogroup nss_nlcapwap_datatypes */
+/** @addtogroup nss_nlcapwap_functions @{ */
+
+/**
+ * Opens NSS NL CAPWAP socket.
  *
- * @param ctx[IN] NSS NL socket context, allocated by the caller
- * @param user_ctx[IN] user context stored per socket
- * @param event_cb[IN] event callback handler
+ * @param[in] ctx NSS NL socket context allocated by the caller.
+ * @param[in] user_ctx User context stored per socket.
+ * @param[in] event_cb Event callback handler.
  *
- * @return status of the open call
+ * @return
+ * Status of the open call.
  */
 int nss_nlcapwap_sock_open(struct nss_nlcapwap_ctx *ctx, void *user_ctx, nss_nlcapwap_event_t event_cb);
 
-/*
- * @brief Close NSS capwap NL socket
+/**
+ * Closes NSS NL CAPWAP socket.
  *
- * @param ctx[IN] NSS NL context
+ * @param[in] ctx NSS NL socket context allocated by the caller.
+ *
+ * @return
+ * None.
  */
 void nss_nlcapwap_sock_close(struct nss_nlcapwap_ctx *ctx);
 
-/*
- * @brief send an capwap rule synchronously to the NSS NETLINK
+/**
+ * Sends a CAPWAP rule synchronously to NSS NETLINK.
  *
- * @param ctx[IN] NSS capwap NL context
- * @param rule[IN] capwap rule to use
- * @param cb[IN] response callback handler
- * @param data[IN] data received from sender
+ * @param[in] ctx NSS NL socket context allocated by the caller.
+ * @param[in] rule CAPWAP rule.
+ * @param[in] cb Response callback handler.
+ * @param[in] data Data received from sender.
  *
- * @return status of send, where '0' is success and -ve means failure
+ * @return
+ * Send status:
+ * - 0 -- Success.
+ * - Negative version error (-ve) -- Failure.
  */
 int nss_nlcapwap_sock_send(struct nss_nlcapwap_ctx *ctx, struct nss_nlcapwap_rule *rule, nss_nlcapwap_resp_t cb, void *data);
 
-/*
- * @brief initialize the create rule message
+/**
+ * Initializes create rule message.
  *
- * @param rule[IN] capwap rule
- * @param type[IN] type of command
+ * @param[in] rule CAPWAP rule.
+ * @param[in] type Type of command.
+ *
+ * @return
+ * None.
  */
 void nss_nlcapwap_init_rule(struct nss_nlcapwap_rule *rule, enum nss_nlcapwap_cmd_type type);
 
-/**}@*/
-#endif /* !__NSS_NLCAPWAP_API_H__*/
+/** @} *//* end_addtogroup nss_nlcapwap_functions */
+
+#endif /* __NSS_NLCAPWAP_API_H__ */

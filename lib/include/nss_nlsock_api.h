@@ -17,49 +17,64 @@
 #ifndef __NSS_NLSOCK_API_H__
 #define __NSS_NLSOCK_API_H__
 
-/**
- * @addtogroup libnss_nl
- * @{
- */
+/** @addtogroup chapter_nlsocket
+ This chapter describes socket APIs for direct use.
+
+ @note1hang
+ Use these APIs(s) only if there are no available helpers for the specific family.
+*/
 
 /**
- * @file nss_nlsock_api.h
- * 	This file declares the NSS NL Socket API(s) for direct use.
- *
- * Note: Use these API(s) only if there are no helpers available for the
- * 	 specific family
- */
-
-/**
- * @brief NSS NL socket context
+ * @ingroup nss_nlsocket_datatypes
+ * 	NSS NL socket context.
  */
 struct nss_nlsock_ctx {
 	/* Public, caller must populate using helpers */
-	const char *family_name;		/**< family name */
-	void *user_ctx;				/**< socket user's context */
+	const char *family_name;		/**< Family name. */
+	void *user_ctx;				/**< Socket user context. */
 
 	/* Private, maintained by the library */
-	pthread_t thread;			/**< response sync */
-	pthread_spinlock_t lock;		/**< context lock */
-	int ref_cnt;				/**< references to the socket */
+	pthread_t thread;			/**< Response sync. */
+	pthread_spinlock_t lock;		/**< Context lock. */
+	int ref_cnt;				/**< References to the socket. */
 
-	struct nl_sock *nl_sk;			/**< Linux NL socket */
-	struct nl_cb *nl_cb;			/**< NSS NL callback context */
+	struct nl_sock *nl_sk;			/**< Linux NL socket. */
+	struct nl_cb *nl_cb;			/**< NSS NL callback context. */
 
-	pid_t pid;				/**< pid associated with the socket */
-	int family_id;				/**< family identifier */
-	int grp_id;				/**< group indentifier */
-	bool is_avail;				/**< indicates if the socket is available to send/listen */
+	pid_t pid;				/**< Process ID associated with the socket. */
+	int family_id;				/**< Family identifier. */
+	int grp_id;				/**< Group indentifier. */
+	bool is_avail;				/**< Indicates if the socket is available to send or listen. */
 };
 
-#define nss_nlsock_log_error(arg, ...) printf("NSS_NLERROR(%s[%d]):"arg, __func__, __LINE__, ##__VA_ARGS__)
-#define nss_nlsock_log_info(arg, ...) printf("NSS_NLINFO(%s[%d]):"arg, __func__, __LINE__, ##__VA_ARGS__)
+/** @addtogroup nss_nlsocket_macros @{ */
 
 /**
- * @brief helper for setting the family name
+ * Prints error log.
  *
- * @param sock[IN] socket context
- * @param name[IN] family name
+ * @param[in] arg Argument to be printed
+ */
+#define nss_nlsock_log_error(arg, ...) printf("NSS_NLERROR(%s[%d]):"arg, __func__, __LINE__, ##__VA_ARGS__)
+
+/**
+ * Prints arguments
+ *
+ * @param[in] arg Argument to be printed
+ */
+#define nss_nlsock_log_info(arg, ...) printf("NSS_NLINFO(%s[%d]):"arg, __func__, __LINE__, ##__VA_ARGS__)
+
+/** @} *//* end_addtogroup nss_nlsocket_macros */
+
+/** @addtogroup nss_nlsocket_functions @{ */
+
+/**
+ * Sets family name.
+ *
+ * @param[in] sock Socket context.
+ * @param[in] name Family name.
+ *
+ * @return
+ * None.
  */
 static inline void nss_nlsock_set_family(struct nss_nlsock_ctx *sock, const char *name)
 {
@@ -67,10 +82,13 @@ static inline void nss_nlsock_set_family(struct nss_nlsock_ctx *sock, const char
 }
 
 /**
- * @brief helper for setting the user context
+ * Sets user context.
  *
- * @param sock[IN] socket context
- * @param user[IN] user context
+ * @param[in] sock Socket context.
+ * @param[in] user User context.
+ *
+ * @return
+ * None.
  */
 static inline void nss_nlsock_set_user_ctx(struct nss_nlsock_ctx *sock, void *user)
 {
@@ -78,11 +96,12 @@ static inline void nss_nlsock_set_user_ctx(struct nss_nlsock_ctx *sock, void *us
 }
 
 /**
- * @brief extract the NSS NL message data
+ * Extracts NSS NL message data.
  *
- * @param msg[IN] NL message
+ * @param[in] msg NL message.
  *
- * @return start of NSS NL message
+ * @return
+ * Pointer to start of NSS NL message.
  */
 static inline void *nss_nlsock_get_data(struct nl_msg *msg)
 {
@@ -92,78 +111,87 @@ static inline void *nss_nlsock_get_data(struct nl_msg *msg)
 }
 
 /**
- * @brief open the NSS NL family socket
+ * Opens NSS NL family socket.
  *
- * @param sock[IN] socket context, to be allocated by the caller
- * @param cb[IN] callback function for response
+ * @param[in] sock Socket context to be allocated by the caller.
+ * @param[in] cb Callback function for response.
  *
- * @return status of the operation
+ * @return
+ * Status of the operation.
  *
- * @note underlying entity should set sock->family name for socket to open
+ * @note The underlying entity should set the sock->family name for the socket to open.
  */
 int nss_nlsock_open(struct nss_nlsock_ctx *sock, nl_recvmsg_msg_cb_t cb);
 
 /**
- * @brief close the NSS NL family socket
+ * Closes NSS NL family socket.
  *
- * @param sock[IN] socket context
+ * @param[in] sock Socket context.
+ *
+ * @return
+ * None.
  */
 void nss_nlsock_close(struct nss_nlsock_ctx *sock);
 
 /**
- * @brief send a NSS NL message synchronously
+ * Sends NSS NL message synchronously.
  *
- * @param sock[IN] socket context
- * @param cm[IN] common message header
- * @param data[IN] message data
- * @param has_resp[IN] determines if response is needed from kernel
+ * @param[in] sock Socket context.
+ * @param[in] cm Common message header.
+ * @param[in] data Message data.
+ * @param[in] has_resp Determines if response is needed from kernel.
  *
- * @return status of the send operation
- *
- * @note the function blocks until ack/error is received from the kernel
- * and also blocks for the message response from the kernel if is_resp is true
+ * @detdesc The function blocks until ack/error is received from the kernel
+ *       and also blocks for the message response from the kernel if is_resp is TRUE
+
+ * @return
+ * Status of the send operation.
  */
 int nss_nlsock_send(struct nss_nlsock_ctx *sock, struct nss_nlcmn *cm, void *data, bool has_resp);
 
 /**
- * @brief listening to asynchronous events from kernel
+ * Listens to asynchronous events from kernel.
  *
- * @param sock[IN] socket context
+ * @param[in] sock Socket context.
  *
- * @return status of the listen
+ * @return
+ * Listen status.
  */
 int nss_nlsock_listen(struct nss_nlsock_ctx *sock);
 
 /**
- * @brief subscribe to multicast group
+ * Subscribes to multicast group.
  *
- * @param sock[IN] socket context
- * @param grp_name[IN] NSS NL group name
+ * @param[in] sock Socket context.
+ * @param[in] grp_name NSS NL group name.
  *
- * @return status of the subscription
+ * @return
+ * Subscription status.
  */
 int nss_nlsock_join_grp(struct nss_nlsock_ctx *sock, char *grp_name);
 
 /**
- * @brief unsubscribe to multicast group
+ * Unsubscribes from multicast group.
  *
- * @param sock[IN] socket context
- * @param grp_name[IN] NSS NL group name
+ * @param[in] sock Socket context.
+ * @param[in] grp_name NSS NL group name.
  *
- * @return status of the operation
+ * @return
+ * Status of the operation.
  */
 int nss_nlsock_leave_grp(struct nss_nlsock_ctx *sock, char *grp_name);
 
 /**
- * @brief Open a socket for listening to NSS NL event data, when a event arrives
- *	it will be delivered using through the callback function
+ * Opens a socket for listening to NSS NL event data.
  *
- * @param sock[IN] socket context
- * @param cb[IN] callback function
+ * @param[in] sock Socket context.
+ * @param[in] cb Callback function.
  *
- * @return status of the operation
+ * @return
+ * Status of the operation.
  */
 int nss_nlsock_open_mcast(struct nss_nlsock_ctx *sock, nl_recvmsg_msg_cb_t cb);
 
-/**}@*/
-#endif /* !__NSS_NLSOCK_API_H__*/
+/** @} *//* end_addtogroup nss_nlsocket_functions */
+
+#endif /* __NSS_NLSOCK_API_H__ */

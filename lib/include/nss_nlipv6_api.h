@@ -17,93 +17,110 @@
 #ifndef __NSS_NLIPV6_API_H__
 #define __NSS_NLIPV6_API_H__
 
-/**
- * @addtogroup libnss_nl
- * @{
- */
+/** @addtogroup chapter_nlipv6
+ This chapter describes IPv6 APIs in the user space.
+ These APIs are wrapper functions for IPv6 family specific operations.
+*/
+
+/** @addtogroup nss_nlipv6_datatypes @{ */
 
 /**
- * @file nss_nlipv6_api.h
- * 	This file declares the NSS NL IPv6 API(s) for userspace. These
- * 	API(s) are wrapper functions for IPv6 family specific operation.
- */
-
-/**
- * @brief response callback function
+ * Response callback for IPv6.
  *
- * @param user_ctx[IN] user context, provided at socket open
- * @param rule[IN] IPv6 rule associated with the response
- * @param cb_data[IN] data that the user wants per callback
+ * @param[in] user_ctx User context (provided at socket open).
+ * @param[in] rule IPv6 rule.
+ * @param[in] resp_ctx user data per callback.
+ *
+ * @return
+ * None.
  */
 typedef void (*nss_nlipv6_resp_t)(void *user_ctx, struct nss_nlipv6_rule *rule, void *resp_ctx);
 
 /**
- * @brief event callback function
+ * Event callback for IPv6.
  *
- * @param user_ctx[IN] user context, provided at socket open
- * @param rule[IN] IPv6 rule associated with the event
+ * @param[in] user_ctx User context (provided at socket open).
+ * @param[in] rule IPv6 Rule.
+ *
+ * @return
+ * None.
  */
 typedef void (*nss_nlipv6_event_t)(void *user_ctx, struct nss_nlipv6_rule *rule);
 
 /**
- * @brief NSS NL IPv6 response
+ * NSS NL IPv6 response.
  */
 struct nss_nlipv6_resp {
-	void *data;		/**< response context */
-	nss_nlipv6_resp_t cb;	/**< response callback */
+	void *data;		/**< Response context. */
+	nss_nlipv6_resp_t cb;	/**< Response callback. */
 };
 
 /**
- * @brief NSS IPv6 context
+ * NSS NL IPv6 context.
  */
 struct nss_nlipv6_ctx {
-	struct nss_nlsock_ctx sock;	/**< NSS socket context */
-	nss_nlipv6_event_t event;	/**< NSS event callback function */
+	struct nss_nlsock_ctx sock;	/**< NSS socket context. */
+	nss_nlipv6_event_t event;	/**< NSS event callback function. */
 };
 
+/** @} *//* end_addtogroup nss_nlipv6_datatypes */
+/** @addtogroup nss_nlipv6_functions @{ */
+
 /**
- * @brief Open NSS IPv6 NL socket
+ * Opens NSS NL IPv6 socket.
  *
- * @param ctx[IN] NSS NL socket context, allocated by the caller
- * @param user_ctx[IN] user context stored per socket
- * @param event_cb[IN] event callback handler
+ * @param[in] ctx NSS NL socket context allocated by the caller.
+ * @param[in] user_ctx User context stored per socket.
+ * @param[in] event_cb Event callback handler.
  *
- * @return status of the open call
+ * @return
+ * Status of the open call.
  */
 int nss_nlipv6_sock_open(struct nss_nlipv6_ctx *ctx, void *user_ctx, nss_nlipv6_event_t event_cb);
 
 /**
- * @brief Close NSS IPv6 NL socket
+ * Closes NSS NL IPv6 socket.
  *
- * @param ctx[IN] NSS NL context
+ * @param[in] ctx NSS NL context.
+ *
+ * @return
+ * None.
  */
 void nss_nlipv6_sock_close(struct nss_nlipv6_ctx *ctx);
 
 /**
- * @brief send an IPv6 rule synchronously to the NSS NETLINK
+ * Sends an IPv6 rule synchronously to NSS NETLINK.
  *
- * @param ctx[IN] NSS IPv6 NL context
- * @param rule[IN] IPv6 rule to use
- * @param cb[IN] response callback handler
- * @param data[IN] response data per callback
+ * @param[in] ctx NSS IPv6 NL context.
+ * @param[in] rule IPv6 rule.
+ * @param[in] cb Response callback handler.
+ * @param[in] data Response data per callback.
  *
- * @return status of send, where '0' is success and -ve means failure
+ * @return
+ * Send status:
+ * - 0 -- Success.
+ * - Negative version error (-ve) -- Failure.
  */
 int nss_nlipv6_sock_send(struct nss_nlipv6_ctx *ctx, struct nss_nlipv6_rule *rule, nss_nlipv6_resp_t cb, void *data);
 
 /**
- * @brief initialize the rule message
+ * Initializes rule message.
  *
- * @param rule[IN] IPv6 rule
- * @param type[IN] command type
+ * @param[in] rule IPv6 rule.
+ * @param[in] type Command type.
  *
+ * @return
+ * None.
  */
 void nss_nlipv6_init_rule(struct nss_nlipv6_rule *rule, enum nss_ipv6_message_types type);
 
 /**
- * @brief initialize connection rule for create message
+ * Initializes connection rule for create message.
  *
- * @param create[IN] create message
+ * @param[in] create Creates message.
+ *
+ * @return
+ * None.
  */
 static inline void nss_nlipv6_init_conn_rule(struct nss_ipv6_rule_create_msg *create)
 {
@@ -111,9 +128,12 @@ static inline void nss_nlipv6_init_conn_rule(struct nss_ipv6_rule_create_msg *cr
 }
 
 /**
- * @brief To enable route flow
+ * Enables route flow.
  *
- * @param create[IN] create message
+ * @param[in] create Creates message.
+ *
+ * @return
+ * None.
  */
 static inline void nss_nlipv6_init_route_flow_rule(struct nss_ipv6_rule_create_msg *create)
 {
@@ -121,9 +141,12 @@ static inline void nss_nlipv6_init_route_flow_rule(struct nss_ipv6_rule_create_m
 }
 
 /**
- * @brief To enable bridge flow
+ * Enables bridge flow.
  *
- * @param create[IN] create message
+ * @param[in] create create message.
+ *
+ * @return
+ * None.
  */
 static inline void nss_nlipv6_init_bridge_flow_rule(struct nss_ipv6_rule_create_msg *create)
 {
@@ -131,9 +154,12 @@ static inline void nss_nlipv6_init_bridge_flow_rule(struct nss_ipv6_rule_create_
 }
 
 /**
- * @brief initialize tcp protocol rule for create message
+ * Initializes TCP protocol rule for create message.
  *
- * @param create[IN] create message
+ * @param[in] create Creates message.
+ *
+ * @return
+ * None.
  */
 static inline void nss_nlipv6_init_tcp_rule(struct nss_ipv6_rule_create_msg *create)
 {
@@ -141,9 +167,12 @@ static inline void nss_nlipv6_init_tcp_rule(struct nss_ipv6_rule_create_msg *cre
 }
 
 /**
- * @brief initialize pppoe rule for create message
+ * Initializes PPPoE rule for create message.
  *
- * @param create[IN] create message
+ * @param[in] create Creates message.
+ *
+ * @return
+ * None.
  */
 static inline void nss_nlipv6_init_pppoe_rule(struct nss_ipv6_rule_create_msg *create)
 {
@@ -151,9 +180,12 @@ static inline void nss_nlipv6_init_pppoe_rule(struct nss_ipv6_rule_create_msg *c
 }
 
 /**
- * @brief initialize qos rule for create message
+ * Initializes QoS rule for create message.
  *
- * @param create[IN] create message
+ * @param[in] create Creates message.
+ *
+ * @return
+ * None.
  */
 static inline void nss_nlipv6_init_qos_rule(struct nss_ipv6_rule_create_msg *create)
 {
@@ -161,9 +193,12 @@ static inline void nss_nlipv6_init_qos_rule(struct nss_ipv6_rule_create_msg *cre
 }
 
 /**
- * @brief initialize dscp rule for create message
+ * Initializes DSCP rule for create message.
  *
- * @param create[IN] create message
+ * @param[in] create Creates message.
+ *
+ * @return
+ * None.
  */
 static inline void nss_nlipv6_init_dscp_rule(struct nss_ipv6_rule_create_msg *create)
 {
@@ -171,9 +206,12 @@ static inline void nss_nlipv6_init_dscp_rule(struct nss_ipv6_rule_create_msg *cr
 }
 
 /**
- * @brief initialize vlan rule for create message
+ * Initializes VLAN rule for create message.
  *
- * @param create[IN] create message
+ * @param[in] create Creates message.
+ *
+ * @return
+ * None.
  */
 static inline void nss_nlipv6_init_vlan_rule(struct nss_ipv6_rule_create_msg *create)
 {
@@ -196,14 +234,18 @@ static inline void nss_nlipv6_init_vlan_rule(struct nss_ipv6_rule_create_msg *cr
 }
 
 /**
- * @brief initialize identifier rule for create message
+ * Initializes Identifier rule for create message.
  *
- * @param create[IN] create message
+ * @param[in] create Creates message.
+ *
+ * @return
+ * None.
  */
 static inline void nss_nlipv6_init_identifier_rule(struct nss_ipv6_rule_create_msg *create)
 {
 	create->valid_flags |= NSS_IPV6_RULE_CREATE_IDENTIFIER_VALID;
 }
 
-/**}@*/
-#endif /* !__NSS_NLIPV6_API_H__*/
+/** @} *//* end_addtogroup nss_nlipv6_functions */
+
+#endif /* __NSS_NLIPV6_API_H__ */

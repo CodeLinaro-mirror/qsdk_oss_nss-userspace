@@ -79,4 +79,4 @@
 #include <nss_nlmcast_api.h>
 #include <nss_nludp_st_if.h>
 #include <nss_nludp_st_api.h>
-#endif /* !__NSS_NLBASE_H__*/
+#endif /* __NSS_NLBASE_H__ */

@@ -17,82 +17,103 @@
 #ifndef __NSS_NLIPSEC_API_H__
 #define __NSS_NLIPSEC_API_H__
 
-/**
- * @file nss_nlipsec_api.h
- * 	This file declares the NSS NL IPsec API(s) for userspace. These
- * 	API(s) are wrapper functions for IPsec family specific operation.
- */
+/** @addtogroup chapter_nlipsec
+ This chapter describes IP security (IPsec) APIs in the user space.
+ These APIs are wrapper functions for IPsec family specific operations.
+*/
+
+/** @addtogroup nss_nlipsec_datatypes @{ */
 
 /**
- * @brief response callback function
+ * Response callback for IPsec.
  *
- * @param user_ctx[IN] user context, provided at socket open
- * @param rule[IN] IPsec rule associated with the response
- * @param resp_ctx[IN] data that the user wants per callback
+ * @param[in] user_ctx User context (provided at socket open).
+ * @param[in] rule IPsec rule.
+ * @param[in] resp_ctx User data per callback.
+ *
+ * @return
+ * None.
  */
 typedef void (*nss_nlipsec_resp_t)(void *user_ctx, struct nss_nlipsec_rule *rule, void *resp_ctx);
 
 /**
- * @brief event callback function
+ * Event callback for IPsec.
  *
- * @param user_ctx[IN] user context, provided at socket open
- * @param rule[IN] IPsec rule associated with the event
+ * @param[in] user_ctx User context (provided at socket open).
+ * @param[in] rule IPsec rule.
+ *
+ * @return
+ * None.
  */
 typedef void (*nss_nlipsec_event_t)(void *user_ctx, struct nss_nlipsec_rule *rule);
 
 /**
- * @brief NSS NL IPsec response
+ * NSS NL IPsec response.
  */
 struct nss_nlipsec_resp {
-	void *data;		/**< response context */
-	nss_nlipsec_resp_t cb;	/**< response callback */
+	void *data;		/**< Response context. */
+	nss_nlipsec_resp_t cb;	/**< Response callback. */
 };
 
 /**
- * @brief NSS IPsec context
+ * NSS NL IPsec context.
  */
 struct nss_nlipsec_ctx {
-	struct nss_nlsock_ctx sock;	/**< NSS socket context */
-	nss_nlipsec_event_t event;	/**< NSS event callback function */
+	struct nss_nlsock_ctx sock;	/**< NSS socket context. */
+	nss_nlipsec_event_t event;	/**< NSS event callback function. */
 };
 
+/** @} *//* end_addtogroup nss_nlipsec_datatypes */
+/** @addtogroup nss_nlipsec_functions @{ */
+
 /**
- * @brief Open NSS IPsec NL socket
+ * Opens NSS NL IPsec socket.
  *
- * @param ctx[IN] NSS NL socket context, allocated by the caller
- * @param user_ctx[IN] user context stored per socket
- * @param event_cb[IN] event callback handler
+ * @param[in] ctx  NSS NL socket context allocated by the caller.
+ * @param[in] user_ctx  User context stored per socket.
+ * @param[in] event_cb Event callback handler.
  *
- * @return status of the open call
+ * @return
+ * Status of the open call.
  */
 int nss_nlipsec_sock_open(struct nss_nlipsec_ctx *ctx, void *user_ctx, nss_nlipsec_event_t event_cb);
 
 /**
- * @brief Close NSS IPsec NL socket
+ * Closes NSS NL IPsec socket.
  *
- * @param ctx[IN] NSS NL context
+ * @param[in] ctx NSS NL context.
+ *
+ * @return
+ * None.
  */
 void nss_nlipsec_sock_close(struct nss_nlipsec_ctx *ctx);
 
 /**
- * @brief sends NSS IPsec rule message synchronously via netlink
+ * Sends NSS IPsec rule message synchronously via netlink.
  *
- * @param ctx[IN] NSS IPsec NL context
- * @param rule[IN] IPsec rule to use
- * @param cb[IN] response callback handler
- * @param data[IN] response data per callback
+ * @param[in] ctx NSS NL IPsec context.
+ * @param[in] rule IPsec rule.
+ * @param[in] cb Response callback handler.
+ * @param[in] data Response data per callback.
  *
- * @return status of send, where '0' is success and -ve means failure
+ * @return
+ * Send status:
+ * - 0 -- Success.
+ * - Negative version error (-ve) -- Failure.
  */
 int nss_nlipsec_sock_send(struct nss_nlipsec_ctx *ctx, struct nss_nlipsec_rule *rule, nss_nlipsec_resp_t cb, void *data);
 
 /**
- * @brief IPsec initialization command
+ * IPsec initialization command.
  *
- * @param rule[IN] IPsec rule
- * @param type[IN] command type
+ * @param[in] rule IPsec rule.
+ * @param[in] type Command type.
+ *
+ * @return
+ * None.
  */
 void nss_nlipsec_init_cmd(struct nss_nlipsec_rule *rule, enum nss_nlipsec_cmd type);
 
-/**}@*/
-#endif /* !__NSS_NLIPV4_API_H__*/
+/** @} *//* end_addtogroup nss_nlipsec_functions */
+
+#endif /* __NSS_NLIPV4_API_H__ */

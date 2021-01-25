@@ -17,87 +17,103 @@
 #ifndef __NSS_NLGRE_REDIR_API_H__
 #define __NSS_NLGRE_REDIR_API_H__
 
-/*
- * @addtogroup libnss_nl
- * @{
- */
+/** @addtogroup chapter_nlgre_redirect
+ This chapter describes Generic Routing Encapsulation (GRE) Redirect APIs in the user space.
+ These APIs are wrapper functions for GRE Redirect family specific operations.
+*/
 
-/*
- * @file nss_nlgre_redir_api.h
- * 	This file declares the NSS NL gre_redir API(s) for userspace. These
- * 	API(s) are wrapper functions for gre_redir family specific operation.
- */
+/** @addtogroup nss_nlgre_redirect_datatypes @{ */
 
-/*
- * @brief response callback function
+/**
+ * Response callback for GRE redirect.
  *
- * @param user_ctx[IN] user context, provided at socket open
- * @param rule[IN] gre_redir rule associated with the response
- * @param resp_ctx[IN] data that the user wants per callback
+ * @param[in] user_ctx User context (provided at socket open).
+ * @param[in] rule GRE redirect rule.
+ * @param[in] resp_ctx User data per callback.
+ *
+ * @return
+ * None.
  */
 typedef void (*nss_nlgre_redir_resp_t)(void *user_ctx, struct nss_nlgre_redir_rule *rule, void *resp_ctx);
 
-/*
- * @brief event callback function
+/**
+ * Event callback for GRE redirect.
  *
- * @param user_ctx[IN] user context, provided at socket open
- * @param rule[IN] gre_redir rule associated with the event
+ * @param[in] user_ctx User context (provided at socket open).
+ * @param[in] rule GRE redirect rule.
+ *
+ * @return
+ * None.
  */
 typedef void (*nss_nlgre_redir_event_t)(void *user_ctx, struct nss_nlgre_redir_rule *rule);
 
-/*
- * @brief NSS NL gre_redir response
+/**
+ * NSS NL GRE redirect response.
  */
 struct nss_nlgre_redir_resp {
-	void *data;			/**< response context */
-	nss_nlgre_redir_resp_t cb;	/**< response callback */
+	void *data;			/**< Response context. */
+	nss_nlgre_redir_resp_t cb;	/**< Response callback. */
 };
 
-/*
- * @brief NSS gre_redir context
+/**
+ * NSS NL GRE redirect context.
  */
 struct nss_nlgre_redir_ctx {
-	struct nss_nlsock_ctx sock;	/**< NSS socket context */
-	nss_nlgre_redir_event_t event;	/**< NSS event callback function */
+	struct nss_nlsock_ctx sock;	/**< NSS socket context. */
+	nss_nlgre_redir_event_t event;	/**< NSS event callback function. */
 };
 
-/*
- * @brief Open NSS gre_redir NL socket
+/** @} *//* end_addtogroup nss_nlgre_redirect_datatypes */
+/** @addtogroup nss_nlgre_redirect_functions @{ */
+
+/**
+ * Opens NSS NL GRE redirect socket.
  *
- * @param ctx[IN] NSS NL socket context, allocated by the caller
- * @param user_ctx[IN] user context stored per socket
- * @param event_cb[IN] event callback handler
+ * @param[in] ctx NSS NL socket context allocated by the caller.
+ * @param[in] user_ctx User context stored per socket.
+ * @param[in] event_cb Event callback handler.
  *
- * @return status of the open call
+ * @return
+ * Status of the open call.
  */
 int nss_nlgre_redir_sock_open(struct nss_nlgre_redir_ctx *ctx, void *user_ctx, nss_nlgre_redir_event_t event_cb);
 
-/*
- * @brief Close NSS gre_redir NL socket
+/**
+ * Closes NSS NL GRE redirect socket.
  *
- * @param ctx[IN] NSS NL context
+ * @param[in] ctx NSS NL context.
+ *
+ * @return
+ * None.
  */
 void nss_nlgre_redir_sock_close(struct nss_nlgre_redir_ctx *ctx);
 
-/*
- * @brief send an gre_redir rule synchronously to the NSS NETLINK
+/**
+ * Sends GRE redirect rule synchronously to NSS NETLINK.
  *
- * @param ctx[IN] NSS gre_redir NL context
- * @param rule[IN] gre_redir rule to use
- * @param cb[IN] response callback handler
- * @param data[IN] data received from sender
+ * @param[in] ctx NSS GRE redirect NL context.
+ * @param[in] rule GRE redirect rule.
+ * @param[in] cb Response callback handler.
+ * @param[in] data Data received from sender.
  *
- * @return status of send, where '0' is success and -ve means failure
+ * @return
+ * Send status:
+ * - 0 -- Success.
+ * - Negative version error (-ve) -- Failure.
  */
 int nss_nlgre_redir_sock_send(struct nss_nlgre_redir_ctx *ctx, struct nss_nlgre_redir_rule *rule, nss_nlgre_redir_resp_t cb, void *data);
 
-/*
- * @brief initialize the create rule message
+/**
+ * Initializes create rule message.
  *
- * @param rule[IN] gre_redir rule
- * @param type[IN] type of command
+ * @param[in] rule GRE redirect rule.
+ * @param[in] type Type of command.
+ *
+ * @return
+ * None.
  */
 void nss_nlgre_redir_init_rule(struct nss_nlgre_redir_rule *rule, enum nss_nlgre_redir_cmd_type type);
 
-/**}@*/
-#endif /* !__NSS_NLGRE_REDIR_API_H__*/
+/** @} *//* end_addtogroup nss_nlgre_redirect_functions */
+
+#endif /* __NSS_NLGRE_REDIR_API_H__ */

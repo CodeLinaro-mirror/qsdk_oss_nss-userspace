@@ -17,80 +17,86 @@
 #ifndef __NSS_NLMCAST_API_H__
 #define __NSS_NLMCAST_API_H__
 
-/**
- * @addtogroup libnss_nl
- * @{
- */
+/** @addtogroup chapter_nlmcast
+ This chapter describes multicast APIs in the user space.
+ These APIs are wrapper functions for multicast specific operations.
+*/
+
+/** @addtogroup nss_nlmcast_datatypes @{ */
 
 /**
- * @file nss_nlmcast_api.h
- *	This file declares the NSS NL mcast API(s) for userspace. These
- *	API(s) are wrapper functions for mcast specific operation.
- */
-
-/**
- * @brief event callback function
+ * Event callback for multicast.
  *
- * @param cmd[IN] cmd received in generic Netlink header
- * @param data[IN] data received in Netlink message
+ * @param[in] cmd Command received in generic Netlink header.
+ * @param[in] data Data received in Netlink message.
  */
 typedef void (*nss_nlmcast_event_t)(int cmd, void *data);
 
 /**
- * @brief NSS mcast context
+ * NSS multicast context.
  */
 struct nss_nlmcast_ctx {
-	struct nss_nlsock_ctx sock;     /**< NSS socket context */
-	nss_nlmcast_event_t event;       /**< NSS event callback function */
+	struct nss_nlsock_ctx sock;     /**< NSS socket context. */
+	nss_nlmcast_event_t event;       /**< NSS event callback function. */
 };
 
+/** @} *//* end_addtogroup nss_nlmcast_datatypes */
+/** @addtogroup nss_nlmcast_functions @{ */
+
 /**
- * @brief listening to NSS NL event data
+ * Listens to NSS NL multicast event data.
  *
- * @param ctx[IN] mcast context
+ * @param[in] ctx Multicast context.
  *
- * @return status of the listen
+ * @return
+ * Listen status.
  */
 int nss_nlmcast_sock_listen(struct nss_nlmcast_ctx *ctx);
 
 /**
- * @brief subscribe for the multicast group
+ * Subscribe the multicast group to receive responses.
  *
- * @param ctx[IN] mcast context
- * @param grp_name[IN] NSS NL group name
+ * @param[in] ctx Multicast context.
+ * @param[in] grp_name NSS NL group name.
  *
- * @return status of the subscription
+ * @return
+ * Subscription status.
  */
 int nss_nlmcast_sock_join_grp(struct nss_nlmcast_ctx *ctx, char *grp_name);
 
 /**
- * @brief unsubscribe for the multicast group
+ * Unsubscribe the multicast group to stop receiving responses.
  *
- * @param ctx[IN] mcast context
- * @param grp_name[IN] NSS NL group name
+ * @param[in] ctx Multicast context.
+ * @param[in] grp_name NSS NL group name.
  *
- * @return status of the operation
+ * @return
+ * Status of the operation.
  */
 int nss_nlmcast_sock_leave_grp(struct nss_nlmcast_ctx *ctx, char *grp_name);
 
 /**
- * @brief open a socket for listening to NSS NL event data, when a event arrives
- *	it will be delivered using through the callback function
+ * Opens a socket for listening to NSS NL event data.
  *
- * @param ctx[IN] mcast context
- * @param cb[IN] callback function
- * @param family_name[IN] NSS NL family name
+ * @param[in] ctx Multicast context.
+ * @param[in] cb Callback function.
+ * @param[in] family_name NSS NL family name.
  *
- * @return status of the operation
+ * @return
+ * Status of the operation.
  */
 int nss_nlmcast_sock_open(struct nss_nlmcast_ctx *ctx, nss_nlmcast_event_t cb, const char *family_name);
 
 /**
- * @brief close the socket
+ * Closes socket.
  *
- * @param ctx[IN] mcast context
+ * @param[in] ctx Multicast context.
  *
+ * @return
+ * None.
  */
 void nss_nlmcast_sock_close(struct nss_nlmcast_ctx *ctx);
-/**}@*/
-#endif /* !__NSS_NLMCAST_API_H__*/
+
+/** @} *//* end_addtogroup nss_nlmcast_functions */
+
+#endif /* __NSS_NLMCAST_API_H__ */
