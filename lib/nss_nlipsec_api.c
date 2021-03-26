@@ -126,11 +126,11 @@ void nss_nlipsec_sock_close(struct nss_nlipsec_ctx *ctx)
  */
 int nss_nlipsec_sock_send(struct nss_nlipsec_ctx *ctx, struct nss_nlipsec_rule *rule, nss_nlipsec_resp_t cb, void *data)
 {
-	int32_t family_id = ctx->sock.family_id;
 	struct nss_nlipsec_resp *resp;
 	pid_t pid = getpid();
 	bool has_resp = false;
 	int error;
+	int32_t family_id;
 
 	if(!ctx) {
 		nss_nlsock_log_error("%d: Empty socket context\n", pid);
@@ -143,6 +143,7 @@ int nss_nlipsec_sock_send(struct nss_nlipsec_ctx *ctx, struct nss_nlipsec_rule *
 	}
 
 	if (cb) {
+		family_id = ctx->sock.family_id;
 		nss_nlcmn_set_cb_owner(&rule->cm, family_id);
 
 		resp = nss_nlcmn_get_cb_data(&rule->cm, family_id);
