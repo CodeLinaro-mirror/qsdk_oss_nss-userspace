@@ -1,9 +1,12 @@
 /*
  **************************************************************************
  * Copyright (c) 2021, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
+ *
  * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
  * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
@@ -49,6 +52,8 @@ int nss_nludp_st_sock_cb(struct nl_msg *msg, void *arg)
 	case NSS_UDP_ST_STOP_MSG:
 	case NSS_UDP_ST_TX_CREATE_MSG:
 	case NSS_UDP_ST_TX_DESTROY_MSG:
+	case NSS_UDP_ST_TX_UPDATE_RATE_MSG:
+	case NSS_UDP_ST_RX_MODE_SET_MSG:
 	case NSS_UDP_ST_RESET_STATS_MSG:
 	{
 		void *cb_data = nss_nlcmn_get_cb_data(&rule->cm, sock->family_id);
