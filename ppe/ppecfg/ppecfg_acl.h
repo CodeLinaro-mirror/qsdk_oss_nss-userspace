@@ -1,0 +1,214 @@
+/*
+ * Copyright (c) 2023, Qualcomm Innovation Center, Inc. All rights reserved.
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
+
+#ifndef __PPECFG_ACL_H
+#define __PPECFG_ACL_H
+
+#define PPECFG_ACL_HDR_VERSION 4
+
+/*
+ * PPECFG ACL commands
+ */
+enum ppecfg_acl_error {
+	PPECFG_ACL_SUCCESS,		/* flow add */
+	PPECFG_ACL_RULE_ID_DEL_FAILED,		/* flow delete */
+	PPECFG_ACL_RULE_ID_ADD_FAILED,
+	PPECFG_ACL_ERROR_MAX
+};
+
+/*
+ * PPECFG ACL commands
+ */
+enum ppecfg_acl_cmd {
+	PPECFG_ACL_CMD_RULE_ADD,		/* flow add */
+	PPECFG_ACL_CMD_RULE_DEL,		/* flow delete */
+	PPECFG_ACL_CMD_MAX
+};
+
+/*
+ * TODO: add comments in the file for all struct/enum members
+ */
+
+/*
+ * PPECFG ACL flow add
+ */
+enum ppecfg_acl_smac {
+	/* ppecfg_acl */
+	PPECFG_ACL_SMAC_VAL,
+	PPECFG_ACL_SMAC_NVAL,
+	PPECFG_ACL_SMAC_MASK,
+	PPECFG_ACL_SMAC_RANGE,
+	PPECFG_ACL_SMAC_MAX
+};
+
+/*
+ * PPECFG ACL flow add
+ */
+enum ppecfg_acl_dmac {
+	/* ppecfg_acl */
+	PPECFG_ACL_DMAC_VAL,
+	PPECFG_ACL_DMAC_NVAL,
+	PPECFG_ACL_DMAC_MASK,
+	PPECFG_ACL_DMAC_RANGE,
+	PPECFG_ACL_DMAC_MAX
+};
+
+enum ppecfg_acl_cvid {
+	PPECFG_ACL_CVID_TAG,
+	PPECFG_ACL_CVID_MIN,
+	PPECFG_ACL_CVID_MASK,
+	PPECFG_ACL_CVID_RANGE,
+	PPECFG_ACL_CVID_MAX
+};
+
+enum ppecfg_acl_svid {
+	PPECFG_ACL_SVID_TAG,
+	PPECFG_ACL_SVID_MIN,
+	PPECFG_ACL_SVID_MASK,
+	PPECFG_ACL_SVID_RANGE,
+	PPECFG_ACL_SVID_MAX
+};
+
+enum ppecfg_acl_sip {
+	PPECFG_ACL_SIP_TYPE,
+	PPECFG_ACL_SIP_VAL,
+	PPECFG_ACL_SIP_NVAL,
+	PPECFG_ACL_SIP_MASK,
+	PPECFG_ACL_SIP_MAX
+};
+
+enum ppecfg_acl_dip {
+	PPECFG_ACL_DIP_TYPE,
+	PPECFG_ACL_DIP_VAL,
+	PPECFG_ACL_DIP_NVAL,
+	PPECFG_ACL_DIP_MASK,
+	PPECFG_ACL_DIP_MAX
+};
+
+enum ppecfg_acl_cpcp {
+	PPECFG_ACL_CPCP_MIN,
+	PPECFG_ACL_CPCP_MASK,
+	PPECFG_ACL_CPCP_MAX
+};
+
+enum ppecfg_acl_spcp {
+	PPECFG_ACL_SPCP_MIN,
+	PPECFG_ACL_SPCP_MASK,
+	PPECFG_ACL_SPCP_MAX
+};
+
+enum ppecfg_acl_pppoe {
+	PPECFG_ACL_PPPOE_MIN,
+	PPECFG_ACL_PPPOE_MASK,
+	PPECFG_ACL_PPPOE_MAX
+};
+
+enum ppecfg_acl_ether {
+	PPECFG_ACL_ETHER_MIN,
+	PPECFG_ACL_ETHER_MASK,
+	PPECFG_ACL_ETHER_MAX
+};
+
+enum ppecfg_acl_ttl {
+	PPECFG_ACL_TTL_MIN,
+	PPECFG_ACL_TTL_MASK,
+	PPECFG_ACL_TTL_MAX
+};
+
+enum ppecfg_acl_sport {
+	PPECFG_ACL_SPORT_MIN,
+	PPECFG_ACL_SPORT_MASK,
+	PPECFG_ACL_SPORT_RANGE,
+	PPECFG_ACL_SPORT_MAX
+};
+
+enum ppecfg_acl_dport {
+	PPECFG_ACL_DPORT_MIN,
+	PPECFG_ACL_DPORT_MASK,
+	PPECFG_ACL_DPORT_RANGE,
+	PPECFG_ACL_DPORT_MAX
+};
+
+enum ppecfg_acl_dscp {
+	PPECFG_ACL_DSCP_MIN,
+	PPECFG_ACL_DSCP_MASK,
+	PPECFG_ACL_DSCP_MAX
+};
+
+/*
+ * PPECFG ACL flow add
+ */
+enum ppecfg_acl_action {
+	/* ppecfg_acl */
+	PPECFG_ACL_ACTION_FWD_CMD,
+	PPECFG_ACL_ACTION_SERVICE_CODE,
+	PPECFG_ACL_ACTION_ENQUEUE_PRI,
+	PPECFG_ACL_ACTION_QID,
+	PPECFG_ACL_ACTION_CTAG_PCP,
+	PPECFG_ACL_ACTION_STAG_PCP,
+	PPECFG_ACL_ACTION_DSCP_TC,
+	PPECFG_ACL_ACTION_CVID,
+	PPECFG_ACL_ACTION_SVID,
+	PPECFG_ACL_ACTION_DEST,
+	PPECFG_ACL_ACTION_REDIR_CORE,
+	PPECFG_ACL_ACTION_POLICER_ID,
+	PPECFG_ACL_ACTION_MIRROR_EN,
+	PPECFG_ACL_ACTION_MAX
+};
+
+/*
+ * PPECFG ACL flow add
+ */
+enum ppecfg_acl_rule_add {
+	/* ppecfg_acl */
+	PPECFG_ACL_RULE_ADD_RULE_ID,
+	PPECFG_ACL_RULE_ADD_DEV,
+	PPECFG_ACL_RULE_ADD_POST_ROUTE_EN,
+	PPECFG_ACL_RULE_ADD_PRIORITY,
+	PPECFG_ACL_RULE_ADD_OUTER_HEADER,
+	PPECFG_ACL_RULE_ADD_SMAC,
+	PPECFG_ACL_RULE_ADD_DMAC,
+	PPECFG_ACL_RULE_ADD_CVID,
+	PPECFG_ACL_RULE_ADD_SVID,
+	PPECFG_ACL_RULE_ADD_CPCP,
+	PPECFG_ACL_RULE_ADD_SPCP,
+	PPECFG_ACL_RULE_ADD_PPPOE,
+	PPECFG_ACL_RULE_ADD_ETHER,
+	PPECFG_ACL_RULE_ADD_SIP,
+	PPECFG_ACL_RULE_ADD_DIP,
+	PPECFG_ACL_RULE_ADD_SPORT,
+	PPECFG_ACL_RULE_ADD_DPORT,
+	PPECFG_ACL_RULE_ADD_DSCP,
+	PPECFG_ACL_RULE_ADD_TTL,
+	PPECFG_ACL_RULE_ADD_ACTION,
+	PPECFG_ACL_RULE_ADD_MAX
+};
+
+/*
+ * PPECFG ACL flow del
+ */
+enum ppecfg_acl_rule_del {
+	/* ppecfg_acl */
+	PPECFG_ACL_RULE_DEL_RULE_ID,		/* source IP address */
+	PPECFG_ACL_RULE_DEL_MAX
+};
+
+int ppecfg_acl_get_rule_id(uint32_t rule_id_external);
+int ppecfg_acl_add_rule_id(uint32_t rule_id_external, uint32_t rule_id);
+int ppecfg_acl_del_rule_id(uint32_t rule_id_external);
+
+#endif /* __PPECFG_ACL_H*/
+
