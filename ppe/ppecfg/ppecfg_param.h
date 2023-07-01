@@ -53,9 +53,9 @@ struct ppecfg_param;
  * @brief match list provided matching the paramters
  */
 struct ppecfg_param_in {
-	uint32_t total;			/**< total number of parameters */
-	struct ppecfg_param *cur_param;	/**< current used param */
-	char **args;			/**< list of arguments */
+	uint32_t total;			/**< Total number of parameters */
+	struct ppecfg_param *cur_param;	/**< Currently used parameter */
+	char **args;			/**< List of arguments */
 };
 
 /**

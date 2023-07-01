@@ -50,5 +50,7 @@
 #include <nss_ppenl_cmn_if.h>
 #include <nss_ppenl_acl_if.h>
 #include <nss_ppenl_acl_api.h>
+#include <nss_ppenl_policer_if.h>
+#include <nss_ppenl_policer_api.h>
 
 #endif /* __NSS_PPENL_BASE_H__ */
