@@ -23,6 +23,18 @@
 */
 
 /**
+ * Response callback for ACL.
+ *
+ * @param[in] user_ctx User context (provided at socket open).
+ * @param[in] rule ACL rule.
+ * @param[in] resp_ctx User data per callback.
+ *
+ * @return
+ * None.
+ */
+typedef void (*nss_ppenl_acl_resp_cb_t)(void *user_ctx, struct nss_ppenl_acl_rule *rule, void *resp_ctx);
+
+/**
  * Event callback for ACL.
  *
  * @param[in] user_ctx User context (provided at socket open).
@@ -57,12 +69,11 @@ struct nss_ppenl_acl_ctx {
  *
  * @param[in] ctx NSS NL socket context allocated by the caller.
  * @param[in] user_ctx User context stored per socket.
- * @param[in] event_cb Event callback handler.
  *
  * @return
  * Status of the open call.
  */
-int nss_ppenl_acl_sock_open(struct nss_ppenl_acl_ctx *ctx, void *user_ctx, nss_ppenl_acl_event_cb_t event_cb);
+int nss_ppenl_acl_sock_open(struct nss_ppenl_acl_ctx *ctx, void *user_ctx);
 
 /**
  * Closes NSS NL ACL socket.
@@ -80,14 +91,13 @@ void nss_ppenl_acl_sock_close(struct nss_ppenl_acl_ctx *ctx);
  * @param[in] ctx NSS NL ACL context.
  * @param[in] rule ACL rule.
  * @param[in] cb Response callback handler.
- * @param[in] data Response data per callback.
  *
  * @return
  * Send status:
  * - 0 -- Success.
  * - Negative version error (-ve) -- Failure.
  */
-int nss_ppenl_acl_sock_send(struct nss_ppenl_acl_ctx *ctx, struct nss_ppenl_acl_rule *rule, nss_ppenl_acl_resp_cb_t cb, void *data);
+int nss_ppenl_acl_sock_send(struct nss_ppenl_acl_ctx *ctx, struct nss_ppenl_acl_rule *rule, nss_ppenl_acl_resp_cb_t cb);
 
 
 /** @} *//* end_addtogroup nss_ppenl_acl_functions */

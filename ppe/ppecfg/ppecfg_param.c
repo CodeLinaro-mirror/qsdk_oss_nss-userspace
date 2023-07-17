@@ -128,13 +128,15 @@ int ppecfg_param_iter_tbl(struct ppecfg_param *param, struct ppecfg_param_in *ma
 		 * search for the parameter in its sub_param table
 		 */
 		struct ppecfg_param *sub_param = ppecfg_param_search(name, param->sub_params, param->num_params);
-		if (!sub_param) {
+		if (!sub_param || sub_param->name == NULL) {
 			continue;
 		}
 
 		error = 0;
 
+		sub_param->valid = true;
 		sub_param->data = name + sub_param->len;
+
 
 		/*
 		 * parameter found, call the found handler if present

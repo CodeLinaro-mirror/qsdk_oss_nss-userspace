@@ -39,161 +39,191 @@ enum ppecfg_acl_cmd {
 };
 
 /*
- * TODO: add comments in the file for all struct/enum members
- */
-
-/*
- * PPECFG ACL flow add
+ * PPECFG ACL SMAC fields
  */
 enum ppecfg_acl_smac {
-	/* ppecfg_acl */
-	PPECFG_ACL_SMAC_VAL,
-	PPECFG_ACL_SMAC_NVAL,
-	PPECFG_ACL_SMAC_MASK,
-	PPECFG_ACL_SMAC_RANGE,
+	PPECFG_ACL_SMAC_VAL,		/* SMAC Value */
+	PPECFG_ACL_SMAC_NVAL,		/* SMAC Not Value */
+	PPECFG_ACL_SMAC_MASK,		/* SMAC Mask Value */
 	PPECFG_ACL_SMAC_MAX
 };
 
 /*
- * PPECFG ACL flow add
+ * PPECFG ACL DMAC fields
  */
 enum ppecfg_acl_dmac {
-	/* ppecfg_acl */
-	PPECFG_ACL_DMAC_VAL,
-	PPECFG_ACL_DMAC_NVAL,
-	PPECFG_ACL_DMAC_MASK,
-	PPECFG_ACL_DMAC_RANGE,
+	PPECFG_ACL_DMAC_VAL,		/* DMAC Value */
+	PPECFG_ACL_DMAC_NVAL,           /* DMAC Not Value */
+	PPECFG_ACL_DMAC_MASK,           /* DMAC Mask Value */
 	PPECFG_ACL_DMAC_MAX
 };
 
+/*
+ * PPECFG ACL CVID fields
+ */
 enum ppecfg_acl_cvid {
-	PPECFG_ACL_CVID_TAG,
-	PPECFG_ACL_CVID_MIN,
-	PPECFG_ACL_CVID_MASK,
-	PPECFG_ACL_CVID_RANGE,
+	PPECFG_ACL_CVID_TAGGED,		/* CVID TAG */
+	PPECFG_ACL_CVID_VAL,            /* CVID min Value */
+	PPECFG_ACL_CVID_MASK,           /* CVID Mask Value */
+	PPECFG_ACL_CVID_RANGE,          /* CVID Range Value */
 	PPECFG_ACL_CVID_MAX
 };
 
+/*
+ * PPECFG ACL SVID fields
+ */
 enum ppecfg_acl_svid {
-	PPECFG_ACL_SVID_TAG,
-	PPECFG_ACL_SVID_MIN,
-	PPECFG_ACL_SVID_MASK,
-	PPECFG_ACL_SVID_RANGE,
+	PPECFG_ACL_SVID_MIN,            /* SVID min Value */
+	PPECFG_ACL_SVID_TAG,		/* SVID TAG */
+	PPECFG_ACL_SVID_MASK,           /* SVID Mask Value */
+	PPECFG_ACL_SVID_RANGE,          /* SVID Range Value */
 	PPECFG_ACL_SVID_MAX
 };
 
+/*
+ * PPECFG ACL SIP fields
+ */
 enum ppecfg_acl_sip {
-	PPECFG_ACL_SIP_TYPE,
-	PPECFG_ACL_SIP_VAL,
-	PPECFG_ACL_SIP_NVAL,
-	PPECFG_ACL_SIP_MASK,
+	PPECFG_ACL_SIP_VAL,             /* SIP Value */
+	PPECFG_ACL_SIP_TYPE,		/* SIP TYPE V4/V6 */
+	PPECFG_ACL_SIP_NVAL,            /* SIP Not Value */
+	PPECFG_ACL_SIP_MASK,            /* SIP MASK Value */
 	PPECFG_ACL_SIP_MAX
 };
 
+/*
+ * PPECFG ACL DIP fields
+ */
 enum ppecfg_acl_dip {
-	PPECFG_ACL_DIP_TYPE,
-	PPECFG_ACL_DIP_VAL,
-	PPECFG_ACL_DIP_NVAL,
-	PPECFG_ACL_DIP_MASK,
+	PPECFG_ACL_DIP_TYPE, 		/* DIP TYPE V4/V6 */
+	PPECFG_ACL_DIP_VAL,             /* DIP Value */
+	PPECFG_ACL_DIP_NVAL,            /* DIP Not Value */
+	PPECFG_ACL_DIP_MASK,            /* DIP MASK Value */
 	PPECFG_ACL_DIP_MAX
 };
 
+/*
+ * PPECFG ACL CPCP fields
+ */
 enum ppecfg_acl_cpcp {
-	PPECFG_ACL_CPCP_MIN,
-	PPECFG_ACL_CPCP_MASK,
+	PPECFG_ACL_CPCP_MIN,		/* CPCP Value */
+	PPECFG_ACL_CPCP_MASK,		/* CPCP Mask Value */
 	PPECFG_ACL_CPCP_MAX
 };
 
+/*
+ * PPECFG ACL SPCP Fields
+ */
 enum ppecfg_acl_spcp {
-	PPECFG_ACL_SPCP_MIN,
-	PPECFG_ACL_SPCP_MASK,
+	PPECFG_ACL_SPCP_MIN,		/* SPCP Value */
+	PPECFG_ACL_SPCP_MASK,           /* SPCP Mask Value */
 	PPECFG_ACL_SPCP_MAX
 };
 
+/*
+ * PPECFG ACL PPPoE Fields
+ */
 enum ppecfg_acl_pppoe {
-	PPECFG_ACL_PPPOE_MIN,
-	PPECFG_ACL_PPPOE_MASK,
+	PPECFG_ACL_PPPOE_VAL, 		/* PPPoE Value */
+	PPECFG_ACL_PPPOE_MASK,          /* PPPoE Mask Value */
+	PPECFG_ACL_PPPOE_NVAL, 		/* PPPoE inverse Value */
 	PPECFG_ACL_PPPOE_MAX
 };
 
+/*
+ * PPECFG ACL Ether Type Fields
+ */
 enum ppecfg_acl_ether {
-	PPECFG_ACL_ETHER_MIN,
-	PPECFG_ACL_ETHER_MASK,
+	PPECFG_ACL_ETHER_MIN,		/* EtherType Value */
+	PPECFG_ACL_ETHER_MASK,          /* EtherType Mask Value */
+	PPECFG_ACL_ETHER_NVAL,		/* EtherType inverse Value */
 	PPECFG_ACL_ETHER_MAX
 };
 
+/*
+ * PPECFG ACL TTL fields
+ */
 enum ppecfg_acl_ttl {
-	PPECFG_ACL_TTL_MIN,
-	PPECFG_ACL_TTL_MASK,
+	PPECFG_ACL_TTL_MIN, 		/* TTL Value */
+	PPECFG_ACL_TTL_MASK,            /* TTL Mask Value */
 	PPECFG_ACL_TTL_MAX
 };
 
+/*
+ * PPECFG ACL SPORT
+ */
 enum ppecfg_acl_sport {
-	PPECFG_ACL_SPORT_MASK,
-	PPECFG_ACL_SPORT_MIN,
-	PPECFG_ACL_SPORT_RANGE,
+	PPECFG_ACL_SPORT_RANGE,		/* SPORT Range Value */
+	PPECFG_ACL_SPORT_MASK,          /* SPORT Mask Value */
+	PPECFG_ACL_SPORT_MIN, 		/* SPORT Value */
+	PPECFG_ACL_SPORT_NVAL, 		/* SPORT inverse Value */
 	PPECFG_ACL_SPORT_MAX
 };
 
+/*
+ * PPECFG ACL DPORT
+ */
 enum ppecfg_acl_dport {
-	PPECFG_ACL_DPORT_MIN,
-	PPECFG_ACL_DPORT_MASK,
-	PPECFG_ACL_DPORT_RANGE,
+	PPECFG_ACL_DPORT_RANGE,         /* DPORT Range Value */
+	PPECFG_ACL_DPORT_MASK,          /* DPORT Mask Value */
+	PPECFG_ACL_DPORT_MIN,		/* DPORT Value */
+	PPECFG_ACL_DPORT_NVAL,          /* DPORT inverse Value */
 	PPECFG_ACL_DPORT_MAX
 };
 
+/*
+ * PPECFG ACL DSCP
+ */
 enum ppecfg_acl_dscp {
-	PPECFG_ACL_DSCP_MIN,
-	PPECFG_ACL_DSCP_MASK,
+	PPECFG_ACL_DSCP_MIN,		/* DSCP Value */
+	PPECFG_ACL_DSCP_MASK,           /* DSCP Mask Value */
 	PPECFG_ACL_DSCP_MAX
 };
 
 /*
- * PPECFG ACL flow add
+ * PPECFG ACL Actions
  */
 enum ppecfg_acl_action {
-	/* ppecfg_acl */
-	PPECFG_ACL_ACTION_FWD_CMD,
-	PPECFG_ACL_ACTION_SERVICE_CODE,
-	PPECFG_ACL_ACTION_ENQUEUE_PRI,
-	PPECFG_ACL_ACTION_QID,
-	PPECFG_ACL_ACTION_CTAG_PCP,
-	PPECFG_ACL_ACTION_STAG_PCP,
-	PPECFG_ACL_ACTION_DSCP_TC,
-	PPECFG_ACL_ACTION_CVID,
-	PPECFG_ACL_ACTION_SVID,
-	PPECFG_ACL_ACTION_DEST,
-	PPECFG_ACL_ACTION_REDIR_CORE,
-	PPECFG_ACL_ACTION_POLICER_ID,
-	PPECFG_ACL_ACTION_MIRROR_EN,
+	PPECFG_ACL_ACTION_FWD_CMD, 		/* FWD Command */
+	PPECFG_ACL_ACTION_SERVICE_CODE,		/* Service code */
+	PPECFG_ACL_ACTION_ENQUEUE_PRI,		/* Enqueue Pri */
+	PPECFG_ACL_ACTION_QID,			/* QID Value */
+	PPECFG_ACL_ACTION_CTAG_PCP,		/* CTAG PCP */
+	PPECFG_ACL_ACTION_STAG_PCP,		/* STAG PCP */
+	PPECFG_ACL_ACTION_DSCP_TC,		/* DSCP TC */
+	PPECFG_ACL_ACTION_CVID,			/* CVID Tag */
+	PPECFG_ACL_ACTION_SVID,			/* SVID Tag */
+	PPECFG_ACL_ACTION_DEST,			/* Dest Flag */
+	PPECFG_ACL_ACTION_REDIR_CORE,		/* Redir core */
+	PPECFG_ACL_ACTION_POLICER_ID,		/* Policer ID */
+	PPECFG_ACL_ACTION_MIRROR_EN,		/* Mirror EN */
 	PPECFG_ACL_ACTION_MAX
 };
 
 /*
- * PPECFG ACL flow add
+ * PPECFG ACL Rule add parameters
  */
 enum ppecfg_acl_rule_add {
-	/* ppecfg_acl */
-	PPECFG_ACL_RULE_ADD_RULE_ID,
-	PPECFG_ACL_RULE_ADD_DEV,
-	PPECFG_ACL_RULE_ADD_POST_ROUTE_EN,
-	PPECFG_ACL_RULE_ADD_PRIORITY,
-	PPECFG_ACL_RULE_ADD_OUTER_HEADER,
-	PPECFG_ACL_RULE_ADD_SMAC,
-	PPECFG_ACL_RULE_ADD_DMAC,
-	PPECFG_ACL_RULE_ADD_CVID,
-	PPECFG_ACL_RULE_ADD_SVID,
-	PPECFG_ACL_RULE_ADD_CPCP,
-	PPECFG_ACL_RULE_ADD_SPCP,
-	PPECFG_ACL_RULE_ADD_PPPOE,
-	PPECFG_ACL_RULE_ADD_ETHER,
-	PPECFG_ACL_RULE_ADD_SIP,
-	PPECFG_ACL_RULE_ADD_DIP,
-	PPECFG_ACL_RULE_ADD_SPORT,
-	PPECFG_ACL_RULE_ADD_DPORT,
-	PPECFG_ACL_RULE_ADD_DSCP,
-	PPECFG_ACL_RULE_ADD_TTL,
-	PPECFG_ACL_RULE_ADD_ACTION,
+	PPECFG_ACL_RULE_ADD_RULE_ID,		/* Rule ID */
+	PPECFG_ACL_RULE_ADD_DEV,                /* Source Dev */
+	PPECFG_ACL_RULE_ADD_POST_ROUTE_EN,      /* Post route enable */
+	PPECFG_ACL_RULE_ADD_PRIORITY,           /* Priority */
+	PPECFG_ACL_RULE_ADD_OUTER_HEADER,       /* Outer Header */
+	PPECFG_ACL_RULE_ADD_SMAC,               /* SMAC fields */
+	PPECFG_ACL_RULE_ADD_DMAC,               /* DMAC fields */
+	PPECFG_ACL_RULE_ADD_CVID,               /* CVID fields */
+	PPECFG_ACL_RULE_ADD_SVID,               /* SVID fields */
+	PPECFG_ACL_RULE_ADD_CPCP,               /* CPCP fields */
+	PPECFG_ACL_RULE_ADD_SPCP,               /* SPCP fields */
+	PPECFG_ACL_RULE_ADD_PPPOE,              /* PPPoE fields */
+	PPECFG_ACL_RULE_ADD_ETHER,              /* EtherType fields */
+	PPECFG_ACL_RULE_ADD_SIP,		/* SIP fields */
+	PPECFG_ACL_RULE_ADD_DIP,                /* DIP fields */
+	PPECFG_ACL_RULE_ADD_SPORT,              /* SPORT fields */
+	PPECFG_ACL_RULE_ADD_DPORT,              /* DPORT fields */
+	PPECFG_ACL_RULE_ADD_DSCP,               /* DSCP fields */
+	PPECFG_ACL_RULE_ADD_TTL,                /* TTL fields */
+	PPECFG_ACL_RULE_ADD_ACTION,             /* Action fields */
 	PPECFG_ACL_RULE_ADD_MAX
 };
 
@@ -201,8 +231,7 @@ enum ppecfg_acl_rule_add {
  * PPECFG ACL flow del
  */
 enum ppecfg_acl_rule_del {
-	/* ppecfg_acl */
-	PPECFG_ACL_RULE_DEL_RULE_ID,		/* source IP address */
+	PPECFG_ACL_RULE_DEL_RULE_ID,		/* Rule ID */
 	PPECFG_ACL_RULE_DEL_MAX
 };
 
@@ -211,4 +240,3 @@ int ppecfg_acl_add_rule_id(uint32_t rule_id_external, uint32_t rule_id);
 int ppecfg_acl_del_rule_id(uint32_t rule_id_external);
 
 #endif /* __PPECFG_ACL_H*/
-
