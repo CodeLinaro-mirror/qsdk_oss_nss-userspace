@@ -20,6 +20,47 @@
 #include "nss_ppenl_acl.h"
 
 static struct nss_ppenl_acl_ctx nss_acl_ctx;
+static void nss_ppenl_acl_resp(void *user_ctx, struct nss_ppenl_acl_rule *rule, void *resp_ctx) __attribute__((unused));
+
+/*
+ * ppecfg_acl_resp()
+ *	ppecfg log based on response from netlink
+ */
+static void nss_ppenl_acl_resp(void *user_ctx, struct nss_ppenl_acl_rule *acl_rule, void *resp_ctx)
+{
+	ppe_acl_ret_t ret = 0;
+
+	if (!acl_rule) {
+		return;
+	}
+
+	uint8_t cmd = nss_ppenl_cmn_get_cmd_type(&acl_rule->cm);
+
+	switch (cmd) {
+	case NSS_PPE_ACL_CREATE_RULE_MSG:
+		ret = acl_rule->rule.ret;
+		if (ret != PPE_ACL_RET_SUCCESS) {
+			nss_ppenl_sock_log_error("ACL rule create failed with error: %d\n", ret);
+			return;
+		}
+
+		nss_ppenl_sock_log_info("ACL rule create successful for rule_id %d\n", acl_rule->rule.rule_id);
+		break;
+
+	case NSS_PPE_ACL_DESTROY_RULE_MSG:
+		ret = acl_rule->rule.ret;
+		if (ret != PPE_ACL_RET_SUCCESS) {
+			nss_ppenl_sock_log_error("ACL rule delete failed with error: %d\n", ret);
+			return;
+		}
+
+		nss_ppenl_sock_log_info("ACL rule destroy successful for rule_id %d\n", acl_rule->rule.rule_id);
+		break;
+
+	default:
+		nss_ppenl_sock_log_error("unsupported message cmd type(%d)\n", cmd);
+	}
+}
 
 /*
  * nss_ppenl_acl_sock_cb()
@@ -82,10 +123,8 @@ int nss_ppenl_acl_sock_cb(struct nl_msg *msg, void *arg)
 /*
  * nss_ppenl_acl_sock_open()
  *	this opens the NSS ACL NL socket for usage
- *
- * TODO: Remove event_cb argument as it is now not required
  */
-int nss_ppenl_acl_sock_open(struct nss_ppenl_acl_ctx *ctx, void *user_ctx, nss_ppenl_acl_event_cb_t event_cb)
+int nss_ppenl_acl_sock_open(struct nss_ppenl_acl_ctx *ctx, void *user_ctx)
 {
 	pid_t pid = getpid();
 	int error;
@@ -127,7 +166,7 @@ void nss_ppenl_acl_sock_close(struct nss_ppenl_acl_ctx *ctx)
  * nss_ppenl_acl_sock_send()
  *	register callback and send the ACL message synchronously through the socket
  */
-int nss_ppenl_acl_sock_send(struct nss_ppenl_acl_ctx *ctx, struct nss_ppenl_acl_rule *rule, nss_ppenl_acl_resp_cb_t cb, void *data)
+int nss_ppenl_acl_sock_send(struct nss_ppenl_acl_ctx *ctx, struct nss_ppenl_acl_rule *rule, nss_ppenl_acl_resp_cb_t cb)
 {
 	int32_t family_id = ctx->sock.family_id;
 	struct nss_ppenl_acl_resp *resp;
@@ -146,7 +185,7 @@ int nss_ppenl_acl_sock_send(struct nss_ppenl_acl_ctx *ctx, struct nss_ppenl_acl_
 		resp = nss_ppenl_cmn_get_cb_data(&rule->cm, family_id);
 		assert(resp);
 
-		resp->data = data;
+		resp->data = NULL;
 		resp->cb = cb;
 		has_resp = true;
 	}
@@ -166,13 +205,13 @@ int nss_ppenl_acl_sock_send(struct nss_ppenl_acl_ctx *ctx, struct nss_ppenl_acl_
  * nss_ppenl_acl_rule_del
  * 	Delete ACL rule in PPE
  */
-int nss_ppenl_acl_rule_del(struct nss_ppenl_acl_rule *rule, nss_ppenl_acl_resp_cb_t cb, void *data){
+int nss_ppenl_acl_rule_del(struct nss_ppenl_acl_rule *rule) {
 	int error;
 
 	/*
 	 * open the NSS NL ACL socket
 	 */
-	error = nss_ppenl_acl_sock_open(&nss_acl_ctx, NULL, NULL);
+	error = nss_ppenl_acl_sock_open(&nss_acl_ctx, NULL);
 	if (error < 0) {
 		nss_ppenl_sock_log_error("Failed to open ACL socket; error(%d)\n", error);
 		return error;
@@ -181,7 +220,7 @@ int nss_ppenl_acl_rule_del(struct nss_ppenl_acl_rule *rule, nss_ppenl_acl_resp_c
 	/*
 	 * send message
 	 */
-	error = nss_ppenl_acl_sock_send(&nss_acl_ctx, rule, cb, data);
+	error = nss_ppenl_acl_sock_send(&nss_acl_ctx, rule, nss_ppenl_acl_resp);
 	if (error < 0) {
 		nss_ppenl_sock_log_error("Unable to send message\n");
 		goto done;
@@ -200,13 +239,13 @@ done:
  * nss_ppenl_acl_rule_add()
  * 	Add rule in PPE
  */
-int nss_ppenl_acl_rule_add(struct nss_ppenl_acl_rule *rule, nss_ppenl_acl_resp_cb_t cb, void *data) {
+int nss_ppenl_acl_rule_add(struct nss_ppenl_acl_rule *rule) {
 	int error;
 
 	/*
 	 * open the NSS NL ACL socket
 	 */
-	error = nss_ppenl_acl_sock_open(&nss_acl_ctx, NULL, NULL);
+	error = nss_ppenl_acl_sock_open(&nss_acl_ctx, NULL);
 	if (error < 0) {
 		nss_ppenl_sock_log_error("Failed to open ACL socket; error(%d)\n", error);
 		return error;
@@ -215,7 +254,7 @@ int nss_ppenl_acl_rule_add(struct nss_ppenl_acl_rule *rule, nss_ppenl_acl_resp_c
 	/*
 	 * send message
 	 */
-	error = nss_ppenl_acl_sock_send(&nss_acl_ctx, rule, cb, data);
+	error = nss_ppenl_acl_sock_send(&nss_acl_ctx, rule, nss_ppenl_acl_resp);
 	if (error < 0) {
 		nss_ppenl_sock_log_error("Unable to send message\n");
 		goto done;

@@ -26,7 +26,6 @@
 
 static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_in *match);
 static int ppecfg_acl_rule_del(struct ppecfg_param *param, struct ppecfg_param_in *match);
-static void ppecfg_acl_resp(void *user_ctx, struct nss_ppenl_acl_rule *rule, void *resp_ctx) __attribute__((unused));
 
 /*
  * Rule add parameters
@@ -50,8 +49,8 @@ static struct ppecfg_param dmac_params[PPECFG_ACL_DMAC_MAX] = {
  * rule add parameters
  */
 static struct ppecfg_param cvid_params[PPECFG_ACL_CVID_MAX] = {
-	PPECFG_PARAM_INIT(PPECFG_ACL_CVID_TAG, "ctag="),
-	PPECFG_PARAM_INIT(PPECFG_ACL_CVID_MIN, "cvid_min="),
+	PPECFG_PARAM_INIT(PPECFG_ACL_CVID_TAGGED, "ctag="),
+	PPECFG_PARAM_INIT(PPECFG_ACL_CVID_VAL, "cvid="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_CVID_MASK, "cvid_mask="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_CVID_RANGE, "cvid_range_en="),
 };
@@ -86,8 +85,9 @@ static struct ppecfg_param spcp_params[PPECFG_ACL_SPCP_MAX] = {
  * rule add parameters
  */
 static struct ppecfg_param pppoe_params[PPECFG_ACL_PPPOE_MAX] = {
-	PPECFG_PARAM_INIT(PPECFG_ACL_PPPOE_MIN, "pppoe_sess="),
+	PPECFG_PARAM_INIT(PPECFG_ACL_PPPOE_VAL, "pppoe_sess="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_PPPOE_MASK, "pppoe_sess_mask="),
+	PPECFG_PARAM_INIT(PPECFG_ACL_PPPOE_NVAL, "pppoe_sess!="),
 };
 
 /*
@@ -96,6 +96,7 @@ static struct ppecfg_param pppoe_params[PPECFG_ACL_PPPOE_MAX] = {
 static struct ppecfg_param ether_params[PPECFG_ACL_ETHER_MAX] = {
 	PPECFG_PARAM_INIT(PPECFG_ACL_ETHER_MIN, "l4_proto="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_ETHER_MASK, "l4_proto_mask="),
+	PPECFG_PARAM_INIT(PPECFG_ACL_ETHER_NVAL, "l4_proto!="),
 };
 
 /*
@@ -133,6 +134,7 @@ static struct ppecfg_param sport_params[PPECFG_ACL_SPORT_MAX] = {
 	PPECFG_PARAM_INIT(PPECFG_ACL_SPORT_MIN, "sport_min="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_SPORT_MASK, "sport_max="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_SPORT_RANGE, "sport_range_en="),
+	PPECFG_PARAM_INIT(PPECFG_ACL_SPORT_NVAL, "sport_min!="),
 };
 
 /*
@@ -142,6 +144,7 @@ static struct ppecfg_param dport_params[PPECFG_ACL_DPORT_MAX] = {
 	PPECFG_PARAM_INIT(PPECFG_ACL_DPORT_MIN, "dport_min="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_DPORT_MASK, "dport_max="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_DPORT_RANGE, "dport_range_en="),
+	PPECFG_PARAM_INIT(PPECFG_ACL_DPORT_NVAL, "dport_min!="),
 };
 
 /*
@@ -193,8 +196,8 @@ static struct ppecfg_param rule_add_params[PPECFG_ACL_RULE_ADD_MAX] = {
 	PPECFG_PARAMARR_INIT(PPECFG_ACL_RULE_ADD_SPORT, "sport", sport_params, ppecfg_param_iter_tbl),
 	PPECFG_PARAMARR_INIT(PPECFG_ACL_RULE_ADD_DPORT, "dport", dport_params, ppecfg_param_iter_tbl),
 	PPECFG_PARAMARR_INIT(PPECFG_ACL_RULE_ADD_DSCP, "dscp_tc", dscp_params, ppecfg_param_iter_tbl),
-	PPECFG_PARAMARR_INIT(PPECFG_ACL_RULE_ADD_ACTION, "action", action_params, ppecfg_param_iter_tbl),
 	PPECFG_PARAMARR_INIT(PPECFG_ACL_RULE_ADD_TTL, "ttl_hop", ttl_params, ppecfg_param_iter_tbl),
+	PPECFG_PARAMARR_INIT(PPECFG_ACL_RULE_ADD_ACTION, "action", action_params, ppecfg_param_iter_tbl),
 };
 
 /*
@@ -213,57 +216,17 @@ struct ppecfg_param ppecfg_acl_params[PPECFG_ACL_CMD_MAX] = {
 };
 
 /*
- * ppecfg_acl_resp()
- * 	ppecfg log based on response from netlink
- */
-static void ppecfg_acl_resp(void *user_ctx, struct nss_ppenl_acl_rule *acl_rule, void *resp_ctx)
-{
-	ppe_acl_ret_t ret = 0;
-
-	if (!acl_rule) {
-		return;
-	}
-
-	uint8_t cmd = nss_ppenl_cmn_get_cmd_type(&acl_rule->cm);
-
-	switch (cmd) {
-	case NSS_PPE_ACL_CREATE_RULE_MSG:
-		ret = acl_rule->rule.ret;
-		if (ret != PPE_ACL_RET_SUCCESS) {
-			ppecfg_log_info("ACL rule create failed with error: %d\n", ret);
-			return;
-		}
-
-		ppecfg_log_info("ACL rule create successful for rule_id %d\n", acl_rule->rule.rule_id);
-		break;
-
-	case NSS_PPE_ACL_DESTROY_RULE_MSG:
-		ret = acl_rule->rule.ret;
-		if (ret != PPE_ACL_RET_SUCCESS) {
-			ppecfg_log_info("ACL rule delete failed with error: %d\n", ret);
-			return;
-		}
-
-		ppecfg_log_info("ACL rule destroy successful for rule_id %d\n", acl_rule->rule.rule_id);
-		break;
-
-	default:
-		ppecfg_log_error("unsupported message cmd type(%d)\n", cmd);
-	}
-}
-
-/*
  * ppecfg_acl_rule_add()
  * 	handle ACL rule add
  */
 static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_in *match)
 {
 	struct nss_ppenl_acl_rule nl_msg = {{0}};
+	struct ppecfg_param *sub_params;
 	int error;
 	char *data;
 	uint8_t is_v6;
 	uint8_t mirror_en;
-	uint16_t port;
 	bool bool_val = false;
 
 	if (!param || !match) {
@@ -283,679 +246,814 @@ static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_i
 
 	nss_ppenl_acl_init_rule(&nl_msg, NSS_PPE_ACL_CREATE_RULE_MSG);
 
-	/*
-	 * TODO: Avoid iterating through entire array and instead use a hint from
-	 * tokenizer to inspect only the matched keywords.
-	 */
-
-	/*
-	 * extract the rule_id
-	 */
-	struct ppecfg_param *sub_params = &param->sub_params[PPECFG_ACL_RULE_ADD_RULE_ID];
-	error = ppecfg_param_get_int(sub_params->data, sizeof(uint32_t), &nl_msg.rule.rule_id);
-	if (error < 0) {
-		ppecfg_log_arg_error(sub_params);
-		goto done;
-	}
-
-	/*
-	 * Extract the dev_name parameter
-	 */
-	sub_params = &param->sub_params[PPECFG_ACL_RULE_ADD_DEV];
-	error = ppecfg_param_get_str(sub_params->data, sizeof(nl_msg.rule.src.dev_name), &nl_msg.rule.src.dev_name);
-	if (error < 0) {
-		ppecfg_log_data_error(sub_params);
-		goto done;
-	} else if (strcmp("flow" , nl_msg.rule.src.dev_name) == 0) {
-		nl_msg.rule.stype = PPE_ACL_RULE_SRC_TYPE_FLOW;
-	} else {
-		nl_msg.rule.stype = PPE_ACL_RULE_SRC_TYPE_DEV;
-	}
-
-	/*
-	 * Extract the POST ROUTE EN parameter
-	 */
-	sub_params = &param->sub_params[PPECFG_ACL_RULE_ADD_POST_ROUTE_EN];
-	error = ppecfg_param_get_bool(sub_params->data, &bool_val);
-	if (sub_params->data && error < 0) {
-		ppecfg_log_data_error(sub_params);
-		goto done;
-	} else if (sub_params->data && !error) {
-		if (bool_val == true) {
-			nl_msg.rule.cmn.cmn_flags |= PPE_ACL_RULE_CMN_FLAG_POST_RT_EN;
+	for (int index = PPECFG_ACL_RULE_ADD_RULE_ID; index <= PPECFG_ACL_RULE_ADD_ACTION; index++) {
+		sub_params = &param->sub_params[index];
+		if (sub_params->valid == 0) {
+			continue;
 		}
 
-		bool_val = false;
-	}
+		switch (index) {
+		case PPECFG_ACL_RULE_ADD_RULE_ID:
+			error = ppecfg_param_get_int(sub_params->data, sizeof(uint32_t), &nl_msg.rule.rule_id);
+			if (error < 0) {
+				ppecfg_log_arg_error(sub_params);
+				goto done;
+			}
 
-	/*
-	 * Extract the Outer Header parameter
-	 */
-	sub_params = &param->sub_params[PPECFG_ACL_RULE_ADD_OUTER_HEADER];
-	error = ppecfg_param_get_bool(sub_params->data, &bool_val);
-	if (sub_params->data && error < 0) {
-		ppecfg_log_data_error(sub_params);
-		goto done;
-	} else if (sub_params->data && !error) {
-		if (bool_val == true) {
-			nl_msg.rule.cmn.cmn_flags |= PPE_ACL_RULE_CMN_FLAG_OUTER_HDR_MATCH;
-		}
+			break;
 
-		bool_val = false;
-	}
+		case PPECFG_ACL_RULE_ADD_DEV:
+			error = ppecfg_param_get_str(sub_params->data, sizeof(nl_msg.rule.src.dev_name), &nl_msg.rule.src.dev_name);
+			if (error < 0) {
+				ppecfg_log_data_error(sub_params);
+				goto done;
+			}
 
+			if (strcmp("flow" , nl_msg.rule.src.dev_name) == 0) {
+				nl_msg.rule.stype = PPE_ACL_RULE_SRC_TYPE_FLOW;
+			} else {
+				nl_msg.rule.stype = PPE_ACL_RULE_SRC_TYPE_DEV;
+			}
 
-	/*
-	 * Extract the priority parameter
-	 */
-	sub_params = &param->sub_params[PPECFG_ACL_RULE_ADD_PRIORITY];
-	error = ppecfg_param_get_int(sub_params->data, sizeof(uint16_t), &nl_msg.rule.cmn.pri);
-	if (sub_params->data && error < 0) {
-		ppecfg_log_data_error(sub_params);
-		goto done;
-	} else if (sub_params->data && !error) {
-		nl_msg.rule.cmn.cmn_flags |= PPE_ACL_RULE_CMN_FLAG_PRI_EN;
-	}
+			break;
 
-	/*
-	 * Extract PPECFG_ACL_RULE_ADD_SMAC
-	 */
-	sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_SMAC].sub_params;
+		case PPECFG_ACL_RULE_ADD_POST_ROUTE_EN:
+			error = ppecfg_param_get_bool(sub_params->data, &bool_val);
+			if (error < 0) {
+				ppecfg_log_data_error(sub_params);
+				goto done;
+			}
 
-	data = sub_params[PPECFG_ACL_SMAC_VAL].data;
-	error = ppecfg_param_verify_mac(data, nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SMAC].rule.smac.mac);
-	if (data && !error) {
-		ppecfg_log_data_error(sub_params);
-		goto done;
-	} else if (data && error) {
-		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_SMAC_VALID;
-	}
+			if (bool_val == true) {
+				nl_msg.rule.cmn.cmn_flags |= PPE_ACL_RULE_CMN_FLAG_POST_RT_EN;
+			}
 
-	data = sub_params[PPECFG_ACL_SMAC_NVAL].data;
-	error = ppecfg_param_verify_mac(data, nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SMAC].rule.smac.mac);
-	if (data && !error) {
-		ppecfg_log_data_error(sub_params);
-		goto done;
-	} else if (data && error) {
-		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_SMAC_VALID;
-		nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SMAC].rule_flags |= PPE_ACL_RULE_GEN_FLAG_INVERSE_EN;
-	}
+			bool_val = false;
+			break;
 
-	data = sub_params[PPECFG_ACL_SMAC_MASK].data;
-	error = ppecfg_param_verify_mac(data, nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SMAC].rule.smac.mac_mask);
-	if (data && !error) {
-		ppecfg_log_data_error(sub_params);
-		goto done;
-	} else if (data && error) {
-		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_SMAC_VALID;
-		nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SMAC].rule_flags |= PPE_ACL_RULE_FLAG_MAC_MASK;
-	}
+		case PPECFG_ACL_RULE_ADD_OUTER_HEADER:
+			error = ppecfg_param_get_bool(sub_params->data, &bool_val);
+			if (error < 0) {
+				ppecfg_log_data_error(sub_params);
+				goto done;
+			}
 
-	/*
-	 * Extract PPECFG_ACL_RULE_ADD_DMAC
-	 */
-	sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_DMAC].sub_params;
+			if (bool_val == true) {
+				nl_msg.rule.cmn.cmn_flags |= PPE_ACL_RULE_CMN_FLAG_OUTER_HDR_MATCH;
+			}
 
-	data = sub_params[PPECFG_ACL_DMAC_VAL].data;
-	error = ppecfg_param_verify_mac(data, nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DMAC].rule.dmac.mac);
-	if (data && !error) {
-		ppecfg_log_data_error(sub_params);
-		goto done;
-	} else if (data && error){
-		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_DMAC_VALID;
-	}
+			bool_val = false;
+			break;
 
-	data = sub_params[PPECFG_ACL_DMAC_NVAL].data;
-	error = ppecfg_param_verify_mac(data, nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DMAC].rule.dmac.mac);
-	if (data && !error) {
-		ppecfg_log_data_error(sub_params);
-		goto done;
-	} else if (data && error) {
-		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_DMAC_VALID;
-		nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DMAC].rule_flags |= PPE_ACL_RULE_GEN_FLAG_INVERSE_EN;
-	}
+		case PPECFG_ACL_RULE_ADD_PRIORITY:
+			error = ppecfg_param_get_int(sub_params->data, sizeof(uint16_t), &nl_msg.rule.cmn.pri);
+			if (error < 0) {
+				ppecfg_log_data_error(sub_params);
+				goto done;
+			}
 
-	data = sub_params[PPECFG_ACL_DMAC_MASK].data;
-	error = ppecfg_param_verify_mac(data, nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DMAC].rule.dmac.mac_mask);
-	if (data && !error) {
-		ppecfg_log_data_error(sub_params);
-		goto done;
-	} else if (data && error){
-		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_DMAC_VALID;
-		nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DMAC].rule_flags |= PPE_ACL_RULE_FLAG_MAC_MASK;
-	}
+			nl_msg.rule.cmn.cmn_flags |= PPE_ACL_RULE_CMN_FLAG_PRI_EN;
+			break;
 
-	/*
-	 * Extract PPECFG_ACL_RULE_ADD_CVID
-	 */
-	sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_CVID].sub_params;
+		case PPECFG_ACL_RULE_ADD_SMAC:
+			sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_SMAC].sub_params;
+			nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_SMAC_VALID;
 
-	data = sub_params[PPECFG_ACL_CVID_TAG].data;
-	error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule.cvid.tag_fmt);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_CVID_VALID;
-	}
+			data = sub_params[PPECFG_ACL_SMAC_VAL].data;
+			error = ppecfg_param_verify_mac(data, nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SMAC].rule.smac.mac);
+			if (!error && !(sub_params[PPECFG_ACL_SMAC_NVAL].data)) {
+				ppecfg_log_data_error(sub_params);
+				goto done;
+			}
 
-	data = sub_params[PPECFG_ACL_CVID_MIN].data;
-	error = ppecfg_param_get_int(data, sizeof(uint16_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule.cvid.vid_min);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_CVID_VALID;
-	}
+			data = sub_params[PPECFG_ACL_SMAC_NVAL].data;
+			if (data) {
+				error = ppecfg_param_verify_mac(data, nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SMAC].rule.smac.mac);
+				if (!error) {
+					ppecfg_log_data_error(sub_params);
+					goto done;
+				}
 
-	data = sub_params[PPECFG_ACL_CVID_MASK].data;
-	error = ppecfg_param_get_int(data, sizeof(uint16_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule.cvid.vid_mask_max);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_CVID_VALID;
-		nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule_flags |= PPE_ACL_RULE_FLAG_VID_MASK;
-	}
+				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SMAC].rule_flags |= PPE_ACL_RULE_GEN_FLAG_INVERSE_EN;
+			}
 
-	data = sub_params[PPECFG_ACL_CVID_RANGE].data;
-	error = ppecfg_param_get_bool(sub_params->data, &bool_val);
-	if (sub_params->data && error < 0) {
-		ppecfg_log_data_error(sub_params);
-		goto done;
-	} else if (sub_params->data && !error) {
-		if (bool_val == true) {
-			nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule_flags |= PPE_ACL_RULE_FLAG_VID_RANGE;
-			nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule_flags &= ~PPE_ACL_RULE_FLAG_VID_MASK;
-		}
+			data = sub_params[PPECFG_ACL_SMAC_MASK].data;
+			if (data) {
+				error = ppecfg_param_verify_mac(data, nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SMAC].rule.smac.mac_mask);
+				if (!error) {
+					ppecfg_log_data_error(sub_params);
+					goto done;
+				}
 
-		bool_val = false;
-	}
+				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SMAC].rule_flags |= PPE_ACL_RULE_FLAG_MAC_MASK;
+			}
 
-	/*
-	 * Extract PPECFG_ACL_RULE_ADD_SVID
-	 */
-	sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_SVID].sub_params;
+			break;
 
-	data = sub_params[PPECFG_ACL_SVID_TAG].data;
-	error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule.svid.tag_fmt);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_SVID_VALID;
-	}
+	        case PPECFG_ACL_RULE_ADD_DMAC:
+			sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_DMAC].sub_params;
+			nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_DMAC_VALID;
 
-	data = sub_params[PPECFG_ACL_SVID_MIN].data;
-	error = ppecfg_param_get_int(data, sizeof(uint16_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule.svid.vid_min);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_SVID_VALID;
-	}
+			data = sub_params[PPECFG_ACL_DMAC_VAL].data;
+			error = ppecfg_param_verify_mac(data, nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DMAC].rule.dmac.mac);
+			if (!error && !(sub_params[PPECFG_ACL_DMAC_NVAL].data)) {
+				ppecfg_log_data_error(sub_params);
+				goto done;
+			}
 
-	data = sub_params[PPECFG_ACL_SVID_MASK].data;
-	error = ppecfg_param_get_int(data, sizeof(uint16_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule.svid.vid_mask_max);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_SVID_VALID;
-		nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule_flags |= PPE_ACL_RULE_FLAG_VID_MASK;
-	}
+			data = sub_params[PPECFG_ACL_DMAC_NVAL].data;
+			if (data) {
+				error = ppecfg_param_verify_mac(data, nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DMAC].rule.dmac.mac);
+				if (!error) {
+					ppecfg_log_data_error(sub_params);
+					goto done;
+				}
 
-	data = sub_params[PPECFG_ACL_SVID_RANGE].data;
-	error = ppecfg_param_get_bool(sub_params->data, &bool_val);
-	if (sub_params->data && error < 0) {
-		ppecfg_log_data_error(sub_params);
-		goto done;
-	} else if (sub_params->data && !error) {
-		if (bool_val == true) {
-			nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule_flags |= PPE_ACL_RULE_FLAG_SVID_RANGE;
-			nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule_flags &= ~PPE_ACL_RULE_FLAG_VID_MASK;
-		}
+				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DMAC].rule_flags |= PPE_ACL_RULE_GEN_FLAG_INVERSE_EN;
+			}
 
-		bool_val = false;
-	}
+			data = sub_params[PPECFG_ACL_DMAC_MASK].data;
+			if (data) {
+				error = ppecfg_param_verify_mac(data, nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DMAC].rule.dmac.mac_mask);
+				if (!error) {
+					ppecfg_log_data_error(sub_params);
+					goto done;
+				}
 
-	/*
-	 * Extract PPECFG_ACL_RULE_ADD_CPCP
-	 */
-	sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_CPCP].sub_params;
+				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DMAC].rule_flags |= PPE_ACL_RULE_FLAG_MAC_MASK;
+			}
+			break;
 
-	data = sub_params[PPECFG_ACL_CPCP_MIN].data;
-	error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_CPCP].rule.cpcp.pcp);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.valid_flags = PPE_ACL_RULE_MATCH_TYPE_CPCP_VALID;
-	}
+	        case PPECFG_ACL_RULE_ADD_CVID:
+			sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_CVID].sub_params;
+			nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_CVID_VALID;
 
-	data = sub_params[PPECFG_ACL_CPCP_MASK].data;
-	error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_CPCP].rule.cpcp.pcp_mask);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.valid_flags = PPE_ACL_RULE_MATCH_TYPE_CPCP_VALID;
-	}
+			data = sub_params[PPECFG_ACL_CVID_VAL].data;
+			error = ppecfg_param_get_int(data, sizeof(uint16_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule.cvid.vid_min);
+			if (error) {
+				goto print_error;
+			}
 
-	/*
-	 * Extract PPECFG_ACL_RULE_ADD_SPCP
-	 */
-	sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_SPCP].sub_params;
+			data = sub_params[PPECFG_ACL_CVID_TAGGED].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule.cvid.tag_fmt);
+				if (error) {
+					goto print_error;
+				}
+			}
 
-	data = sub_params[PPECFG_ACL_SPCP_MIN].data;
-	error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SPCP].rule.spcp.pcp);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_SPCP_VALID;
-	}
+			data = sub_params[PPECFG_ACL_CVID_MASK].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint16_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule.cvid.vid_mask_max);
+				if (error) {
+					goto print_error;
+				}
 
-	data = sub_params[PPECFG_ACL_SPCP_MASK].data;
-	error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SPCP].rule.spcp.pcp_mask);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_SPCP_VALID;
-	}
+				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule_flags |= PPE_ACL_RULE_FLAG_VID_MASK;
+			}
 
-	/*
-	 * Extract PPECFG_ACL_RULE_ADD_PPPOE
-	 */
-	sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_PPPOE].sub_params;
+			data = sub_params[PPECFG_ACL_CVID_RANGE].data;
+			if (data) {
+				error = ppecfg_param_get_bool(sub_params->data, &bool_val);
+				if (error < 0) {
+					ppecfg_log_data_error(sub_params);
+					goto done;
+				}
 
-	data = sub_params[PPECFG_ACL_PPPOE_MIN].data;
-	error = ppecfg_param_get_int(data, sizeof(uint16_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_PPPOE_SESS].rule.pppoe_sess.pppoe_session_id);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_PPPOE_SESS_VALID;
-	}
+				if (!(nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule_flags & PPE_ACL_RULE_FLAG_VID_MASK)) {
+					goto print_error;
+				}
 
-	data = sub_params[PPECFG_ACL_PPPOE_MASK].data;
-	error = ppecfg_param_get_int(data, sizeof(uint16_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_PPPOE_SESS].rule.pppoe_sess.pppoe_session_id_mask);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_PPPOE_SESS_VALID;
-		nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_PPPOE_SESS].rule_flags |= PPE_ACL_RULE_FLAG_PPPOE_MASK;
-	}
+				if (bool_val == true) {
+					nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule_flags |= PPE_ACL_RULE_FLAG_VID_RANGE;
+				}
+			}
 
-	/*
-	 * Extract PPECFG_ACL_RULE_ADD_ETHER
-	 */
-	sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_ETHER].sub_params;
+			bool_val = false;
+			break;
 
-	data = sub_params[PPECFG_ACL_ETHER_MIN].data;
-	error = ppecfg_param_get_int(data, sizeof(uint16_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_ETHER_TYPE].rule.ether_type.l2_proto);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_ETHER_TYPE_VALID;
-	}
+		case PPECFG_ACL_RULE_ADD_SVID:
+			sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_SVID].sub_params;
+			nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_SVID_VALID;
 
-	data = sub_params[PPECFG_ACL_ETHER_MASK].data;
-	error = ppecfg_param_get_int(data, sizeof(uint16_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_ETHER_TYPE].rule.ether_type.l2_proto_mask);
-	if (data && error) {
-		goto print_error;
-	}
+			data = sub_params[PPECFG_ACL_SVID_MIN].data;
+			error = ppecfg_param_get_int(data, sizeof(uint16_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule.svid.vid_min);
+			if (error) {
+				goto print_error;
+			}
 
-	/*
-	 * Extract PPECFG_ACL_RULE_ADD_SPORT
-	 */
-	sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_SPORT].sub_params;
+			data = sub_params[PPECFG_ACL_SVID_TAG].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule.svid.tag_fmt);
+				if (error) {
+					goto print_error;
+				}
+			}
 
-	data = sub_params[PPECFG_ACL_SPORT_MIN].data;
-	error = ppecfg_param_get_int(data, sizeof(uint16_t), &port);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_SPORT_VALID;
-		nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SPORT].rule.sport.l4_port_min = ntohs(port);
-	}
+			data = sub_params[PPECFG_ACL_SVID_MASK].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint16_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule.svid.vid_mask_max);
+				if (error) {
+					goto print_error;
+				}
 
-	data = sub_params[PPECFG_ACL_SPORT_MASK].data;
-	error = ppecfg_param_get_int(data, sizeof(uint16_t), &port);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_SPORT_VALID;
-		nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SPORT].rule_flags |= PPE_ACL_RULE_FLAG_SPORT_MASK;
-		nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SPORT].rule.sport.l4_port_max_mask = ntohs(port);
-	}
+				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule_flags |= PPE_ACL_RULE_FLAG_VID_MASK;
+			}
 
-	data = sub_params[PPECFG_ACL_SPORT_RANGE].data;
-	error = ppecfg_param_get_bool(sub_params->data, &bool_val);
-	if (sub_params->data && error < 0) {
-		ppecfg_log_data_error(sub_params);
-		goto done;
-	} else if (sub_params->data && !error) {
-		if (bool_val == true) {
-			nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SPORT].rule_flags |= PPE_ACL_RULE_FLAG_SPORT_RANGE;
-			nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SPORT].rule_flags &= ~PPE_ACL_RULE_FLAG_SPORT_MASK;
-		}
+			data = sub_params[PPECFG_ACL_SVID_RANGE].data;
+			if (data) {
+				error = ppecfg_param_get_bool(sub_params->data, &bool_val);
+				if (error < 0) {
+					ppecfg_log_data_error(sub_params);
+					goto done;
+				}
 
-		bool_val = false;
-	}
+				if (!(nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule_flags & PPE_ACL_RULE_FLAG_VID_MASK)) {
+					goto print_error;
+				}
 
-	/*
-	 * Extract PPECFG_ACL_RULE_ADD_DPORT
-	 */
-	sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_DPORT].sub_params;
+				if (bool_val == true) {
+					nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule_flags |= PPE_ACL_RULE_FLAG_SVID_RANGE;
+				}
 
-	data = sub_params[PPECFG_ACL_DPORT_MIN].data;
-	error = ppecfg_param_get_int(data, sizeof(uint16_t), &port);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_DPORT_VALID;
-		nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DPORT].rule.dport.l4_port_min = ntohs(port);
-	}
+				bool_val = false;
+			}
+			break;
 
-	data = sub_params[PPECFG_ACL_DPORT_MASK].data;
-	error = ppecfg_param_get_int(data, sizeof(uint16_t), &port);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_DPORT_VALID;
-		nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DPORT].rule_flags |= PPE_ACL_RULE_FLAG_DPORT_MASK;
-		nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DPORT].rule.dport.l4_port_max_mask = ntohs(port);
-	}
+		case PPECFG_ACL_RULE_ADD_CPCP:
+			sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_CPCP].sub_params;
+			nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_CPCP_VALID;
 
-	data = sub_params[PPECFG_ACL_DPORT_RANGE].data;
-	error = ppecfg_param_get_bool(sub_params->data, &bool_val);
-	if (sub_params->data && error < 0) {
-		ppecfg_log_data_error(sub_params);
-		goto done;
-	} else if (sub_params->data && !error) {
-		if (bool_val == true) {
-			nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DPORT].rule_flags |= PPE_ACL_RULE_FLAG_DPORT_RANGE;
-			nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DPORT].rule_flags &= ~PPE_ACL_RULE_FLAG_DPORT_MASK;
-		}
+			data = sub_params[PPECFG_ACL_CPCP_MIN].data;
+			error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_CPCP].rule.cpcp.pcp);
+			if (error) {
+				goto print_error;
+			}
 
-		bool_val = false;
-	}
+			data = sub_params[PPECFG_ACL_CPCP_MASK].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_CPCP].rule.cpcp.pcp_mask);
+				if (error) {
+					goto print_error;
+				}
 
-	/*
-	 * Extract PPECFG_ACL_RULE_ADD_DSCP
-	 */
-	sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_DSCP].sub_params;
+				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_CPCP].rule_flags |= PPE_ACL_RULE_FLAG_PCP_MASK;
+			}
+			break;
 
-	data = sub_params[PPECFG_ACL_DSCP_MIN].data;
-	error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DSCP_TC].rule.dscp_tc.l3_dscp_tc);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error){
-		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_DSCP_TC_VALID;
-	}
+		case PPECFG_ACL_RULE_ADD_SPCP:
+			sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_SPCP].sub_params;
+			nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_SPCP_VALID;
 
-	data = sub_params[PPECFG_ACL_DSCP_MASK].data;
-	error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DSCP_TC].rule.dscp_tc.l3_dscp_tc_mask);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error){
-		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_DSCP_TC_VALID;
-		nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DSCP_TC].rule_flags |= PPE_ACL_RULE_FLAG_DSCP_TC_MASK;
-	}
+			data = sub_params[PPECFG_ACL_SPCP_MIN].data;
+			error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SPCP].rule.spcp.pcp);
+			if (error) {
+				goto print_error;
+			}
 
-	/*
-	 * Extract PPECFG_ACL_RULE_ADD_TTL
-	 */
-	sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_TTL].sub_params;
+			data = sub_params[PPECFG_ACL_SPCP_MASK].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SPCP].rule.spcp.pcp_mask);
+				if (error) {
+					goto print_error;
+				}
 
-	data = sub_params[PPECFG_ACL_TTL_MIN].data;
-	error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_TTL_HOPLIMIT].rule.ttl_hop.hop_limit);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_TTL_HOPLIMIT_VALID;
-	}
+				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SPCP].rule_flags |= PPE_ACL_RULE_FLAG_PCP_MASK;
+			}
+			break;
 
-	data = sub_params[PPECFG_ACL_TTL_MASK].data;
-	error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_TTL_HOPLIMIT].rule.ttl_hop.hop_limit_mask);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_TTL_HOPLIMIT_VALID;
-		nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_TTL_HOPLIMIT].rule_flags |= PPE_ACL_RULE_FLAG_TTL_HOPLIMIT_MASK;
-	}
+		case PPECFG_ACL_RULE_ADD_PPPOE:
+			sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_PPPOE].sub_params;
+			nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_PPPOE_SESS_VALID;
 
-	/*
-	 * Extract PPECFG_ACL_RULE_ADD_SIP
-	 */
-	sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_SIP].sub_params;
+			data = sub_params[PPECFG_ACL_PPPOE_VAL].data;
+			error = ppecfg_param_get_int(data, sizeof(uint16_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_PPPOE_SESS].rule.pppoe_sess.pppoe_session_id);
+			if (error && !(sub_params[PPECFG_ACL_PPPOE_NVAL].data)) {
+				goto print_error;
+			}
 
-	data = sub_params[PPECFG_ACL_SIP_TYPE].data;
-	error = ppecfg_param_get_int(data, sizeof(uint8_t), &is_v6);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		if (is_v6 == 1) {
-			nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule.sip.ip_type = PPE_ACL_IP_TYPE_V6;
-			ppecfg_log_trace("Ipv6 address : %pI6h\n", &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule.sip.ip);
-		} else if (is_v6 == 0){
-			nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule.sip.ip_type = PPE_ACL_IP_TYPE_V4;
-			ppecfg_log_trace("Ipv4 address :%pI4h\n", &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule.sip.ip);
-		} else {
-			ppecfg_log_trace("wrong ip address type \n");
-			goto print_error;
-		}
-	}
+			data = sub_params[PPECFG_ACL_PPPOE_MASK].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint16_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_PPPOE_SESS].rule.pppoe_sess.pppoe_session_id_mask);
+				if (error) {
+					goto print_error;
+				}
 
-	if (is_v6 == 1) {
-		data = sub_params[PPECFG_ACL_SIP_VAL].data;
-		error = ppecfg_param_get_ipaddr(data, sizeof(nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule.sip.ip),
-				&nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule.sip.ip);
-		if (data && error) {
-			goto print_error;
-		} else if (data && !error) {
+				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_PPPOE_SESS].rule_flags |= PPE_ACL_RULE_FLAG_PPPOE_MASK;
+			}
+
+			data = sub_params[PPECFG_ACL_PPPOE_NVAL].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint16_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_PPPOE_SESS].rule.pppoe_sess.pppoe_session_id);
+				if (error) {
+					goto print_error;
+				}
+
+				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_PPPOE_SESS].rule_flags |= PPE_ACL_RULE_GEN_FLAG_INVERSE_EN;
+			}
+
+			break;
+
+		case PPECFG_ACL_RULE_ADD_ETHER:
+			sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_ETHER].sub_params;
+			nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_ETHER_TYPE_VALID;
+
+			data = sub_params[PPECFG_ACL_ETHER_MIN].data;
+			error = ppecfg_param_get_int(data, sizeof(uint16_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_ETHER_TYPE].rule.ether_type.l2_proto);
+			if (error && !(sub_params[PPECFG_ACL_ETHER_NVAL].data)) {
+				goto print_error;
+			}
+
+			data = sub_params[PPECFG_ACL_ETHER_MASK].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint16_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_ETHER_TYPE].rule.ether_type.l2_proto_mask);
+				if (error) {
+					goto print_error;
+				}
+
+				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_ETHER_TYPE].rule_flags |= PPE_ACL_RULE_FLAG_ETHTYPE_MASK;
+			}
+
+			data = sub_params[PPECFG_ACL_ETHER_NVAL].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint16_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_ETHER_TYPE].rule.ether_type.l2_proto);
+				if (error) {
+					goto print_error;
+				}
+
+				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_ETHER_TYPE].rule_flags |= PPE_ACL_RULE_GEN_FLAG_INVERSE_EN;
+			}
+
+			break;
+
+		case PPECFG_ACL_RULE_ADD_SIP:
+			sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_SIP].sub_params;
 			nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_SIP_VALID;
-		}
 
-		data = sub_params[PPECFG_ACL_SIP_MASK].data;
-		error = ppecfg_param_get_ipaddr(data, sizeof(nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule.sip.ip_mask),
-				&nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule.sip.ip_mask);
-		if (data && error) {
-			goto print_error;
-		} else if (data && !error) {
-			nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_SIP_VALID;
-			nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule_flags |= PPE_ACL_RULE_FLAG_SIP_MASK;
-		}
-	} else if (is_v6 == 0) {
-		data = sub_params[PPECFG_ACL_SIP_VAL].data;
-		error = ppecfg_param_get_ipaddr(data, sizeof(uint32_t),
-				&nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule.sip.ip[0]);
-		if (data && error) {
-			goto print_error;
-		} else if (data && !error) {
-			nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_SIP_VALID;
-		}
+			data = sub_params[PPECFG_ACL_SIP_TYPE].data;
+			error = ppecfg_param_get_int(data, sizeof(uint8_t), &is_v6);
+			if (error) {
+				goto print_error;
+			}
 
-		data = sub_params[PPECFG_ACL_SIP_MASK].data;
-		error = ppecfg_param_get_ipaddr(data, sizeof(uint32_t),
-				&nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule.sip.ip_mask[0]);
-		if (data && error) {
-			goto print_error;
-		} else if (data && !error) {
-			nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_SIP_VALID;
-			nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule_flags |= PPE_ACL_RULE_FLAG_SIP_MASK;
-		}
-	}
+			if (is_v6 == 1) {
+				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule.sip.ip_type = PPE_ACL_IP_TYPE_V6;
+				ppecfg_log_trace("Ipv6 address : %pI6h\n", &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule.sip.ip);
+			} else if (is_v6 == 0){
+				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule.sip.ip_type = PPE_ACL_IP_TYPE_V4;
+				ppecfg_log_trace("Ipv4 address :%pI4h\n", &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule.sip.ip);
+			} else {
+				ppecfg_log_trace("wrong ip address type \n");
+				goto print_error;
+			}
 
-	/*
-	 * Extract PPECFG_ACL_RULE_ADD_DIP
-	 */
-	sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_DIP].sub_params;
+			if (is_v6 == 1) {
+				data = sub_params[PPECFG_ACL_SIP_VAL].data;
+				error = ppecfg_param_get_ipaddr(data, sizeof(nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule.sip.ip),
+						&nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule.sip.ip);
+				if (error && !(sub_params[PPECFG_ACL_SIP_NVAL].data)) {
+					goto print_error;
+				}
 
-	data = sub_params[PPECFG_ACL_DIP_TYPE].data;
-	error = ppecfg_param_get_int(data, sizeof(uint16_t), &is_v6);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		if (is_v6 == 1) {
-			nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DIP].rule.dip.ip_type = PPE_ACL_IP_TYPE_V6;
-		} else if (is_v6 == 0){
-			nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DIP].rule.dip.ip_type = PPE_ACL_IP_TYPE_V4;
-		} else {
-			goto print_error;
-		}
-	}
+				data = sub_params[PPECFG_ACL_SIP_NVAL].data;
+				if (data) {
+					error = ppecfg_param_get_ipaddr(data, sizeof(nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule.sip.ip),
+							&nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule.sip.ip);
+					if (error) {
+						goto print_error;
+					}
 
-	if (is_v6 == 1) {
-		data = sub_params[PPECFG_ACL_DIP_VAL].data;
-		error = ppecfg_param_get_ipaddr(data, sizeof(nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DIP].rule.dip.ip),
-				&nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DIP].rule.dip.ip);
-		if (data && error) {
-			goto print_error;
-		} else if (data && !error) {
+					nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule_flags |= PPE_ACL_RULE_GEN_FLAG_INVERSE_EN;
+				}
+
+				data = sub_params[PPECFG_ACL_SIP_MASK].data;
+				if (data) {
+					error = ppecfg_param_get_ipaddr(data, sizeof(nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule.sip.ip_mask),
+							&nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule.sip.ip_mask);
+					if (error) {
+						goto print_error;
+					}
+
+					nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule_flags |= PPE_ACL_RULE_FLAG_SIP_MASK;
+				}
+			}
+
+			if (is_v6 == 0) {
+				data = sub_params[PPECFG_ACL_SIP_VAL].data;
+				error = ppecfg_param_get_ipaddr(data, sizeof(uint32_t),
+						&nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule.sip.ip[0]);
+				if (error) {
+					goto print_error;
+				}
+
+				data = sub_params[PPECFG_ACL_SIP_NVAL].data;
+				if (data) {
+					error = ppecfg_param_get_ipaddr(data, sizeof(uint32_t),
+							&nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule.sip.ip[0]);
+					if (error) {
+						goto print_error;
+					}
+
+					nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule_flags |= PPE_ACL_RULE_GEN_FLAG_INVERSE_EN;
+				}
+
+				data = sub_params[PPECFG_ACL_SIP_MASK].data;
+				if (data) {
+					error = ppecfg_param_get_ipaddr(data, sizeof(uint32_t),
+							&nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule.sip.ip_mask[0]);
+					if (error) {
+						goto print_error;
+					}
+
+					nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SIP].rule_flags |= PPE_ACL_RULE_FLAG_SIP_MASK;
+				}
+			}
+			break;
+
+		case PPECFG_ACL_RULE_ADD_DIP:
+			sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_DIP].sub_params;
 			nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_DIP_VALID;
-		}
 
-		data = sub_params[PPECFG_ACL_DIP_MASK].data;
-		error = ppecfg_param_get_ipaddr(data, sizeof(nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DIP].rule.dip.ip_mask),
-				&nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DIP].rule.dip.ip_mask);
-		if (data && error) {
-			goto print_error;
-		} else if (data && !error) {
-			nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_DIP_VALID;
-			nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DIP].rule_flags |= PPE_ACL_RULE_FLAG_DIP_MASK;
-		}
-	} else if (is_v6 == 0) {
-		data = sub_params[PPECFG_ACL_DIP_VAL].data;
-		error = ppecfg_param_get_ipaddr(data, sizeof(uint32_t),
-				&nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DIP].rule.dip.ip[0]);
-		if (data && error) {
-			goto print_error;
-		} else if (data && !error) {
-			nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_DIP_VALID;
-		}
+			data = sub_params[PPECFG_ACL_DIP_TYPE].data;
+			error = ppecfg_param_get_int(data, sizeof(uint8_t), &is_v6);
+			if (error) {
+				goto print_error;
+			}
 
-		data = sub_params[PPECFG_ACL_DIP_MASK].data;
-		error = ppecfg_param_get_ipaddr(data, sizeof(uint32_t),
-				&nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DIP].rule.dip.ip_mask[0]);
-		if (data && error) {
-			goto print_error;
-		} else if (data && !error) {
-			nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_DIP_VALID;
-			nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DIP].rule_flags |= PPE_ACL_RULE_FLAG_DIP_MASK;
-		}
-	}
+			if (is_v6 == 1) {
+				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DIP].rule.dip.ip_type = PPE_ACL_IP_TYPE_V6;
+			} else if (is_v6 == 0){
+				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DIP].rule.dip.ip_type = PPE_ACL_IP_TYPE_V4;
+			} else {
+				goto print_error;
+			}
 
-	/*
-	 * Extract the action fields
-	 */
-	sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_ACTION].sub_params;
+			if (is_v6 == 1) {
+				data = sub_params[PPECFG_ACL_DIP_VAL].data;
+				error = ppecfg_param_get_ipaddr(data, sizeof(nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DIP].rule.dip.ip),
+						&nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DIP].rule.dip.ip);
+				if (error && !(sub_params[PPECFG_ACL_DIP_NVAL].data)) {
+					goto print_error;
+				}
 
-	data = sub_params[PPECFG_ACL_ACTION_FWD_CMD].data;
-	error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.action.fwd_cmd);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_FW_CMD;
-	}
+				data = sub_params[PPECFG_ACL_DIP_NVAL].data;
+				if (data) {
+					error = ppecfg_param_get_ipaddr(data, sizeof(nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DIP].rule.dip.ip),
+							&nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DIP].rule.dip.ip);
+					if (error) {
+						goto print_error;
+					}
 
-	data = sub_params[PPECFG_ACL_ACTION_SERVICE_CODE].data;
-	error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.action.service_code);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_SERVICE_CODE_EN;
-	}
+					nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DIP].rule_flags |= PPE_ACL_RULE_GEN_FLAG_INVERSE_EN;
+				}
 
-	data = sub_params[PPECFG_ACL_ACTION_ENQUEUE_PRI].data;
-	error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.action.enqueue_pri);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_ENQUEUE_PRI_CHANGE_EN;
-	}
+				data = sub_params[PPECFG_ACL_DIP_MASK].data;
+				if (data) {
+					error = ppecfg_param_get_ipaddr(data, sizeof(nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DIP].rule.dip.ip_mask),
+							&nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DIP].rule.dip.ip_mask);
+					if (error) {
+						goto print_error;
+					}
+					nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DIP].rule_flags |= PPE_ACL_RULE_FLAG_DIP_MASK;
+				}
+			}
 
-	data = sub_params[PPECFG_ACL_ACTION_QID].data;
-	error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.action.qid);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_QID_EN;
-	}
+			if (is_v6 == 0) {
+				data = sub_params[PPECFG_ACL_DIP_VAL].data;
+				error = ppecfg_param_get_ipaddr(data, sizeof(uint32_t),
+						&nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DIP].rule.dip.ip[0]);
+				if (error && !(sub_params[PPECFG_ACL_DIP_NVAL].data)) {
+					goto print_error;
+				}
 
-	data = sub_params[PPECFG_ACL_ACTION_CTAG_PCP].data;
-	error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.action.ctag_pcp);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_CTAG_PCP_CHANGE_EN;
-	}
+				data = sub_params[PPECFG_ACL_DIP_NVAL].data;
+				if (data) {
+					error = ppecfg_param_get_ipaddr(data, sizeof(uint32_t),
+							&nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DIP].rule.dip.ip[0]);
+					if (error) {
+						goto print_error;
+					}
 
-	data = sub_params[PPECFG_ACL_ACTION_STAG_PCP].data;
-	error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.action.stag_pcp);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_STAG_PCP_CHANGE_EN;
-	}
+					nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DIP].rule_flags |= PPE_ACL_RULE_GEN_FLAG_INVERSE_EN;
+				}
 
-	data = sub_params[PPECFG_ACL_ACTION_DSCP_TC].data;
-	error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.action.dscp_tc);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_DSCP_TC_CHANGE_EN;
-	}
+				data = sub_params[PPECFG_ACL_DIP_MASK].data;
+				if (data) {
+					error = ppecfg_param_get_ipaddr(data, sizeof(uint32_t),
+							&nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DIP].rule.dip.ip_mask[0]);
+					if (error) {
+						goto print_error;
+					}
 
-	data = sub_params[PPECFG_ACL_ACTION_CVID].data;
-	error = ppecfg_param_get_int(data, sizeof(uint16_t), &nl_msg.rule.action.cvid);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_CVID_CHANGE_EN;
-	}
+					nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DIP].rule_flags |= PPE_ACL_RULE_FLAG_DIP_MASK;
+				}
+			}
+			break;
 
-	data = sub_params[PPECFG_ACL_ACTION_SVID].data;
-	error = ppecfg_param_get_int(data, sizeof(uint16_t), &nl_msg.rule.action.svid);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_SVID_CHANGE_EN;
-	}
+		case PPECFG_ACL_RULE_ADD_SPORT:
+			sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_SPORT].sub_params;
+			nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_SPORT_VALID;
 
-	/*
-	 * Extract the dev_name parameter
-	 */
-	data = sub_params[PPECFG_ACL_ACTION_DEST].data;
-	error = ppecfg_param_get_str(data, sizeof(nl_msg.rule.action.dst.dev_name), &nl_msg.rule.action.dst.dev_name);
-	if (data && error < 0) {
-		ppecfg_log_data_error(sub_params);
-		goto done;
-	} else if (data && !error) {
-		nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_DEST_INFO_CHANGE_EN;
-	}
+			uint16_t sport_val;
+			data = sub_params[PPECFG_ACL_SPORT_MIN].data;
+			error = ppecfg_param_get_int(data, sizeof(uint16_t), &sport_val);
+			if (error && !(sub_params[PPECFG_ACL_SPORT_NVAL].data)) {
+				goto print_error;
+			}
 
-	data = sub_params[PPECFG_ACL_ACTION_REDIR_CORE].data;
-	error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.action.redir_core);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_REDIR_TO_CORE_EN;
-	}
+			nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SPORT].rule.sport.l4_port_min = ntohs(sport_val);
 
-	data = sub_params[PPECFG_ACL_ACTION_POLICER_ID].data;
-	error = ppecfg_param_get_int(data, sizeof(uint16_t), &nl_msg.rule.action.policer_id);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_POLICER_EN;
-	}
+			data = sub_params[PPECFG_ACL_SPORT_NVAL].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint16_t), &sport_val);
+				if (error) {
+					goto print_error;
+				}
 
-	data = sub_params[PPECFG_ACL_ACTION_MIRROR_EN].data;
-	error = ppecfg_param_get_int(data, sizeof(uint16_t), &mirror_en);
-	if (data && error) {
-		goto print_error;
-	} else if (data && !error) {
-		if (mirror_en == 1) {
-			nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_MIRROR_EN;
+				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SPORT].rule.sport.l4_port_min = ntohs(sport_val);
+				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SPORT].rule_flags |= PPE_ACL_RULE_GEN_FLAG_INVERSE_EN;
+			}
+
+			data = sub_params[PPECFG_ACL_SPORT_MASK].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint16_t), &sport_val);
+				if (error) {
+					goto print_error;
+				}
+
+				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SPORT].rule.sport.l4_port_max_mask = ntohs(sport_val);
+				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SPORT].rule_flags |= PPE_ACL_RULE_FLAG_SPORT_MASK;
+			}
+
+			data = sub_params[PPECFG_ACL_SPORT_RANGE].data;
+			if (data) {
+				error = ppecfg_param_get_bool(sub_params->data, &bool_val);
+				if (error < 0) {
+					ppecfg_log_data_error(sub_params);
+					goto done;
+				}
+
+				if(!(nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SPORT].rule_flags & PPE_ACL_RULE_FLAG_SPORT_MASK)) {
+					goto print_error;
+				}
+
+				if (bool_val == true) {
+					nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SPORT].rule_flags |= PPE_ACL_RULE_FLAG_SPORT_RANGE;
+				}
+
+				bool_val = false;
+			}
+			break;
+
+		case PPECFG_ACL_RULE_ADD_DPORT:
+			sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_DPORT].sub_params;
+			nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_DPORT_VALID;
+
+			uint16_t dport_val;
+			data = sub_params[PPECFG_ACL_DPORT_MIN].data;
+			error = ppecfg_param_get_int(data, sizeof(uint16_t), &dport_val);
+			if (error && !(sub_params[PPECFG_ACL_DPORT_NVAL].data)) {
+				goto print_error;
+			}
+
+			nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DPORT].rule.dport.l4_port_min = ntohs(dport_val);
+
+			data = sub_params[PPECFG_ACL_DPORT_NVAL].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint16_t), &dport_val);
+				if (error) {
+					goto print_error;
+				}
+
+				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DPORT].rule.dport.l4_port_min = ntohs(dport_val);
+				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DPORT].rule_flags |= PPE_ACL_RULE_GEN_FLAG_INVERSE_EN;
+			}
+
+			data = sub_params[PPECFG_ACL_DPORT_MASK].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint16_t), &dport_val);
+				if (error) {
+					goto print_error;
+				}
+
+				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DPORT].rule.dport.l4_port_max_mask = ntohs(dport_val);
+				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DPORT].rule_flags |= PPE_ACL_RULE_FLAG_DPORT_MASK;
+			}
+
+			data = sub_params[PPECFG_ACL_DPORT_RANGE].data;
+			if (data) {
+				error = ppecfg_param_get_bool(sub_params->data, &bool_val);
+				if (error < 0) {
+					ppecfg_log_data_error(sub_params);
+					goto done;
+				}
+
+				if (!(nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DPORT].rule_flags & PPE_ACL_RULE_FLAG_DPORT_MASK)) {
+					goto print_error;
+				}
+
+				if (bool_val == true) {
+					nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DPORT].rule_flags |= PPE_ACL_RULE_FLAG_DPORT_RANGE;
+				}
+
+				bool_val = false;
+			}
+			break;
+
+		case PPECFG_ACL_RULE_ADD_DSCP:
+			sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_DSCP].sub_params;
+			nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_DSCP_TC_VALID;
+
+			data = sub_params[PPECFG_ACL_DSCP_MIN].data;
+			error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DSCP_TC].rule.dscp_tc.l3_dscp_tc);
+			if (error) {
+				goto print_error;
+			}
+
+			data = sub_params[PPECFG_ACL_DSCP_MASK].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DSCP_TC].rule.dscp_tc.l3_dscp_tc_mask);
+				if (error) {
+					goto print_error;
+				}
+
+				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DSCP_TC].rule_flags |= PPE_ACL_RULE_FLAG_DSCP_TC_MASK;
+			}
+			break;
+
+		case PPECFG_ACL_RULE_ADD_TTL:
+			sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_TTL].sub_params;
+			nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_TTL_HOPLIMIT_VALID;
+
+			data = sub_params[PPECFG_ACL_TTL_MIN].data;
+			error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_TTL_HOPLIMIT].rule.ttl_hop.hop_limit);
+			if (error) {
+				goto print_error;
+			}
+
+			data = sub_params[PPECFG_ACL_TTL_MASK].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_TTL_HOPLIMIT].rule.ttl_hop.hop_limit_mask);
+				if (error) {
+					goto print_error;
+				}
+
+				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_TTL_HOPLIMIT].rule_flags |= PPE_ACL_RULE_FLAG_TTL_HOPLIMIT_MASK;
+			}
+			break;
+
+		case PPECFG_ACL_RULE_ADD_ACTION:
+			sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_ACTION].sub_params;
+			char fwd_cmd[10];
+
+			data = sub_params[PPECFG_ACL_ACTION_FWD_CMD].data;
+			if (data) {
+				error = ppecfg_param_get_str(data, sizeof(uint8_t), &fwd_cmd);
+				if (error) {
+					goto print_error;
+				}
+
+				if (strcmp("FWD" , fwd_cmd) == 0) {
+					nl_msg.rule.action.fwd_cmd = PPE_ACL_FWD_CMD_FWD;
+				} else if (strcmp("DROP" , fwd_cmd) == 0) {
+					nl_msg.rule.action.fwd_cmd = PPE_ACL_FWD_CMD_DROP;
+				} else if (strcmp("COPY" , fwd_cmd) == 0) {
+					nl_msg.rule.action.fwd_cmd = PPE_ACL_FWD_CMD_COPY;
+				} else if (strcmp("REDIR" , fwd_cmd) == 0) {
+					nl_msg.rule.action.fwd_cmd = PPE_ACL_FWD_CMD_REDIR;
+				} else {
+					goto print_error;
+				}
+
+				nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_FW_CMD;
+			}
+
+			data = sub_params[PPECFG_ACL_ACTION_SERVICE_CODE].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.action.service_code);
+				if (error) {
+					goto print_error;
+				}
+
+				nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_SERVICE_CODE_EN;
+			}
+
+			data = sub_params[PPECFG_ACL_ACTION_ENQUEUE_PRI].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.action.enqueue_pri);
+				if (error) {
+					goto print_error;
+				}
+
+				nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_ENQUEUE_PRI_CHANGE_EN;
+			}
+
+			data = sub_params[PPECFG_ACL_ACTION_QID].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.action.qid);
+				if (error) {
+					goto print_error;
+				}
+
+				nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_QID_EN;
+			}
+
+			data = sub_params[PPECFG_ACL_ACTION_CTAG_PCP].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.action.ctag_pcp);
+				if (data && error) {
+					goto print_error;
+				}
+
+				nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_CTAG_PCP_CHANGE_EN;
+
+			}
+
+			data = sub_params[PPECFG_ACL_ACTION_STAG_PCP].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.action.stag_pcp);
+				if (error) {
+					goto print_error;
+				}
+
+				nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_STAG_PCP_CHANGE_EN;
+			}
+
+			data = sub_params[PPECFG_ACL_ACTION_DSCP_TC].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.action.dscp_tc);
+				if (error) {
+					goto print_error;
+				}
+
+				nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_DSCP_TC_CHANGE_EN;
+			}
+
+			data = sub_params[PPECFG_ACL_ACTION_CVID].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint16_t), &nl_msg.rule.action.cvid);
+				if (error) {
+					goto print_error;
+				}
+
+				nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_CVID_CHANGE_EN;
+			}
+
+			data = sub_params[PPECFG_ACL_ACTION_SVID].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint16_t), &nl_msg.rule.action.svid);
+				if (error) {
+					goto print_error;
+				}
+				nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_SVID_CHANGE_EN;
+			}
+
+			data = sub_params[PPECFG_ACL_ACTION_DEST].data;
+			if (data) {
+				error = ppecfg_param_get_str(data, sizeof(nl_msg.rule.action.dst.dev_name), &nl_msg.rule.action.dst.dev_name);
+				if (error < 0) {
+					ppecfg_log_data_error(sub_params);
+					goto done;
+				}
+				nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_DEST_INFO_CHANGE_EN;
+			}
+
+			data = sub_params[PPECFG_ACL_ACTION_REDIR_CORE].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.action.redir_core);
+				if (error) {
+					goto print_error;
+				}
+				nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_REDIR_TO_CORE_EN;
+			}
+
+			data = sub_params[PPECFG_ACL_ACTION_POLICER_ID].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint16_t), &nl_msg.rule.action.policer_id);
+				if (error) {
+					goto print_error;
+				}
+				nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_POLICER_EN;
+			}
+
+			data = sub_params[PPECFG_ACL_ACTION_MIRROR_EN].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint8_t), &mirror_en);
+				if (error) {
+					goto print_error;
+				}
+				if (mirror_en == 1) {
+					nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_MIRROR_EN;
+				}
+			}
+			break;
 		}
 	}
 
 	/*
 	 * send message
 	 */
-	error = nss_ppenl_acl_rule_add(&nl_msg, ppecfg_acl_resp, NULL);
+	error = nss_ppenl_acl_rule_add(&nl_msg);
 	if (error < 0) {
 		ppecfg_log_warn("Unable to send message\n");
 		return error;
@@ -968,7 +1066,6 @@ print_error:
 done:
 	return error;
 }
-
 
 /*
  * ppecfg_acl_rule_del()
@@ -1009,7 +1106,7 @@ static int ppecfg_acl_rule_del(struct ppecfg_param *param, struct ppecfg_param_i
 	/*
 	 * send message
 	 */
-	error = nss_ppenl_acl_rule_del(&nl_msg, ppecfg_acl_resp, NULL);
+	error = nss_ppenl_acl_rule_del(&nl_msg);
 	if (error < 0) {
 		ppecfg_log_warn("Unable to send message\n");
 		goto done;

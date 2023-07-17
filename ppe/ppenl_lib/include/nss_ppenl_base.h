@@ -46,7 +46,6 @@
 #define unlikely(x) __builtin_expect(!!(x), 0)
 #endif
 
-/* NSS_PPE headers */
 #include <nss_ppenl_cmn_if.h>
 #include <nss_ppenl_acl_if.h>
 #include <nss_ppenl_acl_api.h>

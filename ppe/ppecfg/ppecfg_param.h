@@ -27,6 +27,7 @@
 	.name = (_param),	\
 	.len = sizeof(_param) - 1,	\
 	.num_params = 1,	\
+	.valid = false,		\
 }
 
 #define PPECFG_PARAMLIST_INIT(_param, _sub_param_tbl, _match_cb) {	\
@@ -35,6 +36,7 @@
 	.num_params = PPECFG_PARAM_NUM(_sub_param_tbl),	\
 	.sub_params = (_sub_param_tbl),	\
 	.match_cb = (_match_cb),	\
+	.valid = false,		\
 }
 
 #define PPECFG_PARAMARR_INIT(_idx, _param, _sub_param_tbl, _match_cb) 	\
@@ -45,6 +47,7 @@
 	.sub_params = (_sub_param_tbl),	\
 	.match_cb = (_match_cb),	\
 	.id = _idx,		\
+	.valid = false,		\
 }
 
 struct ppecfg_param;
@@ -80,6 +83,7 @@ struct ppecfg_param {
 	uint16_t num_params;			/**< number of sub-parameters present */
 
 	uint8_t id;
+	bool valid;
 
 	struct ppecfg_param *sub_params;		/**< sub-parameter list */
 	ppecfg_param_match_t match_cb;		/**< match callback function upon match */
