@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2023, Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -21,6 +21,18 @@
  This chapter describes Policer APIs in the user space.
  These APIs are wrapper functions for POLICER family specific operations.
 */
+
+/*
+ * Response callback for Policer
+ *
+ * @param[in] user_ctx User context (provided at socket open).
+ * @param[in] rule Policer rule.
+ * @param[in] resp_ctx User data per callback.
+ *
+ * @return
+ * None.
+ */
+typedef void (*nss_ppenl_policer_resp_cb_t)(void *user_ctx, struct nss_ppenl_policer_rule *rule, void *resp_ctx);
 
 /**
  * Event callback for POLICER.
@@ -57,12 +69,11 @@ struct nss_ppenl_policer_ctx {
  *
  * @param[in] ctx NSS NL socket context allocated by the caller.
  * @param[in] user_ctx User context stored per socket.
- * @param[in] event_cb Event callback handler.
  *
  * @return
  * Status of the open call.
  */
-int nss_ppenl_policer_sock_open(struct nss_ppenl_policer_ctx *ctx, void *user_ctx, nss_ppenl_policer_event_cb_t event_cb);
+int nss_ppenl_policer_sock_open(struct nss_ppenl_policer_ctx *ctx, void *user_ctx);
 
 /**
  * Closes NSS NL Policer socket.
@@ -80,14 +91,13 @@ void nss_ppenl_policer_sock_close(struct nss_ppenl_policer_ctx *ctx);
  * @param[in] ctx NSS NL Policer context.
  * @param[in] rule Policer rule.
  * @param[in] cb Response callback handler.
- * @param[in] data Response data per callback.
  *
  * @return
  * Send status:
  * - 0 -- Success.
  * - Negative version error (-ve) -- Failure.
  */
-int nss_ppenl_policer_sock_send(struct nss_ppenl_policer_ctx *ctx, struct nss_ppenl_policer_rule *rule, nss_ppenl_policer_resp_cb_t cb, void *data);
+int nss_ppenl_policer_sock_send(struct nss_ppenl_policer_ctx *ctx, struct nss_ppenl_policer_rule *rule, nss_ppenl_policer_resp_cb_t cb);
 
 
 /** @} *//* end_addtogroup nss_ppenl_policer_functions */
