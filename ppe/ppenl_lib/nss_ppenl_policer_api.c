@@ -19,7 +19,55 @@
 #include <nss_ppenl_policer_api.h>
 #include "nss_ppenl_policer.h"
 
-static struct nss_ppenl_policer_ctx nss_ppe_ctx;
+static struct nss_ppenl_policer_ctx nss_policer_ctx;
+static void nss_ppenl_policer_resp(void *user_ctx, struct nss_ppenl_policer_rule *rule, void *resp_ctx) __attribute__((unused));
+/*
+ * ppecfg_policer_resp()
+ * 	ppecfg log based on response from netlink
+ */
+static void nss_ppenl_policer_resp(void *user_ctx, struct nss_ppenl_policer_rule *policer_rule, void *resp_ctx)
+{
+	int ret = 0;
+
+	if (!policer_rule) {
+		return;
+	}
+
+	uint8_t cmd = nss_ppenl_cmn_get_cmd_type(&policer_rule->cm);
+
+	switch (cmd) {
+		case NSS_PPE_POLICER_CREATE_RULE_MSG:
+			ret = policer_rule->config.ret;
+			if (ret != 0) {
+				nss_ppenl_sock_log_error("Policer rule create failed with error: %d\n", ret);
+				return;
+			}
+
+			if (!policer_rule->config.is_port_policer) {
+				nss_ppenl_sock_log_info("Policer rule create successful for rule_id %d\n", policer_rule->config.policer_id);
+			} else {
+				nss_ppenl_sock_log_info("Policer rule create successful for dev %s\n",policer_rule->config.dev);
+			}
+
+			break;
+		case NSS_PPE_POLICER_DESTROY_RULE_MSG:
+			ret = policer_rule->config.ret;
+			if (ret != 0) {
+				nss_ppenl_sock_log_error("Policer rule delete failed with error:%d\n",ret);
+				return;
+			}
+
+			if (!policer_rule->config.is_port_policer) {
+				nss_ppenl_sock_log_info("Policer rule delete successful for rule_id %d\n",policer_rule->config.policer_id);
+			} else {
+				nss_ppenl_sock_log_info("Policer rule delete successful for dev %s\n",policer_rule->config.dev);
+			}
+
+			break;
+		default:
+			nss_ppenl_sock_log_error("unsupported message cmd type(%d)", cmd);
+	}
+}
 /*
  * nss_ppenl_policer_sock_cb()
  *	NSS NL POLICER callback
@@ -82,7 +130,7 @@ int nss_ppenl_policer_sock_cb(struct nl_msg *msg, void *arg)
  * nss_ppenl_policer_sock_open()
  *	this opens the NSS POLICER NL socket for usage
  */
-int nss_ppenl_policer_sock_open(struct nss_ppenl_policer_ctx *ctx, void *user_ctx, nss_ppenl_policer_event_cb_t event_cb)
+int nss_ppenl_policer_sock_open(struct nss_ppenl_policer_ctx *ctx, void *user_ctx)
 {
 	pid_t pid = getpid();
 	int error;
@@ -125,7 +173,7 @@ void nss_ppenl_policer_sock_close(struct nss_ppenl_policer_ctx *ctx)
  * nss_ppenl_policer_sock_send()
  *	register callback and send the POLICER message synchronously through the socket
  */
-int nss_ppenl_policer_sock_send(struct nss_ppenl_policer_ctx *ctx, struct nss_ppenl_policer_rule *rule, nss_ppenl_policer_resp_cb_t cb, void *data)
+int nss_ppenl_policer_sock_send(struct nss_ppenl_policer_ctx *ctx, struct nss_ppenl_policer_rule *rule, nss_ppenl_policer_resp_cb_t cb)
 {
 	int32_t family_id = ctx->sock.family_id;
 	struct nss_ppenl_policer_resp *resp;
@@ -144,7 +192,7 @@ int nss_ppenl_policer_sock_send(struct nss_ppenl_policer_ctx *ctx, struct nss_pp
 		resp = nss_ppenl_cmn_get_cb_data(&rule->cm, family_id);
 		assert(resp);
 
-		resp->data = data;
+		resp->data = NULL;
 		resp->cb = cb;
 		has_resp = true;
 	}
@@ -162,13 +210,13 @@ int nss_ppenl_policer_sock_send(struct nss_ppenl_policer_ctx *ctx, struct nss_pp
  * nss_ppenl_policer_rule_del
  *  Delete Policer rule in PPE
  */
-int nss_ppenl_policer_rule_del(struct nss_ppenl_policer_rule *rule, nss_ppenl_policer_resp_cb_t cb, void *data){
+int nss_ppenl_policer_rule_del(struct nss_ppenl_policer_rule *rule) {
 
 	int error;
 	/*
 	 * open the NSS NL POLICER socket
 	 */
-	error = nss_ppenl_policer_sock_open(&nss_ppe_ctx, NULL, NULL);
+	error = nss_ppenl_policer_sock_open(&nss_policer_ctx, NULL);
 	if (error < 0) {
 		nss_ppenl_sock_log_error("Failed to open POLICER socket; error(%d)\n", error);
 		return error;
@@ -177,7 +225,7 @@ int nss_ppenl_policer_rule_del(struct nss_ppenl_policer_rule *rule, nss_ppenl_po
 	/*
 	 * send message
 	 */
-	error = nss_ppenl_policer_sock_send(&nss_ppe_ctx, rule, cb, data);
+	error = nss_ppenl_policer_sock_send(&nss_policer_ctx, rule, nss_ppenl_policer_resp);
 	if (error < 0) {
 		nss_ppenl_sock_log_error("Unable to send message\n");
 		goto done;
@@ -187,7 +235,7 @@ done:
 	/*
 	 * close the socket
 	 */
-	nss_ppenl_policer_sock_close(&nss_ppe_ctx);
+	nss_ppenl_policer_sock_close(&nss_policer_ctx);
 	return error;
 }
 
@@ -195,14 +243,14 @@ done:
  * nss_ppenl_policer_rule_add()
  * Add Policer rule in PPE
  */
-int nss_ppenl_policer_rule_add(struct nss_ppenl_policer_rule *rule, nss_ppenl_policer_resp_cb_t cb, void *data) {
+int nss_ppenl_policer_rule_add(struct nss_ppenl_policer_rule *rule) {
 
 	int error;
 
 	/*
 	 * open the NSS NL POLICER socket
 	 */
-	error = nss_ppenl_policer_sock_open(&nss_ppe_ctx, NULL, NULL);
+	error = nss_ppenl_policer_sock_open(&nss_policer_ctx, NULL);
 	if (error < 0) {
 		nss_ppenl_sock_log_error("Failed to open POLICER socket; error(%d)\n", error);
 		return error;
@@ -211,7 +259,7 @@ int nss_ppenl_policer_rule_add(struct nss_ppenl_policer_rule *rule, nss_ppenl_po
 	/*
 	 * send message
 	 */
-	error = nss_ppenl_policer_sock_send(&nss_ppe_ctx, rule, cb, data);
+	error = nss_ppenl_policer_sock_send(&nss_policer_ctx, rule, nss_ppenl_policer_resp);
 	if (error < 0) {
 		nss_ppenl_sock_log_error("Unable to send message\n");
 		goto done;
@@ -220,7 +268,7 @@ done:
 	/*
 	 * close the socket
 	 */
-	nss_ppenl_policer_sock_close(&nss_ppe_ctx);
+	nss_ppenl_policer_sock_close(&nss_policer_ctx);
 	return error;
 }
 
