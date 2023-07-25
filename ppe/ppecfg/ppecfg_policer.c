@@ -34,9 +34,9 @@ static struct ppecfg_param rule_add_params[PPECFG_POLICER_RULE_ADD_MAX] = {
 	PPECFG_PARAM_INIT(PPECFG_POLICER_RULE_ADD_METER_MODE,"meter_mode="),
 	PPECFG_PARAM_INIT(PPECFG_POLICER_RULE_ADD_METER_UNIT,"meter_unit="),
 	PPECFG_PARAM_INIT(PPECFG_POLICER_RULE_ADD_COMMITTED_RATE, "committed_rate="),
-	PPECFG_PARAM_INIT(PPECFG_POLICER_RULE_ADD_COMMITTED_BRUST_SIZE, "committed_brust_size="),
+	PPECFG_PARAM_INIT(PPECFG_POLICER_RULE_ADD_COMMITTED_BURST_SIZE, "committed_burst_size="),
 	PPECFG_PARAM_INIT(PPECFG_POLICER_RULE_ADD_PEAK_RATE, "peak_rate="),
-	PPECFG_PARAM_INIT(PPECFG_POLICER_RULE_ADD_PEAK_BRUST_SIZE, "peak_brust_size="),
+	PPECFG_PARAM_INIT(PPECFG_POLICER_RULE_ADD_PEAK_BURST_SIZE, "peak_burst_size="),
 	PPECFG_PARAM_INIT(PPECFG_POLICER_RULE_ADD_METER_ENABLE, "meter_enable="),
 	PPECFG_PARAM_INIT(PPECFG_POLICER_RULE_ADD_COUPLE_ENABLE, "couple_enable="),
 	PPECFG_PARAM_INIT(PPECFG_POLICER_RULE_ADD_COLOUR_AWARE, "colour_aware_enable="),
@@ -259,10 +259,10 @@ static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_par
 	}
 
 	/*
-	 * Parse committed_brust_size from user_config
+	 * Parse committed_burst_size from user_config
 	 */
-	sub_params = &param->sub_params[PPECFG_POLICER_RULE_ADD_COMMITTED_BRUST_SIZE];
-	error = ppecfg_param_get_int(sub_params->data, sizeof(uint32_t), &nl_msg.config.committed_brust_size);
+	sub_params = &param->sub_params[PPECFG_POLICER_RULE_ADD_COMMITTED_BURST_SIZE];
+	error = ppecfg_param_get_int(sub_params->data, sizeof(uint32_t), &nl_msg.config.committed_burst_size);
 	if (error < 0) {
 		ppecfg_log_arg_error(sub_params);
 		goto done;
@@ -284,7 +284,7 @@ static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_par
 	/*
 	 * parse peak_burst_size from user_config
 	 */
-	sub_params = &param->sub_params[PPECFG_POLICER_RULE_ADD_PEAK_BRUST_SIZE];
+	sub_params = &param->sub_params[PPECFG_POLICER_RULE_ADD_PEAK_BURST_SIZE];
 	error = ppecfg_param_get_int(sub_params->data, sizeof(uint32_t), &nl_msg.config.peak_burst_size);
 	if (error < 0) {
 		ppecfg_log_arg_error(sub_params);
