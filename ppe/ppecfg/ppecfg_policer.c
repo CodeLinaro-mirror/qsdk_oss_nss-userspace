@@ -24,7 +24,7 @@ static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_par
 static int ppecfg_policer_rule_del(struct ppecfg_param *param, struct ppecfg_param_in *match);
 
 /*
- *  policer_rule add parameters
+ * policer_rule add parameters
  */
 static struct ppecfg_param rule_add_params[PPECFG_POLICER_RULE_ADD_MAX] = {
 	PPECFG_PARAM_INIT(PPECFG_POLICER_RULE_ADD_IS_PORT_POLICER, "port_policer="),
@@ -102,7 +102,7 @@ static int ppecfg_policer_rule_del(struct ppecfg_param *param, struct ppecfg_par
 		case PPECFG_POLICER_RULE_DEL_IS_PORT_POLICER:
 			/*
 			 * parse policer choice from user
-	 		*/
+			 */
 			sub_params = &param->sub_params[PPECFG_POLICER_RULE_DEL_IS_PORT_POLICER];
 			error = ppecfg_param_get_bool(sub_params->data,&nl_msg.config.is_port_policer);
 			if (error < 0) {
@@ -114,28 +114,31 @@ static int ppecfg_policer_rule_del(struct ppecfg_param *param, struct ppecfg_par
 
 		case PPECFG_POLICER_RULE_DEL_DEV:
 			/*
-	 		* parse dev name for port policer
-	 		*/
-			if (nl_msg.config.is_port_policer) {
-				sub_params = &param->sub_params[PPECFG_POLICER_RULE_DEL_DEV];
-				error = ppecfg_param_get_str(sub_params->data, sizeof(nl_msg.config.dev), &nl_msg.config.dev);
-				if (error < 0) {
-					ppecfg_log_arg_error(sub_params);
-					goto done;
-				}
-			} else {
-				/*
-		 		* parse rule id from user
-		 		*/
-				sub_params = &param->sub_params[PPECFG_POLICER_RULE_DEL_RULE_ID];
-				error = ppecfg_param_get_int(sub_params->data, sizeof(uint32_t), &nl_msg.config.policer_id);
-				if (error < 0) {
-					ppecfg_log_arg_error(sub_params);
-					goto done;
-				}
+			 * parse dev name for port policer
+			 */
+			sub_params = &param->sub_params[PPECFG_POLICER_RULE_DEL_DEV];
+			error = ppecfg_param_get_str(sub_params->data, sizeof(nl_msg.config.dev), &nl_msg.config.dev);
+			if (error < 0) {
+				ppecfg_log_arg_error(sub_params);
+				goto done;
+			}
+
+			break;
+
+		case PPECFG_POLICER_RULE_DEL_RULE_ID:
+			/*
+			 * parse rule id from user
+			 */
+			sub_params = &param->sub_params[PPECFG_POLICER_RULE_DEL_RULE_ID];
+			error = ppecfg_param_get_int(sub_params->data, sizeof(uint32_t), &nl_msg.config.policer_id);
+			if (error < 0) {
+				ppecfg_log_arg_error(sub_params);
+				goto done;
+			}
+
+				break;
 			}
 		}
-	}
 
 	/*
 	 * send message
@@ -192,8 +195,8 @@ static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_par
 		switch (index) {
 		case PPECFG_POLICER_RULE_ADD_IS_PORT_POLICER:
 			/*
-	 		* parse port_policer from user
-	 		*/
+			 * parse port_policer from user
+			 */
 			error = ppecfg_param_get_bool(sub_params->data,&nl_msg.config.is_port_policer);
 			if (error < 0) {
 				ppecfg_log_arg_error(sub_params);
@@ -204,31 +207,34 @@ static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_par
 
 		case PPECFG_POLICER_RULE_ADD_DEV:
 			/*
-	 		* Making dev as optional
-			*/
-			if (nl_msg.config.is_port_policer) {
-				error = ppecfg_param_get_str(sub_params->data, sizeof(nl_msg.config.dev), &nl_msg.config.dev);
-				if (error < 0) {
-					ppecfg_log_arg_error(sub_params);
-					goto done;
-				}
-			} else {
-				/*
-		 		* parse rule_id from user
-		 		*/
-				error = ppecfg_param_get_int(sub_params->data, sizeof(uint32_t), &nl_msg.config.policer_id);
-				if (error < 0) {
-					ppecfg_log_arg_error(sub_params);
-					goto done;
-				}
+			 * parse dev name for port policer
+			 */
+			sub_params = &param->sub_params[PPECFG_POLICER_RULE_ADD_DEV];
+			error = ppecfg_param_get_str(sub_params->data, sizeof(nl_msg.config.dev), &nl_msg.config.dev);
+			if (error < 0) {
+				ppecfg_log_arg_error(sub_params);
+				goto done;
+			}
+
+			break;
+
+		case PPECFG_POLICER_RULE_ADD_RULE_ID:
+			/*
+			 * parse rule id from user
+			 */
+			sub_params = &param->sub_params[PPECFG_POLICER_RULE_ADD_RULE_ID];
+			error = ppecfg_param_get_int(sub_params->data, sizeof(uint32_t), &nl_msg.config.policer_id);
+			if (error < 0) {
+				ppecfg_log_arg_error(sub_params);
+				goto done;
 			}
 
 			break;
 
 		case PPECFG_POLICER_RULE_ADD_METER_MODE:
 			/*
-	 		* parse optional meter mode from user_config, default 0
-	 		*/
+			 * parse optional meter mode from user_config, default 0
+			 */
 			error = ppecfg_param_get_bool(sub_params->data,&nl_msg.config.meter_mode);
 			if (error < 0) {
 				ppecfg_log_arg_error(sub_params);
@@ -239,8 +245,8 @@ static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_par
 
 		case PPECFG_POLICER_RULE_ADD_METER_UNIT:
 			/*
-	 		* parse option meter_unit, default 0 Byte based
-	 		*/
+			 * parse option meter_unit, default 0 Byte based
+			 */
 			error = ppecfg_param_get_bool(sub_params->data,&nl_msg.config.meter_unit);
 			if (error < 0) {
 				ppecfg_log_arg_error(sub_params);
@@ -251,8 +257,8 @@ static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_par
 
 		case PPECFG_POLICER_RULE_ADD_COMMITTED_RATE:
 			/*
-	 		* parse committed_rate from user_config
-	 		*/
+			 * parse committed_rate from user_config
+			 */
 			error = ppecfg_param_get_int(sub_params->data, sizeof(uint32_t), &nl_msg.config.committed_rate);
 
 			if (error < 0) {
@@ -264,8 +270,8 @@ static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_par
 
 		case PPECFG_POLICER_RULE_ADD_COMMITTED_BURST_SIZE:
 			/*
-	 		* Parse committed_brust_size from user_config
-	 		*/
+	 		 * Parse committed_brust_size from user_config
+	 		 */
 			error = ppecfg_param_get_int(sub_params->data, sizeof(uint32_t), &nl_msg.config.committed_burst_size);
 			if (error < 0) {
 				ppecfg_log_arg_error(sub_params);
@@ -276,11 +282,11 @@ static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_par
 
 		case PPECFG_POLICER_RULE_ADD_PEAK_RATE:
 			/*
-	 		* parse optional EIR from user_config for meter mode is RFC 2697 or RFC 4115
-	 		* meter_mode 0 ==> 2698 (ALL)
-	 		* meter_mode 1 && EIR ==> 4115 (ALL)
-	 		* meter_mode 1 && no EIR ==> 2697 (CIR,CBS,EBS)
-	 		*/
+			 * parse optional EIR from user_config for meter mode is RFC 2697 or RFC 4115
+			 * meter_mode 0 ==> 2698 (ALL)
+			 * meter_mode 1 && EIR ==> 4115 (ALL)
+			 * meter_mode 1 && no EIR ==> 2697 (CIR,CBS,EBS)
+			 */
 			error = ppecfg_param_get_int(sub_params->data, sizeof(uint32_t), &nl_msg.config.peak_rate);
 			if (error < 0) {
 				ppecfg_log_arg_error(sub_params);
@@ -291,8 +297,8 @@ static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_par
 
 		case PPECFG_POLICER_RULE_ADD_PEAK_BURST_SIZE:
 			/*
-	 		* parse peak_burst_size from user_config
-	 		*/
+			 * parse peak_burst_size from user_config
+			 */
 			error = ppecfg_param_get_int(sub_params->data, sizeof(uint32_t), &nl_msg.config.peak_burst_size);
 			if (error < 0) {
 				ppecfg_log_arg_error(sub_params);
@@ -303,8 +309,8 @@ static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_par
 
 		case PPECFG_POLICER_RULE_ADD_METER_ENABLE:
 			/*
-	 		* parse optional meter_enable from user_config, default 1
-	 		*/
+			 * parse optional meter_enable from user_config, default 1
+			 */
 			error = ppecfg_param_get_int(sub_params->data, sizeof(uint8_t),&nl_msg.config.meter_enable);
 			if (error < 0) {
 				ppecfg_log_arg_error(sub_params);
@@ -315,8 +321,8 @@ static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_par
 
 		case PPECFG_POLICER_RULE_ADD_COUPLE_ENABLE:
 			/*
-	 		* parse optional couple_enable from user_config, default 1
-	 		*/
+			 * parse optional couple_enable from user_config, default 1
+			 */
 			error = ppecfg_param_get_int(sub_params->data, sizeof(uint8_t), &nl_msg.config.couple_enable);
 			if (error < 0) {
 				ppecfg_log_arg_error(sub_params);
@@ -327,8 +333,8 @@ static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_par
 
 		case PPECFG_POLICER_RULE_ADD_COLOUR_AWARE:
 			/*
-	 		* parse optional colour_aware from user_config,default 1
-	 		*/
+			 * parse optional colour_aware from user_config,default 1
+			 */
 			error = ppecfg_param_get_int(sub_params->data, sizeof(uint8_t), &nl_msg.config.colour_aware);
 			if (error < 0) {
 				ppecfg_log_arg_error(sub_params);
@@ -339,8 +345,8 @@ static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_par
 
 		case PPECFG_POLICER_RULE_ADD_YELLOW_DP:
 			/*
-	 		* Parse optional yellow_dp from user_config, default 0
-	 		*/
+			 * Parse optional yellow_dp from user_config, default 0
+			 */
 			error = ppecfg_param_get_int(sub_params->data, sizeof(uint8_t), &nl_msg.config.action_info.yellow_dp);
 			if (error < 0) {
 				ppecfg_log_arg_error(sub_params);
@@ -351,8 +357,8 @@ static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_par
 
 		case PPECFG_POLICER_RULE_ADD_YELLOW_INT_PRI:
 			/*
-	 		* parse optional yellow_int_pri from user_config, default 0
-	 		*/
+			 * parse optional yellow_int_pri from user_config, default 0
+			 */
 			error = ppecfg_param_get_int(sub_params->data, sizeof(uint8_t), &nl_msg.config.action_info.yellow_int_pri);
 			if (error < 0) {
 				ppecfg_log_arg_error(sub_params);
@@ -363,8 +369,8 @@ static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_par
 
 		case PPECFG_POLICER_RULE_ADD_YELLOW_PCP:
 			/*
-	 		* parse optional yellow_pcp from user_config, default 0
-	 		*/
+			 * parse optional yellow_pcp from user_config, default 0
+			 */
 			error = ppecfg_param_get_int(sub_params->data, sizeof(uint8_t), &nl_msg.config.action_info.yellow_pcp);
 			if (error < 0) {
 				ppecfg_log_arg_error(sub_params);
@@ -375,8 +381,8 @@ static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_par
 
 		case PPECFG_POLICER_RULE_ADD_YELLOW_DEI:
 			/*
-	 		* parse optional yellow_dei from user_config, default 0
-	 		*/
+			 * parse optional yellow_dei from user_config, default 0
+			 */
 			error = ppecfg_param_get_int(sub_params->data, sizeof(uint8_t), &nl_msg.config.action_info.yellow_dei);
 			if (error < 0) {
 				ppecfg_log_arg_error(sub_params);
@@ -387,8 +393,8 @@ static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_par
 
 		case PPECFG_POLICER_RULE_ADD_YELLOW_DSCP:
 			/*
-	 		* parse optional dscp only in case of ACL, default 0
-	 		*/
+			 * parse optional dscp only in case of ACL, default 0
+			 */
 			if (!nl_msg.config.is_port_policer) {
 				error = ppecfg_param_get_int(sub_params->data, sizeof(uint8_t), &nl_msg.config.action_info.yellow_dscp);
 				if (error < 0) {
