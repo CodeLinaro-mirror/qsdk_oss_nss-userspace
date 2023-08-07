@@ -181,6 +181,7 @@ static struct ppecfg_param rule_add_params[PPECFG_ACL_RULE_ADD_MAX] = {
 	PPECFG_PARAM_INIT(PPECFG_ACL_RULE_ADD_RULE_ID, "rule_id="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_RULE_ADD_DEV, "src_dev="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_RULE_ADD_POST_ROUTE_EN, "post_route_en="),
+	PPECFG_PARAM_INIT(PPECFG_ACL_RULE_ADD_FLOW_QOS_OVERRIDE, "flow_qos_override="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_RULE_ADD_PRIORITY, "priority="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_RULE_ADD_OUTER_HEADER, "outer_header_en="),
 	PPECFG_PARAMARR_INIT(PPECFG_ACL_RULE_ADD_SMAC, "smac", smac_params, ppecfg_param_iter_tbl),
@@ -286,6 +287,20 @@ static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_i
 
 			if (bool_val == true) {
 				nl_msg.rule.cmn.cmn_flags |= PPE_ACL_RULE_CMN_FLAG_POST_RT_EN;
+			}
+
+			bool_val = false;
+			break;
+
+		case PPECFG_ACL_RULE_ADD_FLOW_QOS_OVERRIDE:
+			error = ppecfg_param_get_bool(sub_params->data, &bool_val);
+			if (error < 0) {
+				ppecfg_log_data_error(sub_params);
+				goto done;
+			}
+
+			if (bool_val == true) {
+				nl_msg.rule.cmn.cmn_flags |= PPE_ACL_RULE_CMN_FLAG_FLOW_QOS_OVERRIDE;
 			}
 
 			bool_val = false;
