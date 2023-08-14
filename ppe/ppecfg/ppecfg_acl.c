@@ -574,7 +574,7 @@ static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_i
 		goto print_error;
 	} else if (data && !error) {
 		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_PPPOE_SESS_VALID;
-		nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_PPPOE_SESS].rule_flags &= ~PPE_ACL_RULE_FLAG_PPPOE_MASK;
+		nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_PPPOE_SESS].rule_flags |= PPE_ACL_RULE_FLAG_PPPOE_MASK;
 	}
 
 	/*
