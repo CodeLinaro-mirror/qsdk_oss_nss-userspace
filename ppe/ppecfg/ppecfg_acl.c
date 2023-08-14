@@ -697,12 +697,17 @@ static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_i
 	error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_TTL_HOPLIMIT].rule.ttl_hop.hop_limit);
 	if (data && error) {
 		goto print_error;
+	} else if (data && !error) {
+		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_TTL_HOPLIMIT_VALID;
 	}
 
 	data = sub_params[PPECFG_ACL_TTL_MASK].data;
 	error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_TTL_HOPLIMIT].rule.ttl_hop.hop_limit_mask);
 	if (data && error) {
 		goto print_error;
+	} else if (data && !error) {
+		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_TTL_HOPLIMIT_VALID;
+		nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_TTL_HOPLIMIT].rule_flags |= PPE_ACL_RULE_FLAG_TTL_HOPLIMIT_MASK;
 	}
 
 	/*
