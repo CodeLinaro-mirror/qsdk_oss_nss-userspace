@@ -263,6 +263,7 @@ static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_i
 	char *data;
 	uint8_t is_v6;
 	uint8_t mirror_en;
+	uint16_t port;
 	bool bool_val = false;
 
 	if (!param || !match) {
@@ -601,20 +602,22 @@ static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_i
 	sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_SPORT].sub_params;
 
 	data = sub_params[PPECFG_ACL_SPORT_MIN].data;
-	error = ppecfg_param_get_int(data, sizeof(uint16_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SPORT].rule.sport.l4_port_min);
+	error = ppecfg_param_get_int(data, sizeof(uint16_t), &port);
 	if (data && error) {
 		goto print_error;
 	} else if (data && !error) {
 		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_SPORT_VALID;
+		nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SPORT].rule.sport.l4_port_min = ntohs(port);
 	}
 
 	data = sub_params[PPECFG_ACL_SPORT_MASK].data;
-	error = ppecfg_param_get_int(data, sizeof(uint16_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SPORT].rule.sport.l4_port_max_mask);
+	error = ppecfg_param_get_int(data, sizeof(uint16_t), &port);
 	if (data && error) {
 		goto print_error;
 	} else if (data && !error) {
 		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_SPORT_VALID;
 		nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SPORT].rule_flags |= PPE_ACL_RULE_FLAG_SPORT_MASK;
+		nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SPORT].rule.sport.l4_port_max_mask = ntohs(port);
 	}
 
 	data = sub_params[PPECFG_ACL_SPORT_RANGE].data;
@@ -637,20 +640,22 @@ static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_i
 	sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_DPORT].sub_params;
 
 	data = sub_params[PPECFG_ACL_DPORT_MIN].data;
-	error = ppecfg_param_get_int(data, sizeof(uint16_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DPORT].rule.dport.l4_port_min);
+	error = ppecfg_param_get_int(data, sizeof(uint16_t), &port);
 	if (data && error) {
 		goto print_error;
 	} else if (data && !error) {
 		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_DPORT_VALID;
+		nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DPORT].rule.dport.l4_port_min = ntohs(port);
 	}
 
 	data = sub_params[PPECFG_ACL_DPORT_MASK].data;
-	error = ppecfg_param_get_int(data, sizeof(uint16_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DPORT].rule.dport.l4_port_max_mask);
+	error = ppecfg_param_get_int(data, sizeof(uint16_t), &port);
 	if (data && error) {
 		goto print_error;
 	} else if (data && !error) {
 		nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_DPORT_VALID;
 		nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DPORT].rule_flags |= PPE_ACL_RULE_FLAG_DPORT_MASK;
+		nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DPORT].rule.dport.l4_port_max_mask = ntohs(port);
 	}
 
 	data = sub_params[PPECFG_ACL_DPORT_RANGE].data;

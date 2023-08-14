@@ -129,8 +129,8 @@ enum ppecfg_acl_ttl {
 };
 
 enum ppecfg_acl_sport {
-	PPECFG_ACL_SPORT_MIN,
 	PPECFG_ACL_SPORT_MASK,
+	PPECFG_ACL_SPORT_MIN,
 	PPECFG_ACL_SPORT_RANGE,
 	PPECFG_ACL_SPORT_MAX
 };
