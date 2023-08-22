@@ -18,11 +18,13 @@
 #define __PPECFG_FAMILY_H
 
 #include "ppecfg_acl.h"
+#include "ppecfg_policer.h"
 #include <nss_ppenl_base.h>
 
 /*
  * Family match params
  */
 extern struct ppecfg_param ppecfg_acl_params[PPECFG_ACL_CMD_MAX];
+extern struct ppecfg_param ppecfg_policer_params[PPECFG_POLICER_CMD_MAX];
 
 #endif /* __PPECFG_FAMILY_H*/
