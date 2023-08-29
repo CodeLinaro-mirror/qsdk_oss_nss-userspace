@@ -17,7 +17,12 @@
 #ifndef __PPECFG_POLICER_H
 #define __PPECFG_POLICER_H
 #define PPECFG_POLICER_HDR_VERSION 4
-
+#define PPECFG_POLICER_MIN_INFO_RATE_BYTE 0x1F40	/* HW supported byte based min rate 64 kbps*/
+#define PPECFG_POLICER_MAX_INFO_RATE_BYTE 0x4A817C80	/* HW supported byte based max rate 10 Gbps */
+#define PPECFG_POLICER_MIN_INFO_RATE_FRAME 0x6		/* HW supported frame based min rate 6 pps */
+#define PPECFG_POLICER_MAX_INFO_RATE_FRAME 0xE310E8	/* HW supported frame based max rate 14881000 pps */
+#define PPECFG_POLICER_MAX_BURST_SIZE_FRAME 0x1FF2B60	/* HW supported frame based max burst size 4.29 Gbyte */
+#define PPECFG_POLICER_MAX_BURST_SIZE_BYTE 0x4A817C80	/* HW supported byte based max burst size 33.5 million packet */
 /*
  * PPECFG POLICER commands
  */

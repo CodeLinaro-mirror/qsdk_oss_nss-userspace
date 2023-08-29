@@ -406,6 +406,65 @@ static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_par
 	}
 
 	/*
+	 * Checking Min Max values for CIR, EIR, CBS, EBS
+	 */
+	if(!nl_msg.config.meter_unit) {
+		if (nl_msg.config.committed_rate < PPECFG_POLICER_MIN_INFO_RATE_BYTE) {
+			ppecfg_log_error("Minimum committed rate : %d\n", PPECFG_POLICER_MIN_INFO_RATE_BYTE);
+			goto done;
+		}
+
+		if (nl_msg.config.committed_rate > PPECFG_POLICER_MAX_INFO_RATE_BYTE) {
+			ppecfg_log_error("Maximum committed rate : %d\n", PPECFG_POLICER_MAX_INFO_RATE_BYTE);
+			goto done;
+		}
+
+		if (nl_msg.config.peak_rate < PPECFG_POLICER_MIN_INFO_RATE_BYTE) {
+			ppecfg_log_error("Minimum peak rate : %d\n", PPECFG_POLICER_MIN_INFO_RATE_BYTE);
+			goto done;
+		}
+
+		if (nl_msg.config.peak_rate > PPECFG_POLICER_MAX_INFO_RATE_BYTE) {
+			ppecfg_log_error("Maximum peak rate : %d\n", PPECFG_POLICER_MAX_INFO_RATE_BYTE);
+			goto done;
+		}
+
+	} else {
+		if (nl_msg.config.committed_rate < PPECFG_POLICER_MIN_INFO_RATE_FRAME) {
+			ppecfg_log_error("Minimum committed rate : %d\n", PPECFG_POLICER_MIN_INFO_RATE_FRAME);
+			goto done;
+		}
+
+		if (nl_msg.config.committed_rate > PPECFG_POLICER_MAX_INFO_RATE_FRAME) {
+			ppecfg_log_error("Maximum committed rate : %d\n", PPECFG_POLICER_MAX_INFO_RATE_FRAME);
+			goto done;
+		}
+
+		if (nl_msg.config.peak_rate < PPECFG_POLICER_MIN_INFO_RATE_FRAME) {
+			ppecfg_log_error("Minimum peak rate : %d\n", PPECFG_POLICER_MIN_INFO_RATE_FRAME);
+			goto done;
+		}
+
+		if (nl_msg.config.peak_rate > PPECFG_POLICER_MAX_INFO_RATE_FRAME) {
+			ppecfg_log_error("Maximum peak rate : %d\n", PPECFG_POLICER_MAX_INFO_RATE_FRAME);
+			goto done;
+		}
+	}
+
+	if (!nl_msg.config.meter_unit) {
+		if ((nl_msg.config.peak_burst_size > PPECFG_POLICER_MAX_BURST_SIZE_BYTE) || (nl_msg.config.committed_burst_size > PPECFG_POLICER_MAX_BURST_SIZE_BYTE)) {
+			ppecfg_log_error("Maximum burst size : %d\n", PPECFG_POLICER_MAX_BURST_SIZE_BYTE);
+			goto done;
+		}
+
+	} else {
+		if ((nl_msg.config.peak_burst_size > PPECFG_POLICER_MAX_BURST_SIZE_FRAME) || (nl_msg.config.committed_burst_size > PPECFG_POLICER_MAX_BURST_SIZE_FRAME)) {
+			ppecfg_log_error("Maximum burst size : %d\n", PPECFG_POLICER_MAX_BURST_SIZE_FRAME);
+			goto done;
+		}
+	}
+
+	/*
 	 * send message
 	 */
 	error = nss_ppenl_policer_rule_add(&nl_msg);
