@@ -38,7 +38,7 @@ static void nss_ppenl_policer_resp(void *user_ctx, struct nss_ppenl_policer_rule
 	switch (cmd) {
 		case NSS_PPE_POLICER_CREATE_RULE_MSG:
 			ret = policer_rule->config.ret;
-			if (ret != 0) {
+			if ((ret != PPECFG_POLICER_RET) && (ret != PPECFG_POLICER_RET_NON_PORT)) {
 				nss_ppenl_sock_log_error("Policer rule create failed with error: %d\n", ret);
 				return;
 			}
@@ -52,7 +52,7 @@ static void nss_ppenl_policer_resp(void *user_ctx, struct nss_ppenl_policer_rule
 			break;
 		case NSS_PPE_POLICER_DESTROY_RULE_MSG:
 			ret = policer_rule->config.ret;
-			if (ret != 0) {
+			if (ret != PPECFG_POLICER_RET) {
 				nss_ppenl_sock_log_error("Policer rule delete failed with error:%d\n",ret);
 				return;
 			}
