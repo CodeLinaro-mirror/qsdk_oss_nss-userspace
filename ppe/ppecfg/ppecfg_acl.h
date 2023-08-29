@@ -153,9 +153,9 @@ enum ppecfg_acl_ttl {
  * PPECFG ACL SPORT
  */
 enum ppecfg_acl_sport {
+	PPECFG_ACL_SPORT_RANGE,		/* SPORT Range Value */
 	PPECFG_ACL_SPORT_MASK,          /* SPORT Mask Value */
 	PPECFG_ACL_SPORT_MIN, 		/* SPORT Value */
-	PPECFG_ACL_SPORT_RANGE,		/* SPORT Range Value */
 	PPECFG_ACL_SPORT_NVAL, 		/* SPORT inverse Value */
 	PPECFG_ACL_SPORT_MAX
 };
@@ -164,9 +164,9 @@ enum ppecfg_acl_sport {
  * PPECFG ACL DPORT
  */
 enum ppecfg_acl_dport {
+	PPECFG_ACL_DPORT_RANGE,         /* DPORT Range Value */
 	PPECFG_ACL_DPORT_MASK,          /* DPORT Mask Value */
 	PPECFG_ACL_DPORT_MIN,		/* DPORT Value */
-	PPECFG_ACL_DPORT_RANGE,         /* DPORT Range Value */
 	PPECFG_ACL_DPORT_NVAL,          /* DPORT inverse Value */
 	PPECFG_ACL_DPORT_MAX
 };
