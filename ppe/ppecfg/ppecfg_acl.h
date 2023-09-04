@@ -210,6 +210,7 @@ enum ppecfg_acl_rule_add {
 	PPECFG_ACL_RULE_ADD_FLOW_QOS_OVERRIDE,        /* Flow QoS enable */
 	PPECFG_ACL_RULE_ADD_PRIORITY,           /* Priority */
 	PPECFG_ACL_RULE_ADD_OUTER_HEADER,       /* Outer Header */
+	PPECFG_ACL_RULE_ADD_METADATA,       	/* Metadata */
 	PPECFG_ACL_RULE_ADD_SMAC,               /* SMAC fields */
 	PPECFG_ACL_RULE_ADD_DMAC,               /* DMAC fields */
 	PPECFG_ACL_RULE_ADD_CVID,               /* CVID fields */
