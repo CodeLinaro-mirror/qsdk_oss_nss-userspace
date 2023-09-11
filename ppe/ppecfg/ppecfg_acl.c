@@ -184,6 +184,7 @@ static struct ppecfg_param rule_add_params[PPECFG_ACL_RULE_ADD_MAX] = {
 	PPECFG_PARAM_INIT(PPECFG_ACL_RULE_ADD_FLOW_QOS_OVERRIDE, "flow_qos_override="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_RULE_ADD_PRIORITY, "priority="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_RULE_ADD_OUTER_HEADER, "outer_header_en="),
+	PPECFG_PARAM_INIT(PPECFG_ACL_RULE_ADD_METADATA, "metadata_en="),
 	PPECFG_PARAMARR_INIT(PPECFG_ACL_RULE_ADD_SMAC, "smac", smac_params, ppecfg_param_iter_tbl),
 	PPECFG_PARAMARR_INIT(PPECFG_ACL_RULE_ADD_DMAC, "dmac", dmac_params, ppecfg_param_iter_tbl),
 	PPECFG_PARAMARR_INIT(PPECFG_ACL_RULE_ADD_CVID, "cvid", cvid_params, ppecfg_param_iter_tbl),
@@ -315,6 +316,20 @@ static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_i
 
 			if (bool_val == true) {
 				nl_msg.rule.cmn.cmn_flags |= PPE_ACL_RULE_CMN_FLAG_OUTER_HDR_MATCH;
+			}
+
+			bool_val = false;
+			break;
+
+		case PPECFG_ACL_RULE_ADD_METADATA:
+			error = ppecfg_param_get_bool(sub_params->data, &bool_val);
+			if (error < 0) {
+				ppecfg_log_data_error(sub_params);
+				goto done;
+			}
+
+			if (bool_val == true) {
+				nl_msg.rule.cmn.cmn_flags |= PPE_ACL_RULE_CMN_FLAG_METADATA_EN;
 			}
 
 			bool_val = false;
