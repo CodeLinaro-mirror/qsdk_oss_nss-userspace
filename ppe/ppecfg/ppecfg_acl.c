@@ -938,7 +938,7 @@ static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_i
 
 			data = sub_params[PPECFG_ACL_ACTION_FWD_CMD].data;
 			if (data) {
-				error = ppecfg_param_get_str(data, sizeof(uint8_t), &fwd_cmd);
+				error = ppecfg_param_get_str(data, sizeof(fwd_cmd), &fwd_cmd);
 				if (error) {
 					goto print_error;
 				}
