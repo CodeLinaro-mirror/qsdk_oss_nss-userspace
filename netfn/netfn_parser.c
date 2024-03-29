@@ -96,7 +96,7 @@ bool netfn_parse_json(json_t *root, struct nl_msg *msg)
 		if (json_is_object(value)) {
 			struct nlattr *data = NULL;
 
-			data = nla_nest_start(msg, netfn_string_to_int(key));
+			data = nla_nest_start(msg, netfn_string_to_int(key) | NLA_F_NESTED);
 
 			/*
 			 * Build the nested data from the sub scope
