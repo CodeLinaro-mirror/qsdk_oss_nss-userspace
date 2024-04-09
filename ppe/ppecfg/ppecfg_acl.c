@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2023-2024, Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -158,6 +158,15 @@ static struct ppecfg_param ttl_params[PPECFG_ACL_TTL_MAX] = {
 /*
  * rule add parameters
  */
+static struct ppecfg_param l3_len_param[PPECFG_ACL_L3_LEN_MAX] = {
+	PPECFG_PARAM_INIT(PPECFG_ACL_L3_LEN_MIN, "l3_len="),
+	PPECFG_PARAM_INIT(PPECFG_ACL_L3_LEN_MASK, "l3_len_mask="),
+	PPECFG_PARAM_INIT(PPECFG_ACL_L3_LEN_RANGE, "l3_len_range_en="),
+};
+
+/*
+ * rule add parameters
+ */
 static struct ppecfg_param action_params[PPECFG_ACL_ACTION_MAX] = {
 	PPECFG_PARAM_INIT(PPECFG_ACL_ACTION_FWD_CMD, "fwd_cmd="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_ACTION_SERVICE_CODE, "service_code="),
@@ -199,6 +208,7 @@ static struct ppecfg_param rule_add_params[PPECFG_ACL_RULE_ADD_MAX] = {
 	PPECFG_PARAMARR_INIT(PPECFG_ACL_RULE_ADD_DPORT, "dport", dport_params, ppecfg_param_iter_tbl),
 	PPECFG_PARAMARR_INIT(PPECFG_ACL_RULE_ADD_DSCP, "dscp_tc", dscp_params, ppecfg_param_iter_tbl),
 	PPECFG_PARAMARR_INIT(PPECFG_ACL_RULE_ADD_TTL, "ttl_hop", ttl_params, ppecfg_param_iter_tbl),
+	PPECFG_PARAMARR_INIT(PPECFG_ACL_RULE_ADD_L3_LEN, "l3_len", l3_len_param, ppecfg_param_iter_tbl),
 	PPECFG_PARAMARR_INIT(PPECFG_ACL_RULE_ADD_ACTION, "action", action_params, ppecfg_param_iter_tbl),
 };
 
@@ -931,6 +941,54 @@ static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_i
 				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_TTL_HOPLIMIT].rule_flags |= PPE_ACL_RULE_FLAG_TTL_HOPLIMIT_MASK;
 			}
 			break;
+
+		case PPECFG_ACL_RULE_ADD_L3_LEN:
+			sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_L3_LEN].sub_params;
+			nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_IP_LEN_VALID;
+
+			data = sub_params[PPECFG_ACL_L3_LEN_MIN].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint16_t),
+						&nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_IP_LEN].rule.l3_len.l3_length_min);
+				if (error < 0) {
+					ppecfg_log_data_error(sub_params);
+					goto done;
+				}
+			}
+
+			data = sub_params[PPECFG_ACL_L3_LEN_MASK].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint16_t),
+						&nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_IP_LEN].rule.l3_len.l3_length_mask_max);
+				if (error < 0) {
+					ppecfg_log_data_error(sub_params);
+					goto done;
+				}
+				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_IP_LEN].rule_flags |=
+					PPE_ACL_RULE_FLAG_IPLEN_MASK;
+			}
+
+			data = sub_params[PPECFG_ACL_L3_LEN_RANGE].data;
+			if (data) {
+				error = ppecfg_param_get_bool(data, &bool_val);
+				if (error < 0) {
+					ppecfg_log_data_error(sub_params);
+					goto done;
+				}
+				if (bool_val) {
+					if (!(nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_IP_LEN].rule_flags &
+								PPE_ACL_RULE_FLAG_IPLEN_MASK)) {
+						ppecfg_log_data_error(sub_params);
+						goto done;
+					}
+					nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_IP_LEN].rule_flags |=
+						PPE_ACL_RULE_FLAG_IPLEN_RANGE;
+				}
+			}
+
+			bool_val = false;
+			break;
+
 
 		case PPECFG_ACL_RULE_ADD_ACTION:
 			sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_ACTION].sub_params;
