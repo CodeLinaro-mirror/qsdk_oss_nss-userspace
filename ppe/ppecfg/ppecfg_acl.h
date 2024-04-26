@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2023-2024, Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -180,6 +180,13 @@ enum ppecfg_acl_dscp {
 	PPECFG_ACL_DSCP_MAX
 };
 
+enum ppecfg_acl_l3_len {
+	PPECFG_ACL_L3_LEN_MIN,		/* L3 length/min  */
+	PPECFG_ACL_L3_LEN_MASK,		/* L3 length max/mask */
+	PPECFG_ACL_L3_LEN_RANGE,	/* L3 length range enable */
+	PPECFG_ACL_L3_LEN_MAX
+};
+
 /*
  * PPECFG ACL Actions
  */
@@ -225,6 +232,7 @@ enum ppecfg_acl_rule_add {
 	PPECFG_ACL_RULE_ADD_DPORT,              /* DPORT fields */
 	PPECFG_ACL_RULE_ADD_DSCP,               /* DSCP fields */
 	PPECFG_ACL_RULE_ADD_TTL,                /* TTL fields */
+	PPECFG_ACL_RULE_ADD_L3_LEN,		/* L3 len fields */
 	PPECFG_ACL_RULE_ADD_ACTION,             /* Action fields */
 	PPECFG_ACL_RULE_ADD_MAX
 };
