@@ -194,6 +194,7 @@ static struct ppecfg_param rule_add_params[PPECFG_ACL_RULE_ADD_MAX] = {
 	PPECFG_PARAM_INIT(PPECFG_ACL_RULE_ADD_PRIORITY, "priority="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_RULE_ADD_OUTER_HEADER, "outer_header_en="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_RULE_ADD_METADATA, "metadata_en="),
+	PPECFG_PARAM_INIT(PPECFG_ACL_RULE_ADD_GROUP, "group="),
 	PPECFG_PARAMARR_INIT(PPECFG_ACL_RULE_ADD_SMAC, "smac", smac_params, ppecfg_param_iter_tbl),
 	PPECFG_PARAMARR_INIT(PPECFG_ACL_RULE_ADD_DMAC, "dmac", dmac_params, ppecfg_param_iter_tbl),
 	PPECFG_PARAMARR_INIT(PPECFG_ACL_RULE_ADD_CVID, "cvid", cvid_params, ppecfg_param_iter_tbl),
@@ -353,6 +354,17 @@ static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_i
 			}
 
 			nl_msg.rule.cmn.cmn_flags |= PPE_ACL_RULE_CMN_FLAG_PRI_EN;
+			break;
+
+		case PPECFG_ACL_RULE_ADD_GROUP:
+			error = ppecfg_param_get_int(sub_params->data, sizeof(uint16_t), &nl_msg.rule.cmn.group);
+			if (error < 0) {
+				ppecfg_log_data_error(sub_params);
+				goto done;
+			}
+
+			printf("nl_msg.rule.cmn.group: %d\n", nl_msg.rule.cmn.group);
+			nl_msg.rule.cmn.cmn_flags |= PPE_ACL_RULE_CMN_FLAG_GROUP_EN;
 			break;
 
 		case PPECFG_ACL_RULE_ADD_SMAC:
