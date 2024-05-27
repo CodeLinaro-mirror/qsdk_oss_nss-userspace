@@ -192,6 +192,7 @@ static struct ppecfg_param rule_add_params[PPECFG_ACL_RULE_ADD_MAX] = {
 	PPECFG_PARAM_INIT(PPECFG_ACL_RULE_ADD_POST_ROUTE_EN, "post_route_en="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_RULE_ADD_FLOW_QOS_OVERRIDE, "flow_qos_override="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_RULE_ADD_PRIORITY, "priority="),
+	PPECFG_PARAM_INIT(PPECFG_ACL_RULE_ADD_SRC_SC, "src_sc="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_RULE_ADD_OUTER_HEADER, "outer_header_en="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_RULE_ADD_METADATA, "metadata_en="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_RULE_ADD_GROUP, "group="),
@@ -284,10 +285,28 @@ static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_i
 
 			if (strcmp("flow" , nl_msg.rule.src.dev_name) == 0) {
 				nl_msg.rule.stype = PPE_ACL_RULE_SRC_TYPE_FLOW;
+			} else if (strcmp("sc" , nl_msg.rule.src.dev_name) == 0) {
+				memset(nl_msg.rule.src.dev_name, 0, sizeof(nl_msg.rule.src.dev_name));
+				nl_msg.rule.stype = PPE_ACL_RULE_SRC_TYPE_SC;
 			} else {
 				nl_msg.rule.stype = PPE_ACL_RULE_SRC_TYPE_DEV;
 			}
 
+			break;
+
+		case PPECFG_ACL_RULE_ADD_SRC_SC:
+			if (nl_msg.rule.stype != PPE_ACL_RULE_SRC_TYPE_SC) {
+				ppecfg_log_data_error(sub_params);
+				goto done;
+			}
+
+			error = ppecfg_param_get_int(sub_params->data, sizeof(uint8_t), &nl_msg.rule.src.sc);
+			if (error < 0) {
+				ppecfg_log_data_error(sub_params);
+				goto done;
+			}
+
+			printf("nl_msg.rule.src.sc: %d\n", nl_msg.rule.src.sc);
 			break;
 
 		case PPECFG_ACL_RULE_ADD_POST_ROUTE_EN:

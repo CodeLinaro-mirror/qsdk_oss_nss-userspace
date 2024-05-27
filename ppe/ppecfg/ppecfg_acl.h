@@ -216,6 +216,7 @@ enum ppecfg_acl_rule_add {
 	PPECFG_ACL_RULE_ADD_POST_ROUTE_EN,      /* Post route enable */
 	PPECFG_ACL_RULE_ADD_FLOW_QOS_OVERRIDE,        /* Flow QoS enable */
 	PPECFG_ACL_RULE_ADD_PRIORITY,           /* Priority */
+	PPECFG_ACL_RULE_ADD_SRC_SC,		/* Source service code */
 	PPECFG_ACL_RULE_ADD_OUTER_HEADER,       /* Outer Header */
 	PPECFG_ACL_RULE_ADD_METADATA,       	/* Metadata */
 	PPECFG_ACL_RULE_ADD_GROUP,		/* Group number */
