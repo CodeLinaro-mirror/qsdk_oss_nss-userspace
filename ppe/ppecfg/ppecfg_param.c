@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2023-2024, Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -367,4 +367,27 @@ bool ppecfg_param_verify_mac(char *str_mac, uint8_t mac[])
 	}
 
 	return true;
+}
+
+/*
+ * ppecfg_get_class()
+ *      Extracts and class_id.
+ */
+bool ppecfg_param_get_class(char *arg, uint32_t *class_id)
+{
+	uint16_t maj, min;
+	int ret;
+
+	if (!arg) {
+		return false;
+	}
+
+	ret = sscanf(arg, "%hx:%hx", &maj, &min);
+	if (!ret) {
+		return false;
+	}
+
+	*class_id = ((maj << 16) | min);
+	return true;
+
 }
