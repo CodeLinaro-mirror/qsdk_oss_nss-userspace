@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2023-2024, Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -24,6 +24,7 @@
 static struct ppecfg_param family_params[] = {
 	PPECFG_PARAMLIST_INIT("family=acl", ppecfg_acl_params, ppecfg_param_iter_tbl),
 	PPECFG_PARAMLIST_INIT("family=policer", ppecfg_policer_params, ppecfg_param_iter_tbl),
+	PPECFG_PARAMLIST_INIT("family=qos", ppecfg_qos_params, ppecfg_param_iter_tbl),
 };
 
 /*
