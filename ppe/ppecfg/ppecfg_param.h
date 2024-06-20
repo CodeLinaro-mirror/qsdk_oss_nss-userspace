@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2023-2024, Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -191,4 +191,13 @@ int ppecfg_param_get_protocol(char *str, uint8_t *protocol_num);
  * @return true on successful parsing else false
  */
 bool ppecfg_param_verify_mac(char *str_mac, uint8_t mac[]);
+
+/**
+ * @brief Extracts interger value of class_id from user input.
+ *
+ * @param arg[IN] Class_id string address
+ * @param class_id[OUT] pointer to the parsed input class
+ * @return true on successful parsing else false
+ */
+bool ppecfg_param_get_class(char *arg, uint32_t *class_id);
 #endif /* __PPECFG_PARAM_H*/

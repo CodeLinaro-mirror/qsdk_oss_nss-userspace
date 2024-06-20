@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2023-2024, Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -86,6 +86,7 @@ static int nss_ppenl_sock_init(struct nss_ppenl_sock_ctx *sock, nl_recvmsg_msg_c
 	 * is_avail is set to indicate the socket is available for send/listen
 	 */
 	sock->is_avail = true;
+
 	return 0;
 
 fail2:

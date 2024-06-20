@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2023-2024, Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -51,5 +51,7 @@
 #include <nss_ppenl_acl_api.h>
 #include <nss_ppenl_policer_if.h>
 #include <nss_ppenl_policer_api.h>
+#include <nss_ppenl_qos_if.h>
+#include <nss_ppenl_qos_api.h>
 
 #endif /* __NSS_PPENL_BASE_H__ */
