@@ -370,10 +370,10 @@ bool ppecfg_param_verify_mac(char *str_mac, uint8_t mac[])
 }
 
 /*
- * ppecfg_get_class()
- *      Extracts and class_id.
+ * ppecfg_get_handle()
+ *      Extracts Qdisc handle ID/Class ID from user input.
  */
-bool ppecfg_param_get_class(char *arg, uint32_t *class_id)
+bool ppecfg_param_get_handle(char *arg, uint32_t *handle_id)
 {
 	uint16_t maj, min;
 	int ret;
@@ -387,7 +387,10 @@ bool ppecfg_param_get_class(char *arg, uint32_t *class_id)
 		return false;
 	}
 
-	*class_id = ((maj << 16) | min);
+	/*
+	 * For classful qdiscs input can be either handle_id or class_id
+	 */
+	*handle_id = ((maj << 16) | min);
 	return true;
 
 }

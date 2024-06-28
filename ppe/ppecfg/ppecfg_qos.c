@@ -16,7 +16,7 @@ static int ppecfg_qos_get_int_pri(struct ppecfg_param *param, struct ppecfg_para
  */
 static struct ppecfg_param get_int_pri_params[PPECFG_QOS_MAX] = {
 	PPECFG_PARAM_INIT(PPECFG_QOS_DEV,"dev="),
-	PPECFG_PARAM_INIT(PPECFG_QOS_CLASS_ID, "class_id="),
+	PPECFG_PARAM_INIT(PPECFG_QOS_HANDLE_ID, "handle_id="),
 };
 
 
@@ -75,12 +75,12 @@ static int ppecfg_qos_get_int_pri(struct ppecfg_param *param, struct ppecfg_para
 
 			break;
 
-		case PPECFG_QOS_CLASS_ID:
+		case PPECFG_QOS_HANDLE_ID:
 			/*
 			 * Parse rule id from user
 			 */
-			sub_params = &param->sub_params[PPECFG_QOS_CLASS_ID];
-			error = ppecfg_param_get_class(sub_params->data, &nl_msg.config.class_id);
+			sub_params = &param->sub_params[PPECFG_QOS_HANDLE_ID];
+			error = ppecfg_param_get_handle(sub_params->data, &nl_msg.config.handle_id);
 			if (error < 0) {
 				ppecfg_log_arg_error(sub_params);
 				goto done;
@@ -91,6 +91,13 @@ static int ppecfg_qos_get_int_pri(struct ppecfg_param *param, struct ppecfg_para
 		}
 	}
 
+	if (!(*nl_msg.config.dev)) {
+		ppecfg_log_error("Please provide valid physical interface name\n");
+		goto done;
+	} else if (!nl_msg.config.handle_id) {
+		ppecfg_log_error("Please provide a Qdisc handle ID/leaf class ID to fetch details\n");
+		goto done;
+	}
 	/*
 	 * send message
 	 */
