@@ -193,11 +193,11 @@ int ppecfg_param_get_protocol(char *str, uint8_t *protocol_num);
 bool ppecfg_param_verify_mac(char *str_mac, uint8_t mac[]);
 
 /**
- * @brief Extracts interger value of class_id from user input.
+ * @brief Extracts Qdisc handle ID/Class ID from user input.
  *
- * @param arg[IN] Class_id string address
- * @param class_id[OUT] pointer to the parsed input class
- * @return true on successful parsing else false
+ * @param arg[IN]        Address of user input string.
+ * @param handle_id[OUT] Pointer to the parsed Qdisc handle ID/Class Id from user input.
+ * @return               True on successful parsing else False.
  */
-bool ppecfg_param_get_class(char *arg, uint32_t *class_id);
+bool ppecfg_param_get_handle(char *arg, uint32_t *handle_id);
 #endif /* __PPECFG_PARAM_H*/
