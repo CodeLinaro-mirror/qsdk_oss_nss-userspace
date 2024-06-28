@@ -27,13 +27,26 @@ static void nss_ppenl_qos_resp(void *user_ctx, struct nss_ppenl_qos_req *qos_req
 	switch (cmd) {
 		case NSS_PPE_QOS_GET_INT_PRI:
 			ret = qos_req->config.ret;
-			if ((ret != PPECFG_QOS_RET)) {
+			if (ret == PPECFG_QOS_RET_CLASS_NON_LEAF) {
+				nss_ppenl_sock_log_error("PPE queues are attached to only leaf classes and "
+						"the class_id entered is not a leaf class.\n"
+						"Please enter a leaf class_id or leaf qdisc handle_id.\n");
+				return;
+			} else if (ret == PPECFG_QOS_RET_INVALID_CLASS) {
+				nss_ppenl_sock_log_error("The input handle_id does not exist in the"
+						"qdisc heirarchy configured on the given interface\n");
+				return;
+			} else if (ret == PPECFG_QOS_RET_INVALID_DEV) {
+				nss_ppenl_sock_log_error("The physical interface name is invalid.\n"
+						"Please enter a valid interface name.");
+				return;
+			} else if ((ret != PPECFG_QOS_RET_SUCCESS)) {
 				nss_ppenl_sock_log_error("QoS req create failed with error: %d\n", ret);
 				return;
 			}
 
-			printf(" Class-Id: %x\n PPE-Queue#: %d\n INT_PRI: %d\n",
-						qos_req->config.class_id, qos_req->config.ucast_qid, qos_req->config.int_pri);
+			printf(" Handle-Id: %x\n PPE-Queue#: %d\n INT_PRI: %d\n",qos_req->config.handle_id,
+					qos_req->config.ucast_qid, qos_req->config.int_pri);
 			break;
 
 		default:
