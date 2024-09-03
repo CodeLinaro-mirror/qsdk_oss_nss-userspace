@@ -19,7 +19,7 @@ enum ppecfg_qos_cmd {
  */
 enum ppecfg_qos_get_int_pri {
 	PPECFG_QOS_DEV,	/*dev */
-	PPECFG_QOS_CLASS_ID,	/* class id */
+	PPECFG_QOS_HANDLE_ID,	/* class id or handle id*/
 	PPECFG_QOS_MAX	/* max attribute */
 };
 
