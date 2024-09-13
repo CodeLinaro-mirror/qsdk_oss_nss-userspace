@@ -35,6 +35,7 @@ enum ppecfg_acl_error {
 enum ppecfg_acl_cmd {
 	PPECFG_ACL_CMD_RULE_ADD,		/* flow add */
 	PPECFG_ACL_CMD_RULE_DEL,		/* flow delete */
+	PPECFG_ACL_CMD_RULE_FLUSH,		/* flush rules */
 	PPECFG_ACL_CMD_MAX
 };
 

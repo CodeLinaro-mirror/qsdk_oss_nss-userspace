@@ -26,6 +26,7 @@
 
 static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_in *match);
 static int ppecfg_acl_rule_del(struct ppecfg_param *param, struct ppecfg_param_in *match);
+static int ppecfg_acl_rule_flush(struct ppecfg_param *param, struct ppecfg_param_in *match);
 
 /*
  * Rule add parameters
@@ -227,6 +228,7 @@ static struct ppecfg_param rule_del_params[PPECFG_ACL_RULE_DEL_MAX] = {
 struct ppecfg_param ppecfg_acl_params[PPECFG_ACL_CMD_MAX] = {
 	PPECFG_PARAMLIST_INIT("cmd=rule_add", rule_add_params, ppecfg_acl_rule_add),
 	PPECFG_PARAMLIST_INIT("cmd=rule_del", rule_del_params, ppecfg_acl_rule_del),
+	PPECFG_PARAMFUNC_INIT("cmd=flush", ppecfg_acl_rule_flush),
 };
 
 /*
@@ -497,6 +499,7 @@ static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_i
 
 				if (bool_val == true) {
 					nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule_flags |= PPE_ACL_RULE_FLAG_VID_RANGE;
+					nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule_flags &= ~PPE_ACL_RULE_FLAG_VID_MASK;
 				}
 			}
 
@@ -545,6 +548,7 @@ static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_i
 
 				if (bool_val == true) {
 					nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule_flags |= PPE_ACL_RULE_FLAG_SVID_RANGE;
+					nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule_flags &= ~PPE_ACL_RULE_FLAG_VID_MASK;
 				}
 
 				bool_val = false;
@@ -870,6 +874,7 @@ static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_i
 
 				if (bool_val == true) {
 					nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SPORT].rule_flags |= PPE_ACL_RULE_FLAG_SPORT_RANGE;
+					nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_SPORT].rule_flags &= ~PPE_ACL_RULE_FLAG_SPORT_MASK;
 				}
 
 				bool_val = false;
@@ -925,6 +930,7 @@ static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_i
 
 				if (bool_val == true) {
 					nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DPORT].rule_flags |= PPE_ACL_RULE_FLAG_DPORT_RANGE;
+					nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DPORT].rule_flags &= ~PPE_ACL_RULE_FLAG_DPORT_MASK;
 				}
 
 				bool_val = false;
@@ -1014,6 +1020,7 @@ static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_i
 					}
 					nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_IP_LEN].rule_flags |=
 						PPE_ACL_RULE_FLAG_IPLEN_RANGE;
+					nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_IP_LEN].rule_flags &= ~PPE_ACL_RULE_FLAG_IPLEN_MASK;
 				}
 			}
 
@@ -1232,5 +1239,25 @@ static int ppecfg_acl_rule_del(struct ppecfg_param *param, struct ppecfg_param_i
 	}
 
 done:
+	return error;
+}
+
+/*
+ * ppecfg_acl_rule_flush()
+ * 	Function to flush all acl rules
+ */
+static int ppecfg_acl_rule_flush(struct ppecfg_param *param, struct ppecfg_param_in *match)
+{
+	struct nss_ppenl_acl_rule nl_acl_msg = {{0}};
+	int error;
+
+	nss_ppenl_acl_init_rule(&nl_acl_msg, NSS_PPE_ACL_FLUSH_RULE_MSG);
+
+	error = nss_ppenl_acl_rule_flush(&nl_acl_msg);
+	if (error) {
+		ppecfg_log_warn("Flush policer rule failed!\n");
+		return error;
+	}
+
 	return error;
 }

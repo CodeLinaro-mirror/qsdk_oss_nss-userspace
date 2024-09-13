@@ -16,6 +16,7 @@
 
 #include <string.h>
 #include <ctype.h>
+#include <json-c/json.h>
 #include "ppecfg_hlos.h"
 #include "ppecfg_param.h"
 
@@ -393,4 +394,36 @@ bool ppecfg_param_get_handle(char *arg, uint32_t *handle_id)
 	*handle_id = ((maj << 16) | min);
 	return true;
 
+}
+
+/*
+ * ppecfg_get_json_object()
+ * 	returns the json object for the matching parameter
+ */
+struct json_object* ppecfg_get_json_object(struct json_object *res, const char *param)
+{
+	struct json_object *val;
+	if (!json_object_object_get_ex(res, param, &val)) {
+		return NULL;
+	}
+
+	return val;
+}
+
+/*
+ * ppecfg_json_object_handler()
+ *	returns the string value of a json_object
+ */
+char *ppecfg_json_object_handler(struct json_object *rule_obj, const char *param)
+{
+	struct json_object *obj = ppecfg_get_json_object(rule_obj, param);
+	const char *val = NULL;
+
+	if (!obj) {
+		return NULL;
+	} else {
+		val = json_object_get_string(obj);
+	}
+
+	return (char *)val;
 }

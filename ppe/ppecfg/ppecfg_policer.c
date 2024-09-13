@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2023-2024, Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -22,6 +22,7 @@
 
 static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_param_in *match);
 static int ppecfg_policer_rule_del(struct ppecfg_param *param, struct ppecfg_param_in *match);
+static int ppecfg_policer_rule_flush(struct ppecfg_param *param, struct ppecfg_param_in *match);
 
 /*
  *  policer_rule add parameters
@@ -62,11 +63,12 @@ static struct ppecfg_param rule_del_params[PPECFG_POLICER_RULE_DEL_MAX] = {
 struct ppecfg_param ppecfg_policer_params[PPECFG_POLICER_CMD_MAX] = {
 	PPECFG_PARAMLIST_INIT("cmd=rule_add", rule_add_params, ppecfg_policer_rule_add),
 	PPECFG_PARAMLIST_INIT("cmd=rule_del", rule_del_params, ppecfg_policer_rule_del),
+	PPECFG_PARAMFUNC_INIT("cmd=flush", ppecfg_policer_rule_flush),
 };
 
 /*
  * ppecfg_policer_del()
- * handle policer rule delete
+ * 	handle policer rule delete
  */
 static int ppecfg_policer_rule_del(struct ppecfg_param *param, struct ppecfg_param_in *match)
 {
@@ -153,8 +155,8 @@ done:
 }
 
 /*
- * ppecfg_policer_add()
- * handle policer rule add
+ * ppecfg_policer_rule_add()
+ * 	handle policer rule add
  */
 static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_param_in *match)
 {
@@ -473,5 +475,24 @@ static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_par
 		goto done;
 	}
 done:
+	return error;
+}
+
+/*
+ * ppecfg_policer_rule_flush()
+ * 	Function to flush all policer rules
+ */
+static int ppecfg_policer_rule_flush(struct ppecfg_param *param, struct ppecfg_param_in *match)
+{
+	struct nss_ppenl_policer_rule nl_policer_msg = {{0}};
+	int error;
+
+	nss_ppenl_policer_init_rule(&nl_policer_msg, NSS_PPE_POLICER_FLUSH_RULE_MSG);
+	error = nss_ppenl_policer_rule_flush(&nl_policer_msg);
+
+	if (error) {
+		ppecfg_log_warn("Flush rule failed!\n");
+	}
+
 	return error;
 }

@@ -17,20 +17,21 @@
 #include "ppecfg_hlos.h"
 #include "ppecfg_param.h"
 #include "ppecfg_family.h"
+#include "ppecfg_json_parser.h"
 
 /*
- * Family handler table
+ * Checking the next parameter to know if it is for CLI or Json parser
+ * if next parameter is family, the user is giving rule by CLI
+ * if next parameter is config_type=json, the user is giving rule by json parser
  */
-static struct ppecfg_param family_params[] = {
+static struct ppecfg_param cfg_param[] = {
 	PPECFG_PARAMLIST_INIT("family=acl", ppecfg_acl_params, ppecfg_param_iter_tbl),
 	PPECFG_PARAMLIST_INIT("family=policer", ppecfg_policer_params, ppecfg_param_iter_tbl),
 	PPECFG_PARAMLIST_INIT("family=qos", ppecfg_qos_params, ppecfg_param_iter_tbl),
+	PPECFG_PARAMLIST_INIT("config_type=json", ppecfg_json_parser_param, ppecfg_json_parser_handler),
 };
 
-/*
- * PPECFG handler table
- */
-static struct ppecfg_param root = PPECFG_PARAMLIST_INIT("ppecfg", family_params, NULL);
+static struct ppecfg_param root = PPECFG_PARAMLIST_INIT("ppecfg", cfg_param, NULL);
 
 /*
  * main()

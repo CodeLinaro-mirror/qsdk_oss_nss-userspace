@@ -30,6 +30,14 @@
 	.valid = false,		\
 }
 
+#define PPECFG_PARAMFUNC_INIT(_param, _match_cb) {	\
+	.name = (_param),	\
+	.len = sizeof(_param) - 1,	\
+	.num_params = 1,	\
+	.match_cb = (_match_cb),	\
+	.valid = false,		\
+}
+
 #define PPECFG_PARAMLIST_INIT(_param, _sub_param_tbl, _match_cb) {	\
 	.name = (_param),	\
 	.len = sizeof(_param) - 1,	\
@@ -200,4 +208,25 @@ bool ppecfg_param_verify_mac(char *str_mac, uint8_t mac[]);
  * @return               True on successful parsing else False.
  */
 bool ppecfg_param_get_handle(char *arg, uint32_t *handle_id);
+
+/**
+ * @brief Checks for the matching parameter and returns the value
+ *
+ * @param obj		Previous Json Object Response
+ * @param param 	Matching parameter
+ *
+ * @return		Json object value for matching parameter
+ */
+struct json_object *ppecfg_get_json_object(struct json_object *obj, const char *param);
+
+/**
+ * @brief Extracts Json object and converts the value to string
+ *
+ * @param obj		Previous Json Object Response
+ * @param param		Matching parameter
+ *
+ * @return		Json object value for matching parameter in string format
+ */
+char *ppecfg_json_object_handler(struct json_object *rule_obj, const char *param);
+
 #endif /* __PPECFG_PARAM_H*/

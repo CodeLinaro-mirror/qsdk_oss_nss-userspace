@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2023-2024, Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -29,6 +29,7 @@
 enum ppecfg_policer_cmd {
 	PPECFG_POLICER_ADD,	/* POLICER ADD*/
 	PPECFG_POLICER_DEL,	/* POLICER DEL*/
+	PPECFG_POLICER_FLUSH,	/* POLICER FLUSH*/
 	PPECFG_POLICER_CMD_MAX
 };
 
