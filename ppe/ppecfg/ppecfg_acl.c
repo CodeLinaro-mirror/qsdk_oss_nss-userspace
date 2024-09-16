@@ -102,9 +102,9 @@ static struct ppecfg_param ether_params[PPECFG_ACL_ETHER_MAX] = {
 /*
  * rule add parameters
  */
-static struct ppecfg_param dscp_params[PPECFG_ACL_DSCP_MAX] = {
-	PPECFG_PARAM_INIT(PPECFG_ACL_DSCP_MIN, "dscp_tc="),
-	PPECFG_PARAM_INIT(PPECFG_ACL_DSCP_MASK, "dscp_tc_mask="),
+static struct ppecfg_param tos_tc_params[PPECFG_ACL_TOS_TC_MAX] = {
+	PPECFG_PARAM_INIT(PPECFG_ACL_TOS_TC_MIN, "tos_tc="),
+	PPECFG_PARAM_INIT(PPECFG_ACL_TOS_TC_MASK, "tos_tc_mask="),
 };
 
 /*
@@ -174,7 +174,7 @@ static struct ppecfg_param action_params[PPECFG_ACL_ACTION_MAX] = {
 	PPECFG_PARAM_INIT(PPECFG_ACL_ACTION_QID, "qid="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_ACTION_CTAG_PCP, "c_pcp="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_ACTION_STAG_PCP, "s_pcp="),
-	PPECFG_PARAM_INIT(PPECFG_ACL_ACTION_DSCP_TC, "dscp="),
+	PPECFG_PARAM_INIT(PPECFG_ACL_ACTION_TOS_TC, "tos-tc="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_ACTION_CVID, "c_vid="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_ACTION_SVID, "s_vid="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_ACTION_DEST, "dest_dev="),
@@ -208,7 +208,7 @@ static struct ppecfg_param rule_add_params[PPECFG_ACL_RULE_ADD_MAX] = {
 	PPECFG_PARAMARR_INIT(PPECFG_ACL_RULE_ADD_DIP, "dip", dip_params, ppecfg_param_iter_tbl),
 	PPECFG_PARAMARR_INIT(PPECFG_ACL_RULE_ADD_SPORT, "sport", sport_params, ppecfg_param_iter_tbl),
 	PPECFG_PARAMARR_INIT(PPECFG_ACL_RULE_ADD_DPORT, "dport", dport_params, ppecfg_param_iter_tbl),
-	PPECFG_PARAMARR_INIT(PPECFG_ACL_RULE_ADD_DSCP, "dscp_tc", dscp_params, ppecfg_param_iter_tbl),
+	PPECFG_PARAMARR_INIT(PPECFG_ACL_RULE_ADD_TOS_TC, "tos_tc", tos_tc_params, ppecfg_param_iter_tbl),
 	PPECFG_PARAMARR_INIT(PPECFG_ACL_RULE_ADD_TTL, "ttl_hop", ttl_params, ppecfg_param_iter_tbl),
 	PPECFG_PARAMARR_INIT(PPECFG_ACL_RULE_ADD_L3_LEN, "l3_len", l3_len_param, ppecfg_param_iter_tbl),
 	PPECFG_PARAMARR_INIT(PPECFG_ACL_RULE_ADD_ACTION, "action", action_params, ppecfg_param_iter_tbl),
@@ -931,24 +931,24 @@ static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_i
 			}
 			break;
 
-		case PPECFG_ACL_RULE_ADD_DSCP:
-			sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_DSCP].sub_params;
-			nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_DSCP_TC_VALID;
+		case PPECFG_ACL_RULE_ADD_TOS_TC:
+			sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_TOS_TC].sub_params;
+			nl_msg.rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_TOS_TC_VALID;
 
-			data = sub_params[PPECFG_ACL_DSCP_MIN].data;
-			error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DSCP_TC].rule.dscp_tc.l3_dscp_tc);
+			data = sub_params[PPECFG_ACL_TOS_TC_MIN].data;
+			error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_TOS_TC].rule.tos_tc.l3_tos_tc);
 			if (error) {
 				goto print_error;
 			}
 
-			data = sub_params[PPECFG_ACL_DSCP_MASK].data;
+			data = sub_params[PPECFG_ACL_TOS_TC_MASK].data;
 			if (data) {
-				error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DSCP_TC].rule.dscp_tc.l3_dscp_tc_mask);
+				error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_TOS_TC].rule.tos_tc.l3_tos_tc_mask);
 				if (error) {
 					goto print_error;
 				}
 
-				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_DSCP_TC].rule_flags |= PPE_ACL_RULE_FLAG_DSCP_TC_MASK;
+				nl_msg.rule.rules[PPE_ACL_RULE_MATCH_TYPE_TOS_TC].rule_flags |= PPE_ACL_RULE_FLAG_TOS_TC_MASK;
 			}
 			break;
 
@@ -1098,14 +1098,14 @@ static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_i
 				nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_STAG_PCP_CHANGE_EN;
 			}
 
-			data = sub_params[PPECFG_ACL_ACTION_DSCP_TC].data;
+			data = sub_params[PPECFG_ACL_ACTION_TOS_TC].data;
 			if (data) {
-				error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.action.dscp_tc);
+				error = ppecfg_param_get_int(data, sizeof(uint8_t), &nl_msg.rule.action.tos_tc);
 				if (error) {
 					goto print_error;
 				}
 
-				nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_DSCP_TC_CHANGE_EN;
+				nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_TOS_TC_CHANGE_EN;
 			}
 
 			data = sub_params[PPECFG_ACL_ACTION_CVID].data;
