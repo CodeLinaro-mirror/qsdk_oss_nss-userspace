@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2023-2024 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -21,5 +21,6 @@
 void nss_ppenl_policer_init_rule(struct nss_ppenl_policer_rule *rule, enum nss_ppe_policer_message_types type);
 int nss_ppenl_policer_rule_add(struct nss_ppenl_policer_rule *rule);
 int nss_ppenl_policer_rule_del(struct nss_ppenl_policer_rule *rule);
+int nss_ppenl_policer_rule_flush(struct nss_ppenl_policer_rule *rule);
 
 #endif /* __NSS_PPENL_POLICER_API_H__ */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2023-2024, Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -57,6 +57,16 @@ static void nss_ppenl_acl_resp(void *user_ctx, struct nss_ppenl_acl_rule *acl_ru
 		nss_ppenl_sock_log_info("ACL rule destroy successful for rule_id %d\n", acl_rule->rule.rule_id);
 		break;
 
+	case NSS_PPE_ACL_FLUSH_RULE_MSG:
+		ret = acl_rule->rule.ret;
+		if (ret != PPE_ACL_RET_SUCCESS) {
+			nss_ppenl_sock_log_error("ACL rule flush failed with error: %d\n", ret);
+			return;
+		}
+
+		nss_ppenl_sock_log_info("ACL rule flush successful\n");
+		break;
+
 	default:
 		nss_ppenl_sock_log_error("unsupported message cmd type(%d)\n", cmd);
 	}
@@ -84,6 +94,7 @@ int nss_ppenl_acl_sock_cb(struct nl_msg *msg, void *arg)
 	switch (cmd) {
 	case NSS_PPE_ACL_CREATE_RULE_MSG:
 	case NSS_PPE_ACL_DESTROY_RULE_MSG:
+	case NSS_PPE_ACL_FLUSH_RULE_MSG:
 	{
 		void *cb_data = nss_ppenl_cmn_get_cb_data(&rule->cm, sock->family_id);
 		if (!cb_data) {
@@ -257,6 +268,40 @@ int nss_ppenl_acl_rule_add(struct nss_ppenl_acl_rule *rule) {
 	error = nss_ppenl_acl_sock_send(&nss_acl_ctx, rule, nss_ppenl_acl_resp);
 	if (error < 0) {
 		nss_ppenl_sock_log_error("Unable to send message\n");
+		goto done;
+	}
+
+done:
+	/*
+	 * close the socket
+	 */
+	nss_ppenl_acl_sock_close(&nss_acl_ctx);
+	return error;
+}
+
+/*
+ * nss_ppenl_acl_rule_flush()
+ * 	flushing rules in PPE
+ */
+int nss_ppenl_acl_rule_flush(struct nss_ppenl_acl_rule *rule)
+{
+	int error;
+
+	/*
+	 * open the NSS NL ACL socket
+	 */
+	error = nss_ppenl_acl_sock_open(&nss_acl_ctx, NULL);
+	if (error < 0) {
+		nss_ppenl_sock_log_error("Failed to open ACL socket; error(%d)\n", error);
+		return error;
+	}
+
+	/*
+	 * send message
+	 */
+	error = nss_ppenl_acl_sock_send(&nss_acl_ctx, rule, nss_ppenl_acl_resp);
+	if (error < 0) {
+		nss_ppenl_sock_log_error("Unable to send message; error(%d)\n", error);
 		goto done;
 	}
 

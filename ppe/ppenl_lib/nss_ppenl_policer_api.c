@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2023-2024, Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -46,7 +46,7 @@ static void nss_ppenl_policer_resp(void *user_ctx, struct nss_ppenl_policer_rule
 			if (!policer_rule->config.is_port_policer) {
 				nss_ppenl_sock_log_info("Policer rule create successful for rule_id %d\n", policer_rule->config.policer_id);
 			} else {
-				nss_ppenl_sock_log_info("Policer rule create successful for dev %s\n",policer_rule->config.dev);
+				nss_ppenl_sock_log_info("Policer rule create successful for dev %s\n", policer_rule->config.dev);
 			}
 
 			break;
@@ -58,9 +58,23 @@ static void nss_ppenl_policer_resp(void *user_ctx, struct nss_ppenl_policer_rule
 			}
 
 			if (!policer_rule->config.is_port_policer) {
-				nss_ppenl_sock_log_info("Policer rule delete successful for rule_id %d\n",policer_rule->config.policer_id);
+				nss_ppenl_sock_log_info("Policer rule delete successful for rule_id %d\n", policer_rule->config.policer_id);
 			} else {
-				nss_ppenl_sock_log_info("Policer rule delete successful for dev %s\n",policer_rule->config.dev);
+				nss_ppenl_sock_log_info("Policer rule delete successful for dev %s\n", policer_rule->config.dev);
+			}
+
+			break;
+		case NSS_PPE_POLICER_FLUSH_RULE_MSG:
+			ret = policer_rule->config.ret;
+			if (ret != PPECFG_POLICER_RET) {
+				nss_ppenl_sock_log_error("Policer rule flush failed with error:%d\n", ret);
+				return;
+			}
+
+			if (!policer_rule->config.is_port_policer) {
+				nss_ppenl_sock_log_info("Policer rule flush successful\n");
+			} else {
+				nss_ppenl_sock_log_info("Policer rule flush successful for dev\n");
 			}
 
 			break;
@@ -68,6 +82,7 @@ static void nss_ppenl_policer_resp(void *user_ctx, struct nss_ppenl_policer_rule
 			nss_ppenl_sock_log_error("unsupported message cmd type(%d)", cmd);
 	}
 }
+
 /*
  * nss_ppenl_policer_sock_cb()
  *	NSS NL POLICER callback
@@ -90,6 +105,7 @@ int nss_ppenl_policer_sock_cb(struct nl_msg *msg, void *arg)
 	switch (cmd) {
 	case NSS_PPE_POLICER_CREATE_RULE_MSG:
 	case NSS_PPE_POLICER_DESTROY_RULE_MSG:
+	case NSS_PPE_POLICER_FLUSH_RULE_MSG:
 	{
 		void *cb_data = nss_ppenl_cmn_get_cb_data(&rule->cm, sock->family_id);
 		if (!cb_data) {
@@ -264,6 +280,40 @@ int nss_ppenl_policer_rule_add(struct nss_ppenl_policer_rule *rule) {
 		nss_ppenl_sock_log_error("Unable to send message\n");
 		goto done;
 	}
+done:
+	/*
+	 * close the socket
+	 */
+	nss_ppenl_policer_sock_close(&nss_policer_ctx);
+	return error;
+}
+
+/*
+ * nss_ppenl_policer_rule_flush
+ *	Flush Policer rules in PPE
+ */
+int nss_ppenl_policer_rule_flush(struct nss_ppenl_policer_rule *rule)
+{
+	int error;
+
+	/*
+	 * open the NSS NL POLICER socket
+	 */
+	error = nss_ppenl_policer_sock_open(&nss_policer_ctx, NULL);
+	if (error < 0) {
+		nss_ppenl_sock_log_error("Failed to open POLICER socket; error(%d)\n", error);
+		return error;
+	}
+
+	/*
+	 * send message
+	 */
+	error = nss_ppenl_policer_sock_send(&nss_policer_ctx, rule, nss_ppenl_policer_resp);
+	if (error < 0) {
+		nss_ppenl_sock_log_error("Unable to send message; error(%d)\n", error);
+		goto done;
+	}
+
 done:
 	/*
 	 * close the socket
