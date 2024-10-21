@@ -172,12 +172,12 @@ enum ppecfg_acl_dport {
 };
 
 /*
- * PPECFG ACL DSCP
+ * PPECFG ACL TOS/TC
  */
-enum ppecfg_acl_dscp {
-	PPECFG_ACL_DSCP_MIN,		/* DSCP Value */
-	PPECFG_ACL_DSCP_MASK,           /* DSCP Mask Value */
-	PPECFG_ACL_DSCP_MAX
+enum ppecfg_acl_tos_tc {
+	PPECFG_ACL_TOS_TC_MIN,		/* TOS/TC Value */
+	PPECFG_ACL_TOS_TC_MASK,		/* TOS/TC Mask Value */
+	PPECFG_ACL_TOS_TC_MAX
 };
 
 enum ppecfg_acl_l3_len {
@@ -197,7 +197,7 @@ enum ppecfg_acl_action {
 	PPECFG_ACL_ACTION_QID,			/* QID Value */
 	PPECFG_ACL_ACTION_CTAG_PCP,		/* CTAG PCP */
 	PPECFG_ACL_ACTION_STAG_PCP,		/* STAG PCP */
-	PPECFG_ACL_ACTION_DSCP_TC,		/* DSCP TC */
+	PPECFG_ACL_ACTION_TOS_TC,		/* TOS TC */
 	PPECFG_ACL_ACTION_CVID,			/* CVID Tag */
 	PPECFG_ACL_ACTION_SVID,			/* SVID Tag */
 	PPECFG_ACL_ACTION_DEST,			/* Dest Flag */
@@ -232,7 +232,7 @@ enum ppecfg_acl_rule_add {
 	PPECFG_ACL_RULE_ADD_DIP,                /* DIP fields */
 	PPECFG_ACL_RULE_ADD_SPORT,              /* SPORT fields */
 	PPECFG_ACL_RULE_ADD_DPORT,              /* DPORT fields */
-	PPECFG_ACL_RULE_ADD_DSCP,               /* DSCP fields */
+	PPECFG_ACL_RULE_ADD_TOS_TC,             /* TOS/TC fields */
 	PPECFG_ACL_RULE_ADD_TTL,                /* TTL fields */
 	PPECFG_ACL_RULE_ADD_L3_LEN,		/* L3 len fields */
 	PPECFG_ACL_RULE_ADD_ACTION,             /* Action fields */
