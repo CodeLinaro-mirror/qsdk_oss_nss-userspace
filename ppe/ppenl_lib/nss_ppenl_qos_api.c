@@ -45,8 +45,8 @@ static void nss_ppenl_qos_resp(void *user_ctx, struct nss_ppenl_qos_req *qos_req
 				return;
 			}
 
-			printf(" Handle-Id: %x\n PPE-Queue#: %d\n INT_PRI: %d\n",qos_req->config.handle_id,
-					qos_req->config.ucast_qid, qos_req->config.int_pri);
+			printf("\n PPE-Queue#: %d\n INT_PRI: %d\n", qos_req->config.ucast_qid,
+					qos_req->config.int_pri);
 			break;
 
 		default:
