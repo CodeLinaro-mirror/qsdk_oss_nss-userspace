@@ -32,6 +32,5 @@ clean:
 	@echo [Clean]
 	@rm -f $(OBJECTS)
 	@rm -f $(BINARY)
-	@rmdir $(OBJPATH)
-
+	@rm -rf $(OBJPATH)
 .PHONY: clean
