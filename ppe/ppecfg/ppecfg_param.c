@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024, Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2023-2025, Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -19,6 +19,11 @@
 #include <json-c/json.h>
 #include "ppecfg_hlos.h"
 #include "ppecfg_param.h"
+
+/*
+ * Object for json configuration files
+ */
+struct json_object *json_obj;
 
 /*
  * ******************

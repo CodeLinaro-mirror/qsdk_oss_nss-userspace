@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025, Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2025, Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,21 +14,16 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef __PPECFG_FAMILY_H
-#define __PPECFG_FAMILY_H
+#ifndef __PPECFG_EXCEPTION_H
+#define __PPECFG_EXCEPTION_H
 
-#include "ppecfg_acl.h"
-#include "ppecfg_policer.h"
-#include "ppecfg_qos.h"
-#include "ppecfg_exception.h"
-#include <nss_ppenl_base.h>
+#define PPECFG_EXCEPTION_TUNNEL_FLOW_TYPE 0x0400
 
-/*
- * Family match params
- */
-extern struct ppecfg_param ppecfg_acl_params[PPECFG_ACL_CMD_MAX];
-extern struct ppecfg_param ppecfg_policer_params[PPECFG_POLICER_CMD_MAX];
-extern struct ppecfg_param ppecfg_qos_params[PPECFG_QOS_CMD_MAX];
-extern struct ppecfg_param ppecfg_exception_params[PPECFG_EXCEPTION_PARAM_MAX];
+enum ppecfg_exception_param {
+	PPECFG_EXCEPTION_CONFIG_PATH,
+	PPECFG_EXCEPTION_PARAM_MAX
+};
 
-#endif /* __PPECFG_FAMILY_H*/
+int ppecfg_exception_parser(struct ppecfg_param *param, struct ppecfg_param_in *match);
+
+#endif /* __PPECFG_EXCEPTION_H*/

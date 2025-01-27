@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2024-2025, Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -35,7 +35,6 @@
  */
 #define PPECFG_JSON_PARSER_PATH "/etc/ppecfg/ppecfg_acl_config.json"
 
-struct json_object *json_obj;
 struct ppecfg_param ppecfg_json_parser_param[PPECFG_JSON_PARSER_PARAM_MAX] = {
 	PPECFG_PARAM_INIT(PPECFG_JSON_PARSER_CONFIG_PATH, "path="),
 };

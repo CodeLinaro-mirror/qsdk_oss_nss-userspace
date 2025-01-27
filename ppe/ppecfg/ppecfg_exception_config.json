@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025, Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2025, Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,21 +14,34 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef __PPECFG_FAMILY_H
-#define __PPECFG_FAMILY_H
-
-#include "ppecfg_acl.h"
-#include "ppecfg_policer.h"
-#include "ppecfg_qos.h"
-#include "ppecfg_exception.h"
-#include <nss_ppenl_base.h>
-
 /*
- * Family match params
+ * Parameter description
+ * flow_type : l2_only|l3_only|l2_flow|l3_flow|l2_flow_hit|l3_flow_hit
+ * 				 |l2_flow_miss|l3_flow_miss|tun_flow|mcast_flow
+ * give type of flow according to the requirement as given above
  */
-extern struct ppecfg_param ppecfg_acl_params[PPECFG_ACL_CMD_MAX];
-extern struct ppecfg_param ppecfg_policer_params[PPECFG_POLICER_CMD_MAX];
-extern struct ppecfg_param ppecfg_qos_params[PPECFG_QOS_CMD_MAX];
-extern struct ppecfg_param ppecfg_exception_params[PPECFG_EXCEPTION_PARAM_MAX];
 
-#endif /* __PPECFG_FAMILY_H*/
+ {
+	"exceptions":
+	[
+		{
+			"exception": {
+				"code": "unknown_l2_port",
+				"deaccel_en": "true",
+				"flush_en": "false",
+				"flow_type": "l2_only|l3_only",
+				"action": "DROP",
+				"tun_profile": "1|2"
+			}
+		},
+		{
+			"exception": {
+				"code": "pppoe_wrong_ver_type",
+				"deaccel_en": "true",
+				"flush_en": "false",
+				"flow_type": "l2_only",
+				"action": "REDIR"
+			}
+		}
+	]
+}
