@@ -21,6 +21,11 @@ SOURCES := $(filter-out $(SRCPATH)/nss_ppenl_pm_api.c, $(SOURCES))
 SOURCES := $(filter-out $(SRCPATH)/nss_ppenl_vlan_api.c, $(SOURCES))
 SOURCES := $(filter-out $(SRCPATH)/nss_ppenl_port_mgmt_api.c, $(SOURCES))
 endif
+ifneq ($(filter $(SoC),ipq52xx),)
+EXTRA_CFLAGS += -DNSS_PPE_DOT1P_FEATURE
+else
+SOURCES := $(filter-out $(SRCPATH)/nss_ppenl_dot1p_api.c, $(SOURCES))
+endif
 OBJECTS = $(SOURCES:$(SRCPATH)/%.c=$(OBJPATH)/%.o)
 
 EXTRA_LDFLAGS = -pie -Wl,-z,relro -Wl,-z,now

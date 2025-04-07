@@ -23,6 +23,12 @@ SOURCES := $(filter-out $(SRCDIR)/ppecfg_vlan.c, $(SOURCES))
 SOURCES := $(filter-out $(SRCDIR)/ppecfg_port_mgmt.c, $(SOURCES))
 endif
 
+ifneq ($(filter $(SoC),ipq52xx),)
+EXTRA_CFLAGS += -DNSS_PPE_DOT1P_FEATURE
+else
+SOURCES := $(filter-out $(SRCDIR)/ppecfg_dot1p.c, $(SOURCES))
+endif
+
 OBJECTS = $(SOURCES:$(SRCDIR)/%.c=$(OBJPATH)/%.o)
 
 EXTRA_LDFLAGS = -lnl-genl-3 -lnl-ppe -pie -Wl,-z,relro -Wl,-z,now
