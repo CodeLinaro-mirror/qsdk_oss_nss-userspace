@@ -24,6 +24,8 @@ endif
 ifneq ($(filter $(SoC),ipq52xx),)
 EXTRA_CFLAGS += -DNSS_PPE_DOT1P_FEATURE
 EXTRA_CFLAGS += -DNSS_PPE_GEMPORT_FEATURE
+EXTRA_CFLAGS += -DNSS_PPE_PON_PORT_FEATURE
+EXTRA_CFLAGS += -DCONFIG_NSS_PPENL_PON_PORT
 else
 SOURCES := $(filter-out $(SRCPATH)/nss_ppenl_dot1p_api.c, $(SOURCES))
 SOURCES := $(filter-out $(SRCPATH)/nss_ppenl_gemport_api.c, $(SOURCES))
