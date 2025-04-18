@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
  * SPDX-License-Identifier: ISC
  */
 
@@ -26,7 +26,7 @@ static void nss_ppenl_qos_resp(void *user_ctx, struct nss_ppenl_qos_req *qos_req
 
 	switch (cmd) {
 		case NSS_PPE_QOS_GET_INT_PRI:
-			ret = qos_req->config.ret;
+			ret = qos_req->msg.config.ret;
 			if (ret == PPECFG_QOS_RET_CLASS_NON_LEAF) {
 				nss_ppenl_sock_log_error("PPE queues are attached to only leaf classes and "
 						"the class_id entered is not a leaf class.\n"
@@ -45,8 +45,96 @@ static void nss_ppenl_qos_resp(void *user_ctx, struct nss_ppenl_qos_req *qos_req
 				return;
 			}
 
-			printf("\n PPE-Queue#: %d\n INT_PRI: %d\n", qos_req->config.ucast_qid,
-					qos_req->config.int_pri);
+			nss_ppenl_sock_log_info("\n PPE-Queue#: %d\n INT_PRI: %d\n", qos_req->msg.config.ucast_qid,
+					qos_req->msg.config.int_pri);
+			break;
+
+	case NSS_PPE_QOS_CREATE_SHAPER:
+			ret = qos_req->msg.shaper_info.ret;
+			if (ret == PPECFG_QOS_RET_SHAPER_CREATE_FAIL) {
+				nss_ppenl_sock_log_error("shaper rule create failed with error: %d\n", ret);
+				return;
+			}
+
+			nss_ppenl_sock_log_info("shaper rule create successful for shaper name %s\n", qos_req->msg.shaper_info.name);
+			break;
+
+	case NSS_PPE_QOS_DELETE_SHAPER:
+			ret = qos_req->msg.shaper_info.ret;
+			if (ret == PPECFG_QOS_RET_SHAPER_DELETE_FAIL) {
+				nss_ppenl_sock_log_error("shaper rule delete ush failed with error: %d\n", ret);
+				return;
+			}
+
+			nss_ppenl_sock_log_info("shaper rule reset successful for shaper name %s\n", qos_req->msg.shaper_info.name);
+			break;
+
+	case NSS_PPE_QOS_CREATE_INTERFACE_QUEUES:
+			ret = qos_req->msg.if_info.ret;
+			if (ret == PPECFG_QOS_RET_IF_QUEUES_CREATE_FAIL) {
+				nss_ppenl_sock_log_error("interface queue creation failed with error: %d\n", ret);
+				return;
+			}
+
+			qos_req->msg.if_info.if_data.type == PPE_QOS_INTERFACE_TYPE_PHYSICAL ?
+				nss_ppenl_sock_log_info("interface queue creation successful for dev %s\n", qos_req->msg.if_info.if_data.interface.dev):
+				 nss_ppenl_sock_log_info("interface queue creation successful for tcont %d\n", qos_req->msg.if_info.if_data.interface.tcont_id);
+			break;
+
+	case NSS_PPE_QOS_FLUSH_INTERFACE_QUEUES:
+			ret = qos_req->msg.if_info.ret;
+			if (ret == PPECFG_QOS_RET_IF_QUEUES_FLUSH_FAIL) {
+				nss_ppenl_sock_log_error("interface queue flush failed with error: %d\n", ret);
+				return;
+			}
+
+			qos_req->msg.if_info.if_data.type == PPE_QOS_INTERFACE_TYPE_PHYSICAL ?
+				nss_ppenl_sock_log_info("interface queues flush successful for dev %s\n", qos_req->msg.if_info.if_data.interface.dev):
+				 nss_ppenl_sock_log_info("interface queues flush successful for tcont %d\n", qos_req->msg.if_info.if_data.interface.tcont_id);
+			break;
+
+	case NSS_PPE_QOS_SET_INTERFACE_SHAPER:
+			ret = qos_req->msg.if_shaper_info.ret;
+			if (ret == PPECFG_QOS_RET_IF_SHAPER_SET_FAIL) {
+				nss_ppenl_sock_log_error("shaper set failed with error: %d\n", ret);
+				return;
+			}
+
+			qos_req->msg.if_shaper_info.if_data.type == PPE_QOS_INTERFACE_TYPE_PHYSICAL ?
+				nss_ppenl_sock_log_info("shaper set successful for dev %s\n", qos_req->msg.if_shaper_info.if_data.interface.dev):
+				 nss_ppenl_sock_log_info("shaper set successful for tcont %d\n", qos_req->msg.if_shaper_info.if_data.interface.tcont_id);
+			break;
+
+#ifdef NSS_PPE_PON_PORT_FEATURE
+	case NSS_PPE_QOS_MAP_PQ_TO_TCONT:
+			ret = qos_req->msg.pq_info.ret;
+			if (ret == PPECFG_QOS_RET_QUEUE_PQ_MAPPING_FAIL) {
+				nss_ppenl_sock_log_error("queue mapping failed with error: %d\n", ret);
+				return;
+			}
+
+			nss_ppenl_sock_log_info("queue mapping successful for queue id %d\n", qos_req->msg.pq_info.queue_id);
+			break;
+#endif
+
+	case NSS_PPE_QOS_SET_QUEUE_TM:
+			ret = qos_req->msg.tm_info.ret;
+			if (ret == PPECFG_QOS_RET_QUEUE_TM_CONFIG_FAIL) {
+				nss_ppenl_sock_log_error("queue TM config failed with error: %d\n", ret);
+				return;
+			}
+
+			nss_ppenl_sock_log_info("queue TM config successful for queue id %d\n", qos_req->msg.tm_info.queue_id);
+			break;
+
+	case NSS_PPE_QOS_SET_QUEUE_LIMIT:
+			ret = qos_req->msg.limit_info.ret;
+			if (ret == PPECFG_QOS_RET_QUEUE_LIMIT_CONFIG_FAIL) {
+				nss_ppenl_sock_log_error("queue limit config failed with error: %d\n", ret);
+				return;
+			}
+
+			nss_ppenl_sock_log_info("queue limit config successful for queue id %d\n", qos_req->msg.limit_info.queue_id);
 			break;
 
 		default:
@@ -74,6 +162,14 @@ int nss_ppenl_qos_sock_cb(struct nl_msg *msg, void *arg)
 
 	switch (cmd) {
 	case NSS_PPE_QOS_GET_INT_PRI:
+	case NSS_PPE_QOS_SET_QUEUE_LIMIT:
+	case NSS_PPE_QOS_SET_QUEUE_TM:
+	case NSS_PPE_QOS_MAP_PQ_TO_TCONT:
+	case NSS_PPE_QOS_CREATE_INTERFACE_QUEUES:
+	case NSS_PPE_QOS_FLUSH_INTERFACE_QUEUES:
+	case NSS_PPE_QOS_SET_INTERFACE_SHAPER:
+	case NSS_PPE_QOS_CREATE_SHAPER:
+	case NSS_PPE_QOS_DELETE_SHAPER:
 	{
 		void *cb_data = nss_ppenl_cmn_get_cb_data(&req->cm, sock->family_id);
 
@@ -191,10 +287,10 @@ int nss_ppenl_qos_sock_send(struct nss_ppenl_qos_ctx *ctx, struct nss_ppenl_qos_
 }
 
 /*
- * nss_ppenl_qos_get_int_pri()
+ * nss_ppenl_qos_send_req()
  * Send QoS req to PPE driver
  */
-int nss_ppenl_qos_get_int_pri(struct nss_ppenl_qos_req *req) {
+int nss_ppenl_qos_send_req(struct nss_ppenl_qos_req *req) {
 
 	int error;
 

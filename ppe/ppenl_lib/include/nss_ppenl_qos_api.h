@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
  * SPDX-License-Identifier: ISC
  */
 
@@ -33,8 +33,16 @@ typedef void (*nss_ppenl_qos_resp_cb_t)(void *user_ctx, struct nss_ppenl_qos_req
 #define PPECFG_QOS_RET_INVALID_CLASS		2	/* Invalid class return value from ppe */
 #define PPECFG_QOS_RET_INVALID_DEV		3	/* Invalid physical interface return value from ppe */
 #define PPECFG_QOS_RET_NO_QDISC_CONFIGURED	4	/* PPE QDISC not configured */
+#define	PPECFG_QOS_RET_SHAPER_CREATE_FAIL	5	/* Shaper creation failed */
+#define	PPECFG_QOS_RET_SHAPER_DELETE_FAIL	6	/* Shaper delete failed */
+#define	PPECFG_QOS_RET_IF_QUEUES_CREATE_FAIL	7	/* Interface queues creation failed */
+#define	PPECFG_QOS_RET_IF_QUEUES_FLUSH_FAIL	8	/* Interface queues flush failed */
+#define	PPECFG_QOS_RET_IF_SHAPER_SET_FAIL	9	/* Interface shaper set failed */
+#define	PPECFG_QOS_RET_QUEUE_PQ_MAPPING_FAIL	10	/* Priority queue mapping failed */
+#define	PPECFG_QOS_RET_QUEUE_TM_CONFIG_FAIL	11	/* Queue traffic management configuration failed */
+#define	PPECFG_QOS_RET_QUEUE_LIMIT_CONFIG_FAIL	12	/* Queue limit and threshold configuration failed */
 
 void nss_ppenl_qos_init_req(struct nss_ppenl_qos_req *req, enum nss_ppe_qos_message_types type);
-int nss_ppenl_qos_get_int_pri(struct nss_ppenl_qos_req *req);
+int nss_ppenl_qos_send_req(struct nss_ppenl_qos_req *req);
 
 #endif /* __NSS_PPENL_QOS_API_H__ */
