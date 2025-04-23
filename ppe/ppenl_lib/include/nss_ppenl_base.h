@@ -54,5 +54,7 @@
 #include <nss_ppenl_vlan_api.h>
 #include <nss_ppenl_dot1p_if.h>
 #include <nss_ppenl_dot1p_api.h>
+#include <nss_ppenl_gemport_if.h>
+#include <nss_ppenl_gemport_api.h>
 
 #endif /* __NSS_PPENL_BASE_H__ */

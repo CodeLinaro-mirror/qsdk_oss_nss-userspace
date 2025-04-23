@@ -25,8 +25,10 @@ endif
 
 ifneq ($(filter $(SoC),ipq52xx),)
 EXTRA_CFLAGS += -DNSS_PPE_DOT1P_FEATURE
+EXTRA_CFLAGS += -DNSS_PPE_GEMPORT_FEATURE
 else
 SOURCES := $(filter-out $(SRCDIR)/ppecfg_dot1p.c, $(SOURCES))
+SOURCES := $(filter-out $(SRCDIR)/ppecfg_gemport.c, $(SOURCES))
 endif
 
 OBJECTS = $(SOURCES:$(SRCDIR)/%.c=$(OBJPATH)/%.o)

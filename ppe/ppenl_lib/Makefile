@@ -23,8 +23,10 @@ SOURCES := $(filter-out $(SRCPATH)/nss_ppenl_port_mgmt_api.c, $(SOURCES))
 endif
 ifneq ($(filter $(SoC),ipq52xx),)
 EXTRA_CFLAGS += -DNSS_PPE_DOT1P_FEATURE
+EXTRA_CFLAGS += -DNSS_PPE_GEMPORT_FEATURE
 else
 SOURCES := $(filter-out $(SRCPATH)/nss_ppenl_dot1p_api.c, $(SOURCES))
+SOURCES := $(filter-out $(SRCPATH)/nss_ppenl_gemport_api.c, $(SOURCES))
 endif
 OBJECTS = $(SOURCES:$(SRCPATH)/%.c=$(OBJPATH)/%.o)
 
