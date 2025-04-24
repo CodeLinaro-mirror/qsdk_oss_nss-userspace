@@ -6,11 +6,19 @@ SRCDIR = ./
 BINARY	= $(OBJPATH)/ppecfg
 SOURCES = $(wildcard $(SRCDIR)/*.c)
 HEADERS = $(wildcard $(SRCDIR)/*.h)
-OBJECTS = $(SOURCES:$(SRCDIR)/%.c=$(OBJPATH)/%.o)
 
 INCLUDE += -I./include
 EXTRA_CFLAGS = -Wall -Werror -fpie -Wl,-z,relro -Wl,-z,now
 EXTRA_CFLAGS += -DNSS_PPE_FEATURE_EXCEPTION_EDIT
+
+ifneq ($(filter $(SoC),ipq96xx ipq52xx),)
+EXTRA_CFLAGS += -DNSS_PPE_DSCP_FEATURE
+else
+SOURCES := $(filter-out $(SRCDIR)/ppecfg_dscp.c, $(SOURCES))
+endif
+
+OBJECTS = $(SOURCES:$(SRCDIR)/%.c=$(OBJPATH)/%.o)
+
 EXTRA_LDFLAGS = -lnl-genl-3 -lnl-ppe -pie -Wl,-z,relro -Wl,-z,now
 LDLIBS  = -L../ppecfg_lib/obj
 LDLIBS  += -ljson-c

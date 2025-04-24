@@ -1,17 +1,6 @@
 /*
- * Copyright (c) 2023-2025, Qualcomm Innovation Center, Inc. All rights reserved.
- *
- * Permission to use, copy, modify, and/or distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+ * SPDX-License-Identifier: ISC
  */
 
 #ifndef __PPECFG_FAMILY_H
@@ -21,6 +10,9 @@
 #include "ppecfg_policer.h"
 #include "ppecfg_qos.h"
 #include "ppecfg_exception.h"
+#ifdef NSS_PPE_DSCP_FEATURE
+#include "ppecfg_dscp.h"
+#endif
 #include <nss_ppenl_base.h>
 
 /*
@@ -30,5 +22,8 @@ extern struct ppecfg_param ppecfg_acl_params[PPECFG_ACL_CMD_MAX];
 extern struct ppecfg_param ppecfg_policer_params[PPECFG_POLICER_CMD_MAX];
 extern struct ppecfg_param ppecfg_qos_params[PPECFG_QOS_CMD_MAX];
 extern struct ppecfg_param ppecfg_exception_params[PPECFG_EXCEPTION_PARAM_MAX];
+#ifdef NSS_PPE_DSCP_FEATURE
+extern struct ppecfg_param ppecfg_dscp_params[PPECFG_DSCP_CMD_MAX];
+#endif
 
 #endif /* __PPECFG_FAMILY_H*/
