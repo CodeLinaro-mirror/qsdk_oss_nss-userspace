@@ -13,6 +13,9 @@
 #ifdef NSS_PPE_DSCP_FEATURE
 #include "ppecfg_dscp.h"
 #endif
+#ifdef NSS_PPE_PM_FEATURE
+#include "ppecfg_pm.h"
+#endif
 #include <nss_ppenl_base.h>
 
 /*
@@ -25,5 +28,7 @@ extern struct ppecfg_param ppecfg_exception_params[PPECFG_EXCEPTION_PARAM_MAX];
 #ifdef NSS_PPE_DSCP_FEATURE
 extern struct ppecfg_param ppecfg_dscp_params[PPECFG_DSCP_CMD_MAX];
 #endif
-
+#ifdef NSS_PPE_PM_FEATURE
+extern struct ppecfg_param ppecfg_pm_params[PPECFG_PM_CMD_MAX];
+#endif
 #endif /* __PPECFG_FAMILY_H*/

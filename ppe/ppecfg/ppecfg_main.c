@@ -22,6 +22,9 @@ static struct ppecfg_param cfg_param[] = {
 #ifdef NSS_PPE_DSCP_FEATURE
 	PPECFG_PARAMLIST_INIT("family=dscp", ppecfg_dscp_params, ppecfg_param_iter_tbl),
 #endif
+#ifdef NSS_PPE_PM_FEATURE
+	PPECFG_PARAMLIST_INIT("family=pm", ppecfg_pm_params, ppecfg_param_iter_tbl),
+#endif
 };
 
 static struct ppecfg_param root = PPECFG_PARAMLIST_INIT("ppecfg", cfg_param, NULL);
