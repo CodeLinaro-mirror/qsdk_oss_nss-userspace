@@ -16,6 +16,9 @@
 #ifdef NSS_PPE_PM_FEATURE
 #include "ppecfg_pm.h"
 #endif
+#ifdef NSS_PPE_EXT_VLAN_FEATURE
+#include "ppecfg_vlan.h"
+#endif
 #include <nss_ppenl_base.h>
 
 /*
@@ -31,4 +34,8 @@ extern struct ppecfg_param ppecfg_dscp_params[PPECFG_DSCP_CMD_MAX];
 #ifdef NSS_PPE_PM_FEATURE
 extern struct ppecfg_param ppecfg_pm_params[PPECFG_PM_CMD_MAX];
 #endif
+#ifdef NSS_PPE_EXT_VLAN_FEATURE
+extern struct ppecfg_param ppecfg_vlan_params[PPECFG_VLAN_CMD_MAX];
+#endif
+
 #endif /* __PPECFG_FAMILY_H*/
