@@ -1370,6 +1370,9 @@ static int ppecfg_acl_json_get_actions_obj(struct json_object *rule_obj, struct 
 	struct json_object *obj;
 	int error = 0;
 	uint8_t mirror_val;
+#ifdef NSS_PPE_FEATURE_EXCEPTION_EDIT
+	uint8_t exception_edit_val = 0;
+#endif
 
 	obj = ppecfg_get_json_object(rule_obj, "action");
 	if (obj == NULL) {
@@ -1389,7 +1392,9 @@ static int ppecfg_acl_json_get_actions_obj(struct json_object *rule_obj, struct 
 	char *redir_core = ppecfg_json_object_handler(obj, "redir_core");
 	char *policer_id = ppecfg_json_object_handler(obj, "policer_id");
 	char *mirror_en = ppecfg_json_object_handler(obj, "mirror_en");
-
+#ifdef NSS_PPE_FEATURE_EXCEPTION_EDIT
+	char *exception_edit_en = ppecfg_json_object_handler(obj, "exception_edit_en");
+#endif
 	ppecfg_log_info("\nAction:\n");
 
 	if (fwd_cmd) {
@@ -1539,6 +1544,25 @@ static int ppecfg_acl_json_get_actions_obj(struct json_object *rule_obj, struct 
 		}
 		ppecfg_log_info("mirror_en : %s\n", mirror_en);
 	}
+
+#ifdef NSS_PPE_FEATURE_EXCEPTION_EDIT
+	if (exception_edit_en) {
+		error = ppecfg_param_get_int(exception_edit_en, sizeof(uint8_t), &exception_edit_val);
+		if (error) {
+			ppecfg_log_error("exception_edit_en, %s\n", exception_edit_en);
+			return error;
+		}
+
+		/*
+		 * Set the action flag with exception edit
+		 */
+		if (exception_edit_val == 1) {
+			nl_msg->rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_EXCEPTION_EDIT_EN;
+		}
+
+		ppecfg_log_info("exception_edit_en : %s\n", exception_edit_en);
+	}
+#endif
 
 	return error;
 }

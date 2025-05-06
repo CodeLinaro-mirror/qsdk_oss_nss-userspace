@@ -182,6 +182,9 @@ static struct ppecfg_param action_params[PPECFG_ACL_ACTION_MAX] = {
 	PPECFG_PARAM_INIT(PPECFG_ACL_ACTION_REDIR_CORE, "redir_core="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_ACTION_POLICER_ID, "policer_id="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_ACTION_MIRROR_EN, "mirror_en="),
+#ifdef NSS_PPE_FEATURE_EXCEPTION_EDIT
+	PPECFG_PARAM_INIT(PPECFG_ACL_ACTION_EXCEPTION_EDIT_EN, "exception_edit_en="),
+#endif
 };
 
 /*
@@ -244,6 +247,9 @@ static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_i
 	char *data;
 	uint8_t is_v6;
 	uint8_t mirror_en;
+#ifdef NSS_PPE_FEATURE_EXCEPTION_EDIT
+	uint8_t exception_edit_en;
+#endif
 	bool bool_val = false;
 
 	if (!param || !match) {
@@ -1182,6 +1188,19 @@ static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_i
 					nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_MIRROR_EN;
 				}
 			}
+
+#ifdef NSS_PPE_FEATURE_EXCEPTION_EDIT
+			data = sub_params[PPECFG_ACL_ACTION_EXCEPTION_EDIT_EN].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(uint8_t), &exception_edit_en);
+				if (error) {
+					goto print_error;
+				}
+				if (exception_edit_en == 1) {
+					nl_msg.rule.action.flags |= PPE_ACL_RULE_ACTION_FLAG_EXCEPTION_EDIT_EN;
+				}
+			}
+#endif
 			break;
 		}
 	}

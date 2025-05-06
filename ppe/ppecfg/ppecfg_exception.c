@@ -589,6 +589,26 @@ static int ppecfg_exception_configure_params(struct json_object *exception)
 	}
 
 	/*
+	 * Exception packet edit enable/disable.
+	 */
+#ifdef NSS_PPE_FEATURE_EXCEPTION_EDIT
+	val = ppecfg_json_object_handler(exception, "exception_edit_en");
+	if (val) {
+		error = ppecfg_param_get_bool(val, &bool_val);
+		if (error) {
+			ppecfg_log_error("exception_edit_en, %s\n", val);
+			return error;
+		}
+
+		nl_msg.info.exception_edit_en = bool_val;
+		ppecfg_log_info("EXCEPTION EDIT ENABLED: %s\n", val);
+	} else {
+		ppecfg_log_error("Please mention if packet exception edit is enabled or not, true/false!!\n");
+		return error;
+	}
+#endif
+
+	/*
 	 * Flow type for the exception
 	 */
 	val = ppecfg_json_object_handler(exception, "flow_type");

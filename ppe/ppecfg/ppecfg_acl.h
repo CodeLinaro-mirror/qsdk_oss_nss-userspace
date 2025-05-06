@@ -205,6 +205,9 @@ enum ppecfg_acl_action {
 	PPECFG_ACL_ACTION_REDIR_CORE,		/* Redir core */
 	PPECFG_ACL_ACTION_POLICER_ID,		/* Policer ID */
 	PPECFG_ACL_ACTION_MIRROR_EN,		/* Mirror EN */
+#ifdef NSS_PPE_FEATURE_EXCEPTION_EDIT
+	PPECFG_ACL_ACTION_EXCEPTION_EDIT_EN,	/* Packet exception edit enable */
+#endif
 	PPECFG_ACL_ACTION_MAX
 };
 
