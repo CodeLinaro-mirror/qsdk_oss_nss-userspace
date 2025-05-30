@@ -9,6 +9,7 @@
 #include "ppecfg_acl.h"
 #include "ppecfg_policer.h"
 #include "ppecfg_qos.h"
+#include "ppecfg_cos_map.h"
 #include "ppecfg_exception.h"
 #ifdef NSS_PPE_DSCP_FEATURE
 #include "ppecfg_dscp.h"
@@ -36,6 +37,7 @@
 extern struct ppecfg_param ppecfg_acl_params[PPECFG_ACL_CMD_MAX];
 extern struct ppecfg_param ppecfg_policer_params[PPECFG_POLICER_CMD_MAX];
 extern struct ppecfg_param ppecfg_qos_params[PPECFG_QOS_CMD_MAX];
+extern struct ppecfg_param ppecfg_cos_map_params[PPECFG_COS_MAP_CMD_MAX];
 extern struct ppecfg_param ppecfg_exception_params[PPECFG_EXCEPTION_PARAM_MAX];
 #ifdef NSS_PPE_DSCP_FEATURE
 extern struct ppecfg_param ppecfg_dscp_params[PPECFG_DSCP_CMD_MAX];

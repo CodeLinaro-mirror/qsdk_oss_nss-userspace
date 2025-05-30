@@ -17,6 +17,7 @@ static struct ppecfg_param cfg_param[] = {
 	PPECFG_PARAMLIST_INIT("family=acl", ppecfg_acl_params, ppecfg_param_iter_tbl),
 	PPECFG_PARAMLIST_INIT("family=policer", ppecfg_policer_params, ppecfg_param_iter_tbl),
 	PPECFG_PARAMLIST_INIT("family=qos", ppecfg_qos_params, ppecfg_param_iter_tbl),
+	PPECFG_PARAMLIST_INIT("family=cosmap", ppecfg_cos_map_params, ppecfg_param_iter_tbl),
 	PPECFG_PARAMLIST_INIT("family=exception", ppecfg_exception_params, ppecfg_exception_parser),
 	PPECFG_PARAMLIST_INIT("config_type=json", ppecfg_json_parser_param, ppecfg_json_parser_handler),
 #ifdef NSS_PPE_DSCP_FEATURE

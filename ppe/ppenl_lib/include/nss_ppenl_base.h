@@ -42,6 +42,8 @@
 #include <nss_ppenl_policer_api.h>
 #include <nss_ppenl_qos_if.h>
 #include <nss_ppenl_qos_api.h>
+#include <nss_ppenl_cos_map_if.h>
+#include <nss_ppenl_cos_map_api.h>
 #include <nss_ppenl_exception_if.h>
 #include <nss_ppenl_exception_api.h>
 #include <nss_ppenl_dscp_if.h>
