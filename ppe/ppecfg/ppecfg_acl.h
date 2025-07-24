@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024, Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2023-2025, Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -221,6 +221,7 @@ enum ppecfg_acl_rule_add {
 	PPECFG_ACL_RULE_ADD_OUTER_HEADER,       /* Outer Header */
 	PPECFG_ACL_RULE_ADD_METADATA,       	/* Metadata */
 	PPECFG_ACL_RULE_ADD_GROUP,		/* Group number */
+	PPECFG_ACL_RULE_ADD_L4_PROTO,		/* Protocol */
 	PPECFG_ACL_RULE_ADD_SMAC,               /* SMAC fields */
 	PPECFG_ACL_RULE_ADD_DMAC,               /* DMAC fields */
 	PPECFG_ACL_RULE_ADD_CVID,               /* CVID fields */
