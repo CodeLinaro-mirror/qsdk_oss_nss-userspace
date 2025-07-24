@@ -221,6 +221,7 @@ enum ppecfg_acl_rule_add {
 	PPECFG_ACL_RULE_ADD_OUTER_HEADER,       /* Outer Header */
 	PPECFG_ACL_RULE_ADD_METADATA,       	/* Metadata */
 	PPECFG_ACL_RULE_ADD_GROUP,		/* Group number */
+	PPECFG_ACL_RULE_ADD_L4_PROTO,		/* Protocol */
 	PPECFG_ACL_RULE_ADD_SMAC,               /* SMAC fields */
 	PPECFG_ACL_RULE_ADD_DMAC,               /* DMAC fields */
 	PPECFG_ACL_RULE_ADD_CVID,               /* CVID fields */
