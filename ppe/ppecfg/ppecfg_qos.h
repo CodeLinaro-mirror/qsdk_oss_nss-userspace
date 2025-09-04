@@ -18,6 +18,8 @@ enum ppecfg_qos_cmd {
 	PPECFG_QOS_FLUSH_INTERFACE_QUEUES,	/* Delete interface queues */
 	PPECFG_QOS_SET_INTERFACE_SHAPER,	/* Configure interface shaper */
 	PPECFG_QOS_MAP_PQ_TO_TCONT, 	/* Map Priority Queue to T-cont */
+	PPECFG_QOS_GET_TCONT_STATS, 	/* Get Tcont stats */
+	PPECFG_QOS_RESET_TCONT_CREDIT, 	/* Reset Tcont credit */
 	PPECFG_QOS_SET_QUEUE_TM, 	/* Set Queue traffic managemment */
 	PPECFG_QOS_SET_QUEUE_LIMIT, 	/* Set Queue limit*/
 	PPECFG_QOS_CMD_MAX /* max attribute */
@@ -80,6 +82,14 @@ enum ppecfg_qos_shaper_interface {
 	PPECFG_QOS_SHAPER_INTERFACE_TYPE_TCONT,		/* interface type Tcont. */
 	PPECFG_QOS_SHAPER_INTERFACE_SHAPER_NAME,	/* shaper name */
 	PPECFG_QOS_SHAPER_INTERFACE_MAX	/* max attribute */
+};
+
+/*
+ * PPECFG QOS TCONT STATS
+ */
+enum ppecfg_qos_tcont_stats {
+	PPECFG_QOS_TCONT_STATS_TCONT_ID,	/* Tcont ID */
+	PPECFG_QOS_TCONT_STATS_MAX	/* max attribute */
 };
 
 /*

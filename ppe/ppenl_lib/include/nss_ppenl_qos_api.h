@@ -39,8 +39,10 @@ typedef void (*nss_ppenl_qos_resp_cb_t)(void *user_ctx, struct nss_ppenl_qos_req
 #define	PPECFG_QOS_RET_IF_QUEUES_FLUSH_FAIL	8	/* Interface queues flush failed */
 #define	PPECFG_QOS_RET_IF_SHAPER_SET_FAIL	9	/* Interface shaper set failed */
 #define	PPECFG_QOS_RET_QUEUE_PQ_MAPPING_FAIL	10	/* Priority queue mapping failed */
-#define	PPECFG_QOS_RET_QUEUE_TM_CONFIG_FAIL	11	/* Queue traffic management configuration failed */
-#define	PPECFG_QOS_RET_QUEUE_LIMIT_CONFIG_FAIL	12	/* Queue limit and threshold configuration failed */
+#define PPECFG_QOS_RET_TCONT_STATS_GET_FAIL     11  /* Tcont stats fetch failure */
+#define	PPECFG_QOS_RET_RESET_TCONT_CREDIT_FAIL  12	/* Tcont credit reset failure */
+#define	PPECFG_QOS_RET_QUEUE_TM_CONFIG_FAIL	13	/* Queue traffic management configuration failed */
+#define	PPECFG_QOS_RET_QUEUE_LIMIT_CONFIG_FAIL	14	/* Queue limit and threshold configuration failed */
 
 void nss_ppenl_qos_init_req(struct nss_ppenl_qos_req *req, enum nss_ppe_qos_message_types type);
 int nss_ppenl_qos_send_req(struct nss_ppenl_qos_req *req);

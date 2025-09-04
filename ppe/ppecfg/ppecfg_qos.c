@@ -16,6 +16,8 @@ static int ppecfg_qos_create_interface_queues(struct ppecfg_param *param, struct
 static int ppecfg_qos_flush_interface_queues(struct ppecfg_param *param, struct ppecfg_param_in *match);
 static int ppecfg_qos_set_interface_shaper(struct ppecfg_param *param, struct ppecfg_param_in *match);
 #ifdef NSS_PPE_PON_PORT_FEATURE
+static int ppecfg_qos_get_tcont_stats(struct ppecfg_param *param, struct ppecfg_param_in *match);
+static int ppecfg_qos_reset_tcont_credit(struct ppecfg_param *param, struct ppecfg_param_in *match);
 static int ppecfg_qos_map_pq_to_tcont(struct ppecfg_param *param, struct ppecfg_param_in *match);
 #endif
 static int ppecfg_qos_set_queue_tm(struct ppecfg_param *param, struct ppecfg_param_in *match);
@@ -95,6 +97,13 @@ static struct ppecfg_param map_pq_to_tcont_params[PPECFG_QOS_PQ_MAP_MAX] = {
 	PPECFG_PARAM_INIT(PPECFG_QOS_PQ_MAP_QUEUE_ID, "queue_id="),
 	PPECFG_PARAM_INIT(PPECFG_QOS_PQ_MAP_TCONT_ID,"tcont_id="),
 };
+
+/*
+ * tcont_stats params
+ */
+static struct ppecfg_param tcont_stats_params[PPECFG_QOS_TCONT_STATS_MAX] = {
+	PPECFG_PARAM_INIT(PPECFG_QOS_TCONT_STATS_TCONT_ID, "tcont_id="),
+};
 #endif
 
 /*
@@ -141,6 +150,8 @@ struct ppecfg_param ppecfg_qos_params[PPECFG_QOS_CMD_MAX] = {
 	PPECFG_PARAMLIST_INIT("cmd=set_interface_shaper", set_interface_shaper_params, ppecfg_qos_set_interface_shaper),
 #ifdef NSS_PPE_PON_PORT_FEATURE
 	PPECFG_PARAMLIST_INIT("cmd=map_pq_to_tcont", map_pq_to_tcont_params, ppecfg_qos_map_pq_to_tcont),
+	PPECFG_PARAMLIST_INIT("cmd=get_tcont_stats", tcont_stats_params, ppecfg_qos_get_tcont_stats),
+	PPECFG_PARAMLIST_INIT("cmd=reset_tcont_credit", tcont_stats_params, ppecfg_qos_reset_tcont_credit),
 #endif
 	PPECFG_PARAMLIST_INIT("cmd=set_queue_tm", set_queue_tm_params, ppecfg_qos_set_queue_tm),
 	PPECFG_PARAMLIST_INIT("cmd=set_queue_limit", set_queue_limit_params, ppecfg_qos_set_queue_limit),
@@ -654,6 +665,122 @@ static int ppecfg_qos_map_pq_to_tcont(struct ppecfg_param *param, struct ppecfg_
 		case PPECFG_QOS_PQ_MAP_TCONT_ID:
 			sub_params = &param->sub_params[PPECFG_QOS_PQ_MAP_TCONT_ID];
 			error = ppecfg_param_get_int(sub_params->data, sizeof(nl_msg.msg.pq_info.tcont_id), &nl_msg.msg.pq_info.tcont_id);
+			if (error < 0) {
+				ppecfg_log_arg_error(sub_params);
+				goto done;
+			}
+
+			break;
+		}
+	}
+
+	/*
+	 * send message
+	 */
+	error = nss_ppenl_qos_send_req(&nl_msg);
+	if (error < 0) {
+		ppecfg_log_warn("Unable to send message");
+		goto done;
+	}
+done:
+	return error;
+}
+
+/*
+ * ppecfg_qos_get_tcont_stats()
+ * Handle qos get Tcont stats
+ */
+static int ppecfg_qos_get_tcont_stats(struct ppecfg_param *param, struct ppecfg_param_in *match)
+{
+	struct nss_ppenl_qos_req nl_msg = {{0}};
+	int error;
+	struct ppecfg_param *sub_params;
+
+	if (!param || !match) {
+		ppecfg_log_warn("Param or match table is NULL");
+		return -EINVAL;
+	}
+
+	/*
+	 * iterate through the param table to identify the matched arguments and
+	 * populate the argument list
+	 */
+	error = ppecfg_param_iter_tbl(param, match);
+	if (error < 0) {
+		ppecfg_log_arg_error(param);
+		goto done;
+	}
+
+	nss_ppenl_qos_init_req(&nl_msg, NSS_PPE_QOS_GET_TCONT_STATS);
+
+	for (int index = PPECFG_QOS_TCONT_STATS_TCONT_ID; index < PPECFG_QOS_TCONT_STATS_MAX; index++) {
+		sub_params = &param->sub_params[index];
+		if (sub_params->valid == false) {
+			continue;
+		}
+
+		switch (index) {
+		case PPECFG_QOS_TCONT_STATS_TCONT_ID:
+			sub_params = &param->sub_params[PPECFG_QOS_TCONT_STATS_TCONT_ID];
+			error = ppecfg_param_get_int(sub_params->data, sizeof(nl_msg.msg.stats_info.tcont_id), &nl_msg.msg.stats_info.tcont_id);
+			if (error < 0) {
+				ppecfg_log_arg_error(sub_params);
+				goto done;
+			}
+
+			break;
+		}
+	}
+
+	/*
+	 * send message
+	 */
+	error = nss_ppenl_qos_send_req(&nl_msg);
+	if (error < 0) {
+		ppecfg_log_warn("Unable to send message");
+		goto done;
+	}
+done:
+	return error;
+}
+
+/*
+ * ppecfg_qos_reset_tcont_credit()
+ * Handle qos reset tcont credit request
+ */
+static int ppecfg_qos_reset_tcont_credit(struct ppecfg_param *param, struct ppecfg_param_in *match)
+{
+	struct nss_ppenl_qos_req nl_msg = {{0}};
+	int error;
+	struct ppecfg_param *sub_params;
+
+	if (!param || !match) {
+		ppecfg_log_warn("Param or match table is NULL");
+		return -EINVAL;
+	}
+
+	/*
+	 * iterate through the param table to identify the matched arguments and
+	 * populate the argument list
+	 */
+	error = ppecfg_param_iter_tbl(param, match);
+	if (error < 0) {
+		ppecfg_log_arg_error(param);
+		goto done;
+	}
+
+	nss_ppenl_qos_init_req(&nl_msg, NSS_PPE_QOS_RESET_TCONT_CREDIT);
+
+	for (int index = PPECFG_QOS_TCONT_STATS_TCONT_ID; index < PPECFG_QOS_TCONT_STATS_MAX; index++) {
+		sub_params = &param->sub_params[index];
+		if (sub_params->valid == false) {
+			continue;
+		}
+
+		switch (index) {
+		case PPECFG_QOS_TCONT_STATS_TCONT_ID:
+			sub_params = &param->sub_params[PPECFG_QOS_TCONT_STATS_TCONT_ID];
+			error = ppecfg_param_get_int(sub_params->data, sizeof(nl_msg.msg.stats_info.tcont_id), &nl_msg.msg.stats_info.tcont_id);
 			if (error < 0) {
 				ppecfg_log_arg_error(sub_params);
 				goto done;
