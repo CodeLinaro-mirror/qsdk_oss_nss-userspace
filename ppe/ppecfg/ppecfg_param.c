@@ -167,41 +167,70 @@ int ppecfg_param_get_str(const char *arg, uint16_t data_sz, void *data)
 /*
  * ppecfg_param_get_int()
  * 	extract the integer from the incoming data
+ * 	Supports decimal, hex (0x prefix), and octal (0 prefix) formats
  */
 int ppecfg_param_get_int(const char *arg, uint16_t data_sz, void *data)
 {
 	long int_val;
 	char *end;
-	int base = 10; /* Default base is decimal */
+	const char *start = arg;
 
 	if (!arg || !data) {
 		return -EINVAL;
 	}
 
-	if (arg[0] == '0' && (arg[1] == 'x' || arg[1] == 'X')) {
-		base = 16;
+	/*
+	 * Skip leading whitespace
+	 */
+	while (*start && isspace(*start)) {
+		start++;
+	}
+
+	/*
+	 * Check if we have a valid string after trimming
+	 */
+	if (*start == '\0') {
+		return -EINVAL;
 	}
 
 	/*
 	 * Reset errno to test if there any errors in the conversion
-	 * process. If there are errors in during the conversion. An
-	 * error will returned without any value produced in output
+	 * process. If there are errors during the conversion, an
+	 * error will be returned without any value produced in output.
+	 * Use base 0 to auto-detect: 0x for hex, 0 for octal, otherwise decimal
 	 */
 	errno = 0;
-	int_val = strtol(arg, &end, base);
+	int_val = strtol(start, &end, 0);
+
+	/*
+	 * Check for conversion errors
+	 */
 	if (errno) {
-		if (int_val == LONG_MIN) { /* Underflow */
+		if (errno == ERANGE) { /* Overflow or underflow */
 			return -E2BIG;
 		}
-		if (int_val == LONG_MAX) { /* Overflow */
-			return -E2BIG;
-		}
-		if (!int_val || (arg == end)) { /* Nothing is produced */
-			return -EINVAL;
-		}
+		return -EINVAL;
+	}
+
+	/*
+	 * Check if any conversion happened
+	 */
+	if (end == start) {
+		return -EINVAL;
+	}
+
+	/*
+	 * Check for trailing non-whitespace characters
+	 */
+	while (*end && isspace(*end)) {
+		end++;
+	}
+	if (*end != '\0') {
+		return -EINVAL;
 	}
 
 	memcpy(data, &int_val, data_sz);
+
 	return 0;
 }
 

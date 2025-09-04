@@ -32,6 +32,9 @@
 #ifdef NSS_EDMA_DDRQ_FEATURE
 #include "ppecfg_edma_ddrq.h"
 #endif
+#ifdef NSS_PPE_TUN_RPS_FEATURE
+#include "ppecfg_tun_rps.h"
+#endif
 #include <nss_ppenl_base.h>
 
 /*
@@ -62,5 +65,8 @@ extern struct ppecfg_param ppecfg_gem_port_params[PPECFG_GEM_PORT_CMD_MAX];
 #endif
 #ifdef NSS_EDMA_DDRQ_FEATURE
 extern struct ppecfg_param ppecfg_edma_ddrq_params[PPECFG_EDMA_DDRQ_CMD_MAX];
+#endif
+#ifdef NSS_PPE_TUN_RPS_FEATURE
+extern struct ppecfg_param ppecfg_tun_rps_params[PPECFG_TUN_RPS_CMD_MAX];
 #endif
 #endif /* __PPECFG_FAMILY_H*/
