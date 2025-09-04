@@ -115,6 +115,26 @@ static void nss_ppenl_qos_resp(void *user_ctx, struct nss_ppenl_qos_req *qos_req
 
 			nss_ppenl_sock_log_info("queue mapping successful for queue id %d\n", qos_req->msg.pq_info.queue_id);
 			break;
+
+	case NSS_PPE_QOS_GET_TCONT_STATS:
+			ret = qos_req->msg.stats_info.ret;
+			if (ret == PPECFG_QOS_RET_TCONT_STATS_GET_FAIL) {
+				nss_ppenl_sock_log_error("tcont stats get failed with error: %d\n", ret);
+				return;
+			}
+
+			nss_ppenl_sock_log_info("tcont stats get successful for tcont id %d\n", qos_req->msg.stats_info.tcont_id);
+			break;
+
+	case NSS_PPE_QOS_RESET_TCONT_CREDIT:
+			ret = qos_req->msg.stats_info.ret;
+			if (ret == PPECFG_QOS_RET_RESET_TCONT_CREDIT_FAIL) {
+				nss_ppenl_sock_log_error("reset tcont credit failed with error: %d\n", ret);
+				return;
+			}
+
+			nss_ppenl_sock_log_info("reset tcont credit successful for tcont id %d\n", qos_req->msg.stats_info.tcont_id);
+			break;
 #endif
 
 	case NSS_PPE_QOS_SET_QUEUE_TM:
@@ -165,6 +185,8 @@ int nss_ppenl_qos_sock_cb(struct nl_msg *msg, void *arg)
 	case NSS_PPE_QOS_SET_QUEUE_LIMIT:
 	case NSS_PPE_QOS_SET_QUEUE_TM:
 	case NSS_PPE_QOS_MAP_PQ_TO_TCONT:
+	case NSS_PPE_QOS_GET_TCONT_STATS:
+	case NSS_PPE_QOS_RESET_TCONT_CREDIT:
 	case NSS_PPE_QOS_CREATE_INTERFACE_QUEUES:
 	case NSS_PPE_QOS_FLUSH_INTERFACE_QUEUES:
 	case NSS_PPE_QOS_SET_INTERFACE_SHAPER:
