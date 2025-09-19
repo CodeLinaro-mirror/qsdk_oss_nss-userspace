@@ -31,6 +31,9 @@ SOURCES := $(filter-out $(SRCDIR)/ppecfg_dot1p.c, $(SOURCES))
 SOURCES := $(filter-out $(SRCDIR)/ppecfg_gemport.c, $(SOURCES))
 endif
 
+# Compile out ppecfg_edma_ddrq.c currently. This will be enabled later
+SOURCES := $(filter-out $(SRCDIR)/ppecfg_edma_ddrq.c, $(SOURCES))
+
 OBJECTS = $(SOURCES:$(SRCDIR)/%.c=$(OBJPATH)/%.o)
 
 EXTRA_LDFLAGS = -lnl-genl-3 -lnl-ppe -pie -Wl,-z,relro -Wl,-z,now

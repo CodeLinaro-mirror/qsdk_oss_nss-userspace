@@ -56,5 +56,8 @@
 #include <nss_ppenl_dot1p_api.h>
 #include <nss_ppenl_gemport_if.h>
 #include <nss_ppenl_gemport_api.h>
-
+#ifdef NSS_EDMA_DDRQ_FEATURE
+#include <nss_ppenl_edma_ddrq_if.h>
+#include <nss_ppenl_edma_ddrq_api.h>
+#endif
 #endif /* __NSS_PPENL_BASE_H__ */
