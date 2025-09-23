@@ -95,9 +95,9 @@ static struct ppecfg_param pppoe_params[PPECFG_ACL_PPPOE_MAX] = {
  * rule add parameters
  */
 static struct ppecfg_param ether_params[PPECFG_ACL_ETHER_MAX] = {
-	PPECFG_PARAM_INIT(PPECFG_ACL_ETHER_MIN, "l4_proto="),
-	PPECFG_PARAM_INIT(PPECFG_ACL_ETHER_MASK, "l4_proto_mask="),
-	PPECFG_PARAM_INIT(PPECFG_ACL_ETHER_NVAL, "l4_proto!="),
+	PPECFG_PARAM_INIT(PPECFG_ACL_ETHER_MIN, "l2_proto="),
+	PPECFG_PARAM_INIT(PPECFG_ACL_ETHER_MASK, "l2_proto_mask="),
+	PPECFG_PARAM_INIT(PPECFG_ACL_ETHER_NVAL, "l2_proto!="),
 };
 
 /*

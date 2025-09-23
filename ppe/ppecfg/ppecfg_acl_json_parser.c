@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2024-2025, Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -435,9 +435,9 @@ static int ppecfg_acl_json_get_ether_obj(struct json_object *rule_obj, struct ns
 
 	nl_msg->rule.valid_flags |= PPE_ACL_RULE_MATCH_TYPE_ETHER_TYPE_VALID;
 
-	char *val = ppecfg_json_object_handler(obj, "l4_proto_val");
-	char *nval = ppecfg_json_object_handler(obj, "l4_proto_nval");
-	char *mask = ppecfg_json_object_handler(obj, "l4_proto_mask");
+	char *val = ppecfg_json_object_handler(obj, "l2_proto_val");
+	char *nval = ppecfg_json_object_handler(obj, "l2_proto_nval");
+	char *mask = ppecfg_json_object_handler(obj, "l2_proto_mask");
 
 	if ((val && nval) || (!val && !nval)) {
 		ppecfg_log_info("Error: Either val or nval is required\n");
@@ -447,7 +447,7 @@ static int ppecfg_acl_json_get_ether_obj(struct json_object *rule_obj, struct ns
 	if (val) {
 		error = ppecfg_param_get_int(val, sizeof(uint16_t), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_ETHER_TYPE].rule.ether_type.l2_proto);
 		if (error) {
-			ppecfg_log_error("l4_proto_val, %s\n", val);
+			ppecfg_log_error("l2_proto_val, %s\n", val);
 			return error;
 		}
 		ppecfg_log_info("l4 PROTO: %s\n", val);
@@ -456,23 +456,23 @@ static int ppecfg_acl_json_get_ether_obj(struct json_object *rule_obj, struct ns
 	if (nval) {
 		error = ppecfg_param_get_int(nval, sizeof(uint16_t), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_ETHER_TYPE].rule.ether_type.l2_proto);
 		if (error) {
-			ppecfg_log_error("l4_proto_nval, %s\n", nval);
+			ppecfg_log_error("l2_proto_nval, %s\n", nval);
 			return error;
 		}
 
 		nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_ETHER_TYPE].rule_flags |= PPE_ACL_RULE_GEN_FLAG_INVERSE_EN;
-		ppecfg_log_info("l4 PROTO NVAL: %s\n", nval);
+		ppecfg_log_info("l2 PROTO NVAL: %s\n", nval);
 	}
 
 	if (mask) {
 		error = ppecfg_param_get_int(mask, sizeof(uint16_t), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_ETHER_TYPE].rule.ether_type.l2_proto_mask);
 		if (error) {
-			ppecfg_log_error("l4_proto_mask, %s\n", mask);
+			ppecfg_log_error("l2_proto_mask, %s\n", mask);
 			return error;
 		}
 
 		nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_ETHER_TYPE].rule_flags |= PPE_ACL_RULE_FLAG_ETHTYPE_MASK;
-		ppecfg_log_info("l4 PROTO MASK: %s\n", mask);
+		ppecfg_log_info("l2 PROTO MASK: %s\n", mask);
 	}
 
 	return error;
