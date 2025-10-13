@@ -22,6 +22,7 @@ enum ppecfg_qos_cmd {
 	PPECFG_QOS_RESET_TCONT_CREDIT, 	/* Reset Tcont credit */
 	PPECFG_QOS_SET_QUEUE_TM, 	/* Set Queue traffic managemment */
 	PPECFG_QOS_SET_QUEUE_LIMIT, 	/* Set Queue limit*/
+	PPECFG_QOS_SET_INTERFACE_QUEUE_CTRL, 	/* Set interface queue control */
 	PPECFG_QOS_CMD_MAX /* max attribute */
 };
 
@@ -132,6 +133,17 @@ enum ppecfg_qos_queue_limit {
 	PPECFG_QOS_QUEUE_LIMIT_YELLOW_RESUME_OFF,	/* queue yellow resume offset */
 	PPECFG_QOS_QUEUE_LIMIT_RED_RESUME_OFF,	/* queue red resume offset */
 	PPECFG_QOS_QUEUE_LIMIT_MAX	/* max attribute */
+};
+
+/*
+ * PPECFG QOS INTERFACE QUEUE CONTROL
+ */
+enum ppecfg_qos_interface_queue_ctrl {
+	PPECFG_QOS_QUEUE_CTRL_INTERFACE_TYPE_PHYSICAL,	/* interface type physical */
+	PPECFG_QOS_QUEUE_CTRL_INTERFACE_TYPE_TCONT,	/* interface type Tcont */
+	PPECFG_QOS_QUEUE_CTRL_MODE,	/* mode: enqueue or dequeue */
+	PPECFG_QOS_QUEUE_CTRL_STATE,	/* state: enable or disable */
+	PPECFG_QOS_QUEUE_CTRL_MAX	/* max attribute */
 };
 
 #endif /* __PPECFG_QOS_H*/

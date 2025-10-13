@@ -157,6 +157,16 @@ static void nss_ppenl_qos_resp(void *user_ctx, struct nss_ppenl_qos_req *qos_req
 			nss_ppenl_sock_log_info("queue limit config successful for queue id %d\n", qos_req->msg.limit_info.queue_id);
 			break;
 
+	case NSS_PPE_QOS_SET_INTERFACE_QUEUE_CTRL:
+			ret = qos_req->msg.queue_ctrl_info.ret;
+			if (ret == PPECFG_QOS_RET_QUEUE_CTRL_SET_FAIL) {
+				nss_ppenl_sock_log_error("queue control set failed with error: %d\n", ret);
+				return;
+			}
+
+			nss_ppenl_sock_log_info("queue control set successful\n");
+			break;
+
 		default:
 			nss_ppenl_sock_log_error("unsupported message cmd type(%d)", cmd);
 	}
@@ -192,6 +202,7 @@ int nss_ppenl_qos_sock_cb(struct nl_msg *msg, void *arg)
 	case NSS_PPE_QOS_SET_INTERFACE_SHAPER:
 	case NSS_PPE_QOS_CREATE_SHAPER:
 	case NSS_PPE_QOS_DELETE_SHAPER:
+	case NSS_PPE_QOS_SET_INTERFACE_QUEUE_CTRL:
 	{
 		void *cb_data = nss_ppenl_cmn_get_cb_data(&req->cm, sock->family_id);
 
