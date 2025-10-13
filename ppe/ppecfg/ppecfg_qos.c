@@ -22,6 +22,7 @@ static int ppecfg_qos_map_pq_to_tcont(struct ppecfg_param *param, struct ppecfg_
 #endif
 static int ppecfg_qos_set_queue_tm(struct ppecfg_param *param, struct ppecfg_param_in *match);
 static int ppecfg_qos_set_queue_limit(struct ppecfg_param *param, struct ppecfg_param_in *match);
+static int ppecfg_qos_set_interface_queue_ctrl(struct ppecfg_param *param, struct ppecfg_param_in *match);
 
 /*
  * qos_rule add parameters
@@ -138,6 +139,16 @@ static struct ppecfg_param set_queue_limit_params[PPECFG_QOS_QUEUE_LIMIT_MAX] = 
 };
 
 /*
+ * set_interface_queue_ctrl params
+ */
+static struct ppecfg_param set_interface_queue_ctrl_params[PPECFG_QOS_QUEUE_CTRL_MAX] = {
+	PPECFG_PARAMARR_INIT(PPECFG_QOS_QUEUE_CTRL_INTERFACE_TYPE_PHYSICAL, "DEV", interface_type_dev_params, ppecfg_param_iter_tbl),
+	PPECFG_PARAMARR_INIT(PPECFG_QOS_QUEUE_CTRL_INTERFACE_TYPE_TCONT, "TCONT", interface_type_tcont_params, ppecfg_param_iter_tbl),
+	PPECFG_PARAM_INIT(PPECFG_QOS_QUEUE_CTRL_MODE, "mode="),
+	PPECFG_PARAM_INIT(PPECFG_QOS_QUEUE_CTRL_STATE, "state="),
+};
+
+/*
  * NOTE: whenever this table is updated, the 'enum ppecfg_qos_cmd' should also get updated
  * Supported Qos commands
  */
@@ -155,6 +166,7 @@ struct ppecfg_param ppecfg_qos_params[PPECFG_QOS_CMD_MAX] = {
 #endif
 	PPECFG_PARAMLIST_INIT("cmd=set_queue_tm", set_queue_tm_params, ppecfg_qos_set_queue_tm),
 	PPECFG_PARAMLIST_INIT("cmd=set_queue_limit", set_queue_limit_params, ppecfg_qos_set_queue_limit),
+	PPECFG_PARAMLIST_INIT("cmd=set_interface_queue_ctrl", set_interface_queue_ctrl_params, ppecfg_qos_set_interface_queue_ctrl),
 };
 
 /*
@@ -256,6 +268,118 @@ static int ppecfg_qos_create_shaper(struct ppecfg_param *param, struct ppecfg_pa
 		ppecfg_log_warn("Unable to send message");
 		goto done;
 	}
+done:
+	return error;
+}
+
+/*
+ * ppecfg_qos_set_interface_queue_ctrl()
+ *	Handle qos set interface queue control (enqueue/dequeue enable/disable)
+ */
+static int ppecfg_qos_set_interface_queue_ctrl(struct ppecfg_param *param, struct ppecfg_param_in *match)
+{
+	struct nss_ppenl_qos_req nl_msg = {{0}};
+	int error;
+	struct ppecfg_param *sub_params;
+	int count = 0;
+	char *data;
+
+	if (!param || !match) {
+		ppecfg_log_warn("Param or match table is NULL");
+		return -EINVAL;
+	}
+
+	error = ppecfg_param_iter_tbl(param, match);
+	if (error < 0) {
+		ppecfg_log_arg_error(param);
+		goto done;
+	}
+
+	nss_ppenl_qos_init_req(&nl_msg, NSS_PPE_QOS_SET_INTERFACE_QUEUE_CTRL);
+
+	for (int index = PPECFG_QOS_QUEUE_CTRL_INTERFACE_TYPE_PHYSICAL; index < PPECFG_QOS_QUEUE_CTRL_MAX; index++) {
+		sub_params = &param->sub_params[index];
+		if (sub_params->valid == false) {
+			continue;
+		}
+
+		switch (index) {
+		case PPECFG_QOS_QUEUE_CTRL_INTERFACE_TYPE_PHYSICAL:
+			sub_params = param->sub_params[PPECFG_QOS_QUEUE_CTRL_INTERFACE_TYPE_PHYSICAL].sub_params;
+			data = sub_params[PPECFG_QOS_INTERFACE_DEV_NAME].data;
+			if (data) {
+				error = ppecfg_param_get_str(data, sizeof(nl_msg.msg.queue_ctrl_info.if_data.interface.dev), 
+				                            &nl_msg.msg.queue_ctrl_info.if_data.interface.dev);
+				if (error < 0) {
+					ppecfg_log_arg_error(sub_params);
+					goto done;
+				}
+				nl_msg.msg.queue_ctrl_info.if_data.type = PPE_QOS_INTERFACE_TYPE_PHYSICAL;
+			}
+			count++;
+			break;
+
+		case PPECFG_QOS_QUEUE_CTRL_INTERFACE_TYPE_TCONT:
+			sub_params = param->sub_params[PPECFG_QOS_QUEUE_CTRL_INTERFACE_TYPE_TCONT].sub_params;
+			data = sub_params[PPECFG_QOS_TCONT_ID].data;
+			if (data) {
+				error = ppecfg_param_get_int(data, sizeof(nl_msg.msg.queue_ctrl_info.if_data.interface.tcont_id), 
+				                            &nl_msg.msg.queue_ctrl_info.if_data.interface.tcont_id);
+				if (error < 0) {
+					ppecfg_log_arg_error(sub_params);
+					goto done;
+				}
+				nl_msg.msg.queue_ctrl_info.if_data.type = PPE_QOS_INTERFACE_TYPE_TCONT;
+			}
+			count++;
+			break;
+
+		case PPECFG_QOS_QUEUE_CTRL_MODE:
+			sub_params = &param->sub_params[PPECFG_QOS_QUEUE_CTRL_MODE];
+			data = sub_params->data;
+
+			if (!strcmp(data, "enqueue")) {
+				nl_msg.msg.queue_ctrl_info.mode = PPE_QOS_QUEUE_CTRL_MODE_ENQUEUE;
+			} else if (!strcmp(data, "dequeue")) {
+				nl_msg.msg.queue_ctrl_info.mode = PPE_QOS_QUEUE_CTRL_MODE_DEQUEUE;
+			} else {
+				ppecfg_log_error("Invalid mode value. Use 'enqueue' or 'dequeue'\n");
+				error = -EINVAL;
+				goto done;
+			}
+			break;
+
+		case PPECFG_QOS_QUEUE_CTRL_STATE:
+			sub_params = &param->sub_params[PPECFG_QOS_QUEUE_CTRL_STATE];
+			data = sub_params->data;
+
+			if (!strcmp(data, "enable")) {
+				nl_msg.msg.queue_ctrl_info.state = PPE_QOS_QUEUE_CTRL_STATE_ENABLE;
+			} else if (!strcmp(data, "disable")) {
+				nl_msg.msg.queue_ctrl_info.state = PPE_QOS_QUEUE_CTRL_STATE_DISABLE;
+			} else if (!strcmp(data, "drop")) {
+				nl_msg.msg.queue_ctrl_info.state = PPE_QOS_QUEUE_CTRL_STATE_DROP;
+			} else {
+				ppecfg_log_error("Invalid state value. Use 'enable', 'disable', or 'drop'\n");
+				error = -EINVAL;
+				goto done;
+			}
+			break;
+		}
+	}
+
+	if (count > 1) {
+		ppecfg_log_error("Only one interface type is allowed\n");
+		error = -EINVAL;
+		goto done;
+	}
+
+	error = nss_ppenl_qos_send_req(&nl_msg);
+	if (error < 0) {
+		ppecfg_log_warn("Unable to send message");
+		goto done;
+	}
+
 done:
 	return error;
 }
