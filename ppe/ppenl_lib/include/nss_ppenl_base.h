@@ -62,4 +62,8 @@
 #include <nss_ppenl_edma_ddrq_if.h>
 #include <nss_ppenl_edma_ddrq_api.h>
 #endif
+#ifdef NSS_PPE_MCAST_FEATURE
+#include <nss_ppenl_mcast_if.h>
+#include <nss_ppenl_mcast_api.h>
+#endif
 #endif /* __NSS_PPENL_BASE_H__ */
