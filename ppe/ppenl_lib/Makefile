@@ -26,9 +26,11 @@ EXTRA_CFLAGS += -DNSS_PPE_DOT1P_FEATURE
 EXTRA_CFLAGS += -DNSS_PPE_GEMPORT_FEATURE
 EXTRA_CFLAGS += -DNSS_PPE_PON_PORT_FEATURE
 EXTRA_CFLAGS += -DCONFIG_NSS_PPENL_PON_PORT
+EXTRA_CFLAGS += -DNSS_PPE_MCAST_FEATURE
 else
 SOURCES := $(filter-out $(SRCPATH)/nss_ppenl_dot1p_api.c, $(SOURCES))
 SOURCES := $(filter-out $(SRCPATH)/nss_ppenl_gemport_api.c, $(SOURCES))
+SOURCES := $(filter-out $(SRCPATH)/nss_ppenl_mcast_api.c, $(SOURCES))
 endif
 
 # Compile out nss_ppenl_edma_ddrq_api.c currently. This will be enabled later
