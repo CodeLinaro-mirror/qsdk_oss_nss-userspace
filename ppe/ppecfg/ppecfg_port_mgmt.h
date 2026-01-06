@@ -13,11 +13,13 @@
  *	Top‑level command identifiers for Port Management operations.
  */
 enum ppecfg_port_mgmt_cmd {
-	PPECFG_PORT_MGMT_CMD_PORT_ISOL_SET,   /**< Set port isolation configuration */
-	PPECFG_PORT_MGMT_CMD_PORT_ISOL_GET,   /**< Get port isolation configuration */
-	PPECFG_PORT_MGMT_CMD_DEF_ISOL_SET,    /**< Set default isolation behavior */
-	PPECFG_PORT_MGMT_CMD_MAC_LEARN_LIMIT_SET,	/* Mac learn limit */
-	PPECFG_PORT_MGMT_CMD_MAX	      /**< Max command indicator */
+	PPECFG_PORT_MGMT_CMD_PORT_ISOL_SET,			/* Port isolation set */
+	PPECFG_PORT_MGMT_CMD_PORT_ISOL_GET,			/* Port isolation get */
+	PPECFG_PORT_MGMT_CMD_DEF_ISOL_SET,			/* Default Isol set */
+	PPECFG_PORT_MGMT_CMD_MAC_LEARN_LIMIT_SET,		/* Mac learn limit */
+	PPECFG_PORT_MGMT_CMD_MAC_FILTER_SET,			/* Mac Filter set */
+	PPECFG_PORT_MGMT_CMD_MAC_FILTER_CLR,			/* MAc Filter clear */
+	PPECFG_PORT_MGMT_CMD_MAX
 };
 
 /*
@@ -49,5 +51,23 @@ enum ppecfg_port_mgmt_port_lrn_limit_set {
 	PPECFG_PORT_MGMT_PORT_LRN_LIMIT_SET_PORT_LEARN_LIMIT,	/* Mac learn limit */
 	PPECFG_PORT_MGMT_PORT_LRN_LIMIT_SET_LRN_EXCEED_ACTION,	/* learn limit exceed action */
 	PPECFG_PORT_MGMT_PORT_LRN_LIMIT_SET_MAX
+};
+
+/*
+ * PORT_MGMT mac filter set parameters
+ */
+enum ppecfg_port_mgmt_mac_filter_set {
+        PPECFG_PORT_MGMT_MAC_FILTER_SET_BLOCK,			/* Block mac address */
+	PPECFG_PORT_MGMT_MAC_FILTER_SET_FID_NAME,		/* Specify filter ID */
+        PPECFG_PORT_MGMT_MAC_FILTER_SET_MAX
+};
+
+/*
+ * PORT_MGMT mac filter clear parameters
+ */
+enum ppecfg_port_mgmt_mac_filter_clr {
+	PPECFG_PORT_MGMT_MAC_FILTER_CLR_BLOCK,			/* Allow the blocked mac addr */
+	PPECFG_PORT_MGMT_MAC_FILTER_CLR_FID_NAME,		/* Specify filter ID */
+        PPECFG_PORT_MGMT_MAC_FILTER_CLR_MAX
 };
 #endif /* __PPECFG_PORT_MGMT_H*/
