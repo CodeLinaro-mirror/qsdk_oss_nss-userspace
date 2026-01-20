@@ -61,6 +61,7 @@ static struct ppecfg_param create_interface_queues_params[PPECFG_QOS_INTERFACE_M
 	PPECFG_PARAMARR_INIT(PPECFG_QOS_INTERFACE_TYPE_PHYSICAL, "DEV", interface_type_dev_params, ppecfg_param_iter_tbl),
 	PPECFG_PARAMARR_INIT(PPECFG_QOS_INTERFACE_TYPE_TCONT, "TCONT", interface_type_tcont_params, ppecfg_param_iter_tbl),
 	PPECFG_PARAM_INIT(PPECFG_QOS_INTERFACE_NUM_QUEUES, "num_queues="),
+	PPECFG_PARAM_INIT(PPECFG_QOS_INTERFACE_QUEUE_TYPE, "queue_type="),
 };
 
 /*
@@ -113,6 +114,7 @@ static struct ppecfg_param tcont_stats_params[PPECFG_QOS_TCONT_STATS_MAX] = {
 static struct ppecfg_param set_queue_tm_params[PPECFG_QOS_QUEUE_TM_MAX] = {
 	PPECFG_PARAMARR_INIT(PPECFG_QOS_QUEUE_TM_INTERFACE_TYPE_PHYSICAL, "DEV", interface_type_dev_params, ppecfg_param_iter_tbl),
 	PPECFG_PARAMARR_INIT(PPECFG_QOS_QUEUE_TM_INTERFACE_TYPE_TCONT, "TCONT", interface_type_tcont_params, ppecfg_param_iter_tbl),
+	PPECFG_PARAM_INIT(PPECFG_QOS_QUEUE_TM_QUEUE_TYPE, "queue_type="),
 	PPECFG_PARAM_INIT(PPECFG_QOS_QUEUE_TM_ID, "queue_id="),
 	PPECFG_PARAM_INIT(PPECFG_QOS_QUEUE_TM_PRIORITY, "priority="),
 	PPECFG_PARAM_INIT(PPECFG_QOS_QUEUE_TM_WEIGHT, "weight="),
@@ -124,6 +126,7 @@ static struct ppecfg_param set_queue_tm_params[PPECFG_QOS_QUEUE_TM_MAX] = {
 static struct ppecfg_param set_queue_limit_params[PPECFG_QOS_QUEUE_LIMIT_MAX] = {
 	PPECFG_PARAMARR_INIT(PPECFG_QOS_QUEUE_LIMIT_INTERFACE_TYPE_PHYSICAL, "DEV", interface_type_dev_params, ppecfg_param_iter_tbl),
 	PPECFG_PARAMARR_INIT(PPECFG_QOS_QUEUE_LIMIT_INTERFACE_TYPE_TCONT, "TCONT", interface_type_tcont_params, ppecfg_param_iter_tbl),
+	PPECFG_PARAM_INIT(PPECFG_QOS_QUEUE_LIMIT_QUEUE_TYPE, "queue_type="),
 	PPECFG_PARAM_INIT(PPECFG_QOS_QUEUE_LIMIT_ID, "queue_id="),
 	PPECFG_PARAM_INIT(PPECFG_QOS_QUEUE_LIMIT_CEILING, "ceiling="),
 	PPECFG_PARAM_INIT(PPECFG_QOS_QUEUE_LIMIT_COLOR_EN, "color_en="),
@@ -308,7 +311,7 @@ static int ppecfg_qos_set_interface_queue_ctrl(struct ppecfg_param *param, struc
 			sub_params = param->sub_params[PPECFG_QOS_QUEUE_CTRL_INTERFACE_TYPE_PHYSICAL].sub_params;
 			data = sub_params[PPECFG_QOS_INTERFACE_DEV_NAME].data;
 			if (data) {
-				error = ppecfg_param_get_str(data, sizeof(nl_msg.msg.queue_ctrl_info.if_data.interface.dev), 
+				error = ppecfg_param_get_str(data, sizeof(nl_msg.msg.queue_ctrl_info.if_data.interface.dev),
 				                            &nl_msg.msg.queue_ctrl_info.if_data.interface.dev);
 				if (error < 0) {
 					ppecfg_log_arg_error(sub_params);
@@ -323,7 +326,7 @@ static int ppecfg_qos_set_interface_queue_ctrl(struct ppecfg_param *param, struc
 			sub_params = param->sub_params[PPECFG_QOS_QUEUE_CTRL_INTERFACE_TYPE_TCONT].sub_params;
 			data = sub_params[PPECFG_QOS_TCONT_ID].data;
 			if (data) {
-				error = ppecfg_param_get_int(data, sizeof(nl_msg.msg.queue_ctrl_info.if_data.interface.tcont_id), 
+				error = ppecfg_param_get_int(data, sizeof(nl_msg.msg.queue_ctrl_info.if_data.interface.tcont_id),
 				                            &nl_msg.msg.queue_ctrl_info.if_data.interface.tcont_id);
 				if (error < 0) {
 					ppecfg_log_arg_error(sub_params);
@@ -485,7 +488,6 @@ static int ppecfg_qos_create_interface_queues(struct ppecfg_param *param, struct
 		switch (index) {
 		case PPECFG_QOS_INTERFACE_TYPE_PHYSICAL:
 			sub_params = param->sub_params[PPECFG_QOS_INTERFACE_TYPE_PHYSICAL].sub_params;
-
 			data = sub_params[PPECFG_QOS_INTERFACE_DEV_NAME].data;
 			if (data) {
 				error = ppecfg_param_get_str(data, sizeof(nl_msg.msg.if_info.if_data.interface.dev), &nl_msg.msg.if_info.if_data.interface.dev);
@@ -523,6 +525,26 @@ static int ppecfg_qos_create_interface_queues(struct ppecfg_param *param, struct
 				goto done;
 			}
 
+			break;
+
+		case PPECFG_QOS_INTERFACE_QUEUE_TYPE:
+			/*
+			 * parse optional queue_type from user_config, default ucast
+			 */
+			char qtype[10];
+			error = ppecfg_param_get_str(sub_params->data, sizeof(qtype), qtype);
+			if (error < 0) {
+				ppecfg_log_arg_error(sub_params);
+				goto done;
+			}
+
+			nl_msg.msg.if_info.queue_type = PPE_QOS_QUEUE_TYPE_UCAST;
+			data = sub_params->data;
+			if (data) {
+				if (!strcmp(data, "mcast")) {
+					nl_msg.msg.if_info.queue_type = PPE_QOS_QUEUE_TYPE_MCAST;
+				}
+			}
 			break;
 		}
 	}
@@ -1001,7 +1023,27 @@ static int ppecfg_qos_set_queue_tm(struct ppecfg_param *param, struct ppecfg_par
 			count++;
 			break;
 
-			case PPECFG_QOS_QUEUE_TM_ID:
+		case PPECFG_QOS_QUEUE_TM_QUEUE_TYPE:
+			/*
+			 * parse optional queue_type from user_config, default ucast
+			 */
+			char qtype[10];
+			error = ppecfg_param_get_str(sub_params->data, sizeof(qtype), qtype);
+			if (error < 0) {
+				ppecfg_log_arg_error(sub_params);
+				goto done;
+			}
+
+			nl_msg.msg.tm_info.queue_type = PPE_QOS_QUEUE_TYPE_UCAST;
+			data = sub_params->data;
+			if (data) {
+				if (!strcmp(data, "mcast")) {
+					nl_msg.msg.tm_info.queue_type = PPE_QOS_QUEUE_TYPE_MCAST;
+				}
+			}
+			break;
+
+		case PPECFG_QOS_QUEUE_TM_ID:
 			sub_params = &param->sub_params[PPECFG_QOS_QUEUE_TM_ID];
 			error = ppecfg_param_get_int(sub_params->data, sizeof(uint32_t), &nl_msg.msg.tm_info.queue_id);
 			if (error < 0) {
@@ -1123,6 +1165,26 @@ static int ppecfg_qos_set_queue_limit(struct ppecfg_param *param, struct ppecfg_
 
 			nl_msg.msg.limit_info.if_data.type = PPE_QOS_INTERFACE_TYPE_TCONT;
 			count++;
+			break;
+
+		case PPECFG_QOS_QUEUE_LIMIT_QUEUE_TYPE:
+			/*
+			 * parse optional queue_type from user_config, default ucast
+			 */
+			char qtype[10];
+			error = ppecfg_param_get_str(sub_params->data, sizeof(qtype), qtype);
+			if (error < 0) {
+				ppecfg_log_arg_error(sub_params);
+				goto done;
+			}
+
+			nl_msg.msg.limit_info.queue_type = PPE_QOS_QUEUE_TYPE_UCAST;
+			data = sub_params->data;
+			if (data) {
+				if (!strcmp(data, "mcast")) {
+					nl_msg.msg.limit_info.queue_type = PPE_QOS_QUEUE_TYPE_MCAST;
+				}
+			}
 			break;
 
 		case PPECFG_QOS_QUEUE_LIMIT_ID:

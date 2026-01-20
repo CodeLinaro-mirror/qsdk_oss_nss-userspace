@@ -72,6 +72,7 @@ enum ppecfg_qos_interface_queues {
 	PPECFG_QOS_INTERFACE_TYPE_TCONT,		/* interface type T-cont. */
 	PPECFG_QOS_INTERFACE_FLUSH_MAX,	/* Flush max attribute */
 	PPECFG_QOS_INTERFACE_NUM_QUEUES = PPECFG_QOS_INTERFACE_FLUSH_MAX,	/** Number of queues. */
+	PPECFG_QOS_INTERFACE_QUEUE_TYPE,	/** Queue type (ucast/mcast). */
 	PPECFG_QOS_INTERFACE_MAX	/* max attribute */
 };
 
@@ -108,6 +109,7 @@ enum ppecfg_qos_pq_map {
 enum ppecfg_qos_queue_tm {
 	PPECFG_QOS_QUEUE_TM_INTERFACE_TYPE_PHYSICAL,	/* interface type physical. */
 	PPECFG_QOS_QUEUE_TM_INTERFACE_TYPE_TCONT,	/* interface type Tcont. */
+	PPECFG_QOS_QUEUE_TM_QUEUE_TYPE,	/** Queue type (ucast/mcast). */
 	PPECFG_QOS_QUEUE_TM_ID,	/* queue ID */
 	PPECFG_QOS_QUEUE_TM_PRIORITY,	/* queue priority */
 	PPECFG_QOS_QUEUE_TM_WEIGHT,	/* queue weight */
@@ -120,6 +122,7 @@ enum ppecfg_qos_queue_tm {
 enum ppecfg_qos_queue_limit {
 	PPECFG_QOS_QUEUE_LIMIT_INTERFACE_TYPE_PHYSICAL,	/* interface type physical */
 	PPECFG_QOS_QUEUE_LIMIT_INTERFACE_TYPE_TCONT,	/* interface type Tcont */
+	PPECFG_QOS_QUEUE_LIMIT_QUEUE_TYPE,	/** Queue type (ucast/mcast). */
 	PPECFG_QOS_QUEUE_LIMIT_ID,	/* queue ID */
 	PPECFG_QOS_QUEUE_LIMIT_CEILING,	/* queue ceiling */
 	PPECFG_QOS_QUEUE_LIMIT_COLOR_EN,	/* queue color enable */
