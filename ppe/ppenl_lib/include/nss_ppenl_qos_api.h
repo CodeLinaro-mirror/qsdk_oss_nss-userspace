@@ -44,6 +44,8 @@ typedef void (*nss_ppenl_qos_resp_cb_t)(void *user_ctx, struct nss_ppenl_qos_req
 #define	PPECFG_QOS_RET_QUEUE_TM_CONFIG_FAIL	13	/* Queue traffic management configuration failed */
 #define	PPECFG_QOS_RET_QUEUE_LIMIT_CONFIG_FAIL	14	/* Queue limit and threshold configuration failed */
 #define	PPECFG_QOS_RET_QUEUE_CTRL_SET_FAIL	15	/* Queue control set failed */
+#define PPECFG_QOS_RET_SET_UCAST_PRIO_MAP_FAIL	16	/* Unicast priority map config failed */
+#define PPECFG_QOS_RET_SET_MCAST_PRIO_MAP_FAIL	17	/* Multicast priority map config failed */
 
 void nss_ppenl_qos_init_req(struct nss_ppenl_qos_req *req, enum nss_ppe_qos_message_types type);
 int nss_ppenl_qos_send_req(struct nss_ppenl_qos_req *req);
