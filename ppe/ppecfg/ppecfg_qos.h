@@ -5,8 +5,10 @@
 
 #ifndef __PPECFG_QOS_H
 #define __PPECFG_QOS_H
-#define PPECFG_QOS_HDR_VERSION 4
 
+#define PPECFG_QOS_HDR_VERSION 4
+#define PPECFG_QOS_MCAST_QUEUE_CLASS_MAX 4
+#define PPECFG_QOS_MAX_PRIORITY 16
 /*
  * PPECFG QOS commands
  */
@@ -23,6 +25,8 @@ enum ppecfg_qos_cmd {
 	PPECFG_QOS_SET_QUEUE_TM, 	/* Set Queue traffic managemment */
 	PPECFG_QOS_SET_QUEUE_LIMIT, 	/* Set Queue limit*/
 	PPECFG_QOS_SET_INTERFACE_QUEUE_CTRL, 	/* Set interface queue control */
+	PPECFG_QOS_SET_UCAST_PRIO_MAP,    /* Set unicast priority map */
+	PPECFG_QOS_SET_MCAST_PRIO_MAP,    /* Set multicast priority map */
 	PPECFG_QOS_CMD_MAX /* max attribute */
 };
 
@@ -147,6 +151,24 @@ enum ppecfg_qos_interface_queue_ctrl {
 	PPECFG_QOS_QUEUE_CTRL_MODE,	/* mode: enqueue or dequeue */
 	PPECFG_QOS_QUEUE_CTRL_STATE,	/* state: enable or disable */
 	PPECFG_QOS_QUEUE_CTRL_MAX	/* max attribute */
+};
+
+/*
+ * PPECFG QOS UNICAST PRIORITY MAP
+ */
+enum ppecfg_qos_ucast_prio_map {
+	PPECFG_QOS_UCAST_PRIO_MAP_DEV_NAME,    /* Device name */
+	PPECFG_QOS_UCAST_PRIO_MAP_PRIO_MAP,      /* Priority map values */
+	PPECFG_QOS_UCAST_PRIO_MAP_MAX            /* Max attribute */
+};
+
+/*
+ * PPECFG QOS MULTICAST PRIORITY MAP
+ */
+enum ppecfg_qos_mcast_prio_map {
+	PPECFG_QOS_MCAST_PRIO_MAP_DEV_NAME,    /* Device name */
+	PPECFG_QOS_MCAST_PRIO_MAP_PRIO_MAP,    /* Priority map values */
+	PPECFG_QOS_MCAST_PRIO_MAP_MAX          /* Max attribute */
 };
 
 #endif /* __PPECFG_QOS_H*/

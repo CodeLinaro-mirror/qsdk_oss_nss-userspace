@@ -23,6 +23,8 @@ static int ppecfg_qos_map_pq_to_tcont(struct ppecfg_param *param, struct ppecfg_
 static int ppecfg_qos_set_queue_tm(struct ppecfg_param *param, struct ppecfg_param_in *match);
 static int ppecfg_qos_set_queue_limit(struct ppecfg_param *param, struct ppecfg_param_in *match);
 static int ppecfg_qos_set_interface_queue_ctrl(struct ppecfg_param *param, struct ppecfg_param_in *match);
+static int ppecfg_qos_set_ucast_prio_map(struct ppecfg_param *param, struct ppecfg_param_in *match);
+static int ppecfg_qos_set_mcast_prio_map(struct ppecfg_param *param, struct ppecfg_param_in *match);
 
 /*
  * qos_rule add parameters
@@ -152,6 +154,22 @@ static struct ppecfg_param set_interface_queue_ctrl_params[PPECFG_QOS_QUEUE_CTRL
 };
 
 /*
+ * set_ucast_prio_map params
+ */
+static struct ppecfg_param set_ucast_prio_map_params[PPECFG_QOS_UCAST_PRIO_MAP_MAX] = {
+	PPECFG_PARAM_INIT(PPECFG_QOS_UCAST_PRIO_MAP_DEV_NAME, "dev_name="),
+	PPECFG_PARAM_INIT(PPECFG_QOS_UCAST_PRIO_MAP_PRIO_MAP, "prio_map="),
+};
+
+/*
+ * set_mcast_prio_map params
+ */
+static struct ppecfg_param set_mcast_prio_map_params[PPECFG_QOS_MCAST_PRIO_MAP_MAX] = {
+	PPECFG_PARAM_INIT(PPECFG_QOS_MCAST_PRIO_MAP_DEV_NAME, "dev_name="),
+	PPECFG_PARAM_INIT(PPECFG_QOS_MCAST_PRIO_MAP_PRIO_MAP, "prio_map="),
+};
+
+/*
  * NOTE: whenever this table is updated, the 'enum ppecfg_qos_cmd' should also get updated
  * Supported Qos commands
  */
@@ -170,6 +188,8 @@ struct ppecfg_param ppecfg_qos_params[PPECFG_QOS_CMD_MAX] = {
 	PPECFG_PARAMLIST_INIT("cmd=set_queue_tm", set_queue_tm_params, ppecfg_qos_set_queue_tm),
 	PPECFG_PARAMLIST_INIT("cmd=set_queue_limit", set_queue_limit_params, ppecfg_qos_set_queue_limit),
 	PPECFG_PARAMLIST_INIT("cmd=set_interface_queue_ctrl", set_interface_queue_ctrl_params, ppecfg_qos_set_interface_queue_ctrl),
+	PPECFG_PARAMLIST_INIT("cmd=set_ucast_prio_map", set_ucast_prio_map_params, ppecfg_qos_set_ucast_prio_map),
+	PPECFG_PARAMLIST_INIT("cmd=set_mcast_prio_map", set_mcast_prio_map_params, ppecfg_qos_set_mcast_prio_map),
 };
 
 /*
@@ -213,7 +233,6 @@ static int ppecfg_qos_create_shaper(struct ppecfg_param *param, struct ppecfg_pa
 				ppecfg_log_arg_error(sub_params);
 				goto done;
 			}
-
 			break;
 
 		case PPECFG_QOS_SHAPER_CIR:
@@ -276,6 +295,114 @@ done:
 }
 
 /*
+ * ppecfg_qos_set_mcast_prio_map()
+ * Handle qos set multicast priority map
+ */
+static int ppecfg_qos_set_mcast_prio_map(struct ppecfg_param *param, struct ppecfg_param_in *match)
+{
+	struct nss_ppenl_qos_req nl_msg = {{0}};
+	int error;
+	struct ppecfg_param *sub_params;
+	char *prio_map_str;
+	char *token, *saveptr;
+	int i = 0;
+
+	if (!param || !match) {
+		ppecfg_log_warn("Param or match table is NULL");
+		return -EINVAL;
+	}
+
+	/*
+	 * iterate through the param table to identify the matched arguments and
+	 * populate the argument list
+	 */
+	error = ppecfg_param_iter_tbl(param, match);
+	if (error < 0) {
+		ppecfg_log_arg_error(param);
+		goto done;
+	}
+
+	nss_ppenl_qos_init_req(&nl_msg, NSS_PPE_QOS_SET_MCAST_PRIO_MAP);
+
+	/*
+	 * Process dev_name parameter
+	 */
+	sub_params = &param->sub_params[PPECFG_QOS_MCAST_PRIO_MAP_DEV_NAME];
+	if (sub_params->valid) {
+		error = ppecfg_param_get_str(sub_params->data,
+				sizeof(nl_msg.msg.mcast_prio_map_info.if_data.interface.dev),
+				&nl_msg.msg.mcast_prio_map_info.if_data.interface.dev);
+		if (error < 0) {
+			ppecfg_log_arg_error(sub_params);
+			goto done;
+		}
+	} else {
+		ppecfg_log_error("Device name is required\n");
+		error = -EINVAL;
+		goto done;
+	}
+
+	/*
+	 * Set interface type to physical
+	 */
+	nl_msg.msg.mcast_prio_map_info.if_data.type = PPE_QOS_INTERFACE_TYPE_PHYSICAL;
+
+	/*
+	 * Process prio_map parameter - comma-separated list of 16 values
+	 */
+	sub_params = &param->sub_params[PPECFG_QOS_MCAST_PRIO_MAP_PRIO_MAP];
+	if (sub_params->valid) {
+		prio_map_str = strdup(sub_params->data);
+		if (!prio_map_str) {
+			ppecfg_log_error("Memory allocation failed\n");
+			error = -ENOMEM;
+			goto done;
+		}
+
+		/*
+		 * Parse comma-separated values
+		 */
+		token = strtok_r(prio_map_str, ",", &saveptr);
+		while (token && i < PPECFG_QOS_MAX_PRIORITY) {
+			int val = atoi(token);
+			if (val < 0 || val > PPECFG_QOS_MCAST_QUEUE_CLASS_MAX) {
+				ppecfg_log_error("Multicast queue class values must be between 0 and %d\n",
+						PPECFG_QOS_MCAST_QUEUE_CLASS_MAX);
+				free(prio_map_str);
+				error = -EINVAL;
+				goto done;
+			}
+			nl_msg.msg.mcast_prio_map_info.prio_map[i++] = val;
+			token = strtok_r(NULL, ",", &saveptr);
+		}
+
+		free(prio_map_str);
+
+		if (i != PPECFG_QOS_MAX_PRIORITY) {
+			ppecfg_log_error("Priority map must contain exactly 16 values\n");
+			error = -EINVAL;
+			goto done;
+		}
+	} else {
+		ppecfg_log_error("Priority map is required\n");
+		error = -EINVAL;
+		goto done;
+	}
+
+	/*
+	 * send message
+	 */
+	error = nss_ppenl_qos_send_req(&nl_msg);
+	if (error < 0) {
+		ppecfg_log_warn("Unable to send message");
+		goto done;
+	}
+
+done:
+	return error;
+}
+
+/*
  * ppecfg_qos_set_interface_queue_ctrl()
  *	Handle qos set interface queue control (enqueue/dequeue enable/disable)
  */
@@ -312,7 +439,7 @@ static int ppecfg_qos_set_interface_queue_ctrl(struct ppecfg_param *param, struc
 			data = sub_params[PPECFG_QOS_INTERFACE_DEV_NAME].data;
 			if (data) {
 				error = ppecfg_param_get_str(data, sizeof(nl_msg.msg.queue_ctrl_info.if_data.interface.dev),
-				                            &nl_msg.msg.queue_ctrl_info.if_data.interface.dev);
+						&nl_msg.msg.queue_ctrl_info.if_data.interface.dev);
 				if (error < 0) {
 					ppecfg_log_arg_error(sub_params);
 					goto done;
@@ -327,7 +454,7 @@ static int ppecfg_qos_set_interface_queue_ctrl(struct ppecfg_param *param, struc
 			data = sub_params[PPECFG_QOS_TCONT_ID].data;
 			if (data) {
 				error = ppecfg_param_get_int(data, sizeof(nl_msg.msg.queue_ctrl_info.if_data.interface.tcont_id),
-				                            &nl_msg.msg.queue_ctrl_info.if_data.interface.tcont_id);
+						&nl_msg.msg.queue_ctrl_info.if_data.interface.tcont_id);
 				if (error < 0) {
 					ppecfg_log_arg_error(sub_params);
 					goto done;
@@ -1398,6 +1525,113 @@ static int ppecfg_qos_get_int_pri(struct ppecfg_param *param, struct ppecfg_para
 		ppecfg_log_warn("Unable to send message");
 		goto done;
 	}
+done:
+	return error;
+}
+
+/*
+ * ppecfg_qos_set_ucast_prio_map()
+ * Handle qos set unicast priority map
+ */
+static int ppecfg_qos_set_ucast_prio_map(struct ppecfg_param *param, struct ppecfg_param_in *match)
+{
+	struct nss_ppenl_qos_req nl_msg = {{0}};
+	int error;
+	struct ppecfg_param *sub_params;
+	char *prio_map_str;
+	char *token, *saveptr;
+	int i = 0;
+
+	if (!param || !match) {
+		ppecfg_log_warn("Param or match table is NULL");
+		return -EINVAL;
+	}
+
+	/*
+	 * iterate through the param table to identify the matched arguments and
+	 * populate the argument list
+	 */
+	error = ppecfg_param_iter_tbl(param, match);
+	if (error < 0) {
+		ppecfg_log_arg_error(param);
+		goto done;
+	}
+
+	nss_ppenl_qos_init_req(&nl_msg, NSS_PPE_QOS_SET_UCAST_PRIO_MAP);
+
+	/*
+	 * Process dev_name parameter
+	 */
+	sub_params = &param->sub_params[PPECFG_QOS_UCAST_PRIO_MAP_DEV_NAME];
+	if (sub_params->valid) {
+		error = ppecfg_param_get_str(sub_params->data,
+				sizeof(nl_msg.msg.ucast_prio_map_info.if_data.interface.dev),
+				&nl_msg.msg.ucast_prio_map_info.if_data.interface.dev);
+		if (error < 0) {
+			ppecfg_log_arg_error(sub_params);
+			goto done;
+		}
+	} else {
+		ppecfg_log_error("Device name is required\n");
+		error = -EINVAL;
+		goto done;
+	}
+
+	/*
+	 * Set interface type to physical
+	 */
+	nl_msg.msg.ucast_prio_map_info.if_data.type = PPE_QOS_INTERFACE_TYPE_PHYSICAL;
+
+	/*
+	 * Process prio_map parameter - comma-separated list of 16 values
+	 */
+	sub_params = &param->sub_params[PPECFG_QOS_UCAST_PRIO_MAP_PRIO_MAP];
+	if (sub_params->valid) {
+		prio_map_str = strdup(sub_params->data);
+		if (!prio_map_str) {
+			ppecfg_log_error("Memory allocation failed\n");
+			error = -ENOMEM;
+			goto done;
+		}
+
+		/*
+		 * Parse comma-separated values
+		 */
+		token = strtok_r(prio_map_str, ",", &saveptr);
+		while (token && i < PPECFG_QOS_MAX_PRIORITY) {
+			int val = atoi(token);
+			if (val < 0 || val > 7) {
+				ppecfg_log_error("Unicast priority map values must be between 0 and 7\n");
+				free(prio_map_str);
+				error = -EINVAL;
+				goto done;
+			}
+			nl_msg.msg.ucast_prio_map_info.prio_map[i++] = val;
+			token = strtok_r(NULL, ",", &saveptr);
+		}
+
+		free(prio_map_str);
+
+		if (i != PPECFG_QOS_MAX_PRIORITY) {
+			ppecfg_log_error("Priority map must contain exactly 16 values\n");
+			error = -EINVAL;
+			goto done;
+		}
+	} else {
+		ppecfg_log_error("Priority map is required\n");
+		error = -EINVAL;
+		goto done;
+	}
+
+	/*
+	 * send message
+	 */
+	error = nss_ppenl_qos_send_req(&nl_msg);
+	if (error < 0) {
+		ppecfg_log_warn("Unable to send message");
+		goto done;
+	}
+
 done:
 	return error;
 }
