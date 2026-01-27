@@ -30,6 +30,15 @@ enum ppecfg_acl_cmd {
 };
 
 /*
+ * PPECFG ACL DEV fields
+ */
+enum ppecfg_acl_dev {
+        PPECFG_ACL_DEV_NAME,		/* Dev name */
+        PPECFG_ACL_DEV_TYPE,		/* dev type */
+        PPECFG_ACL_DEV_MAX
+};
+
+/*
  * PPECFG ACL SMAC fields
  */
 enum ppecfg_acl_smac {
@@ -285,7 +294,7 @@ enum ppecfg_acl_rule_add {
 	PPECFG_ACL_RULE_ADD_RULE_ID,		/* Rule ID */
 	PPECFG_ACL_RULE_ADD_DEV,		/* Source Dev */
 	PPECFG_ACL_RULE_ADD_POST_ROUTE_EN,	/* Post route enable */
-	PPECFG_ACL_RULE_ADD_FLOW_QOS_OVERRIDE,	      /* Flow QoS enable */
+	PPECFG_ACL_RULE_ADD_FLOW_QOS_OVERRIDE,	/* Flow QoS enable */
 	PPECFG_ACL_RULE_ADD_PRIORITY,		/* Priority */
 	PPECFG_ACL_RULE_ADD_SRC_SC,		/* Source service code */
 	PPECFG_ACL_RULE_ADD_OUTER_HEADER,	/* Outer Header */

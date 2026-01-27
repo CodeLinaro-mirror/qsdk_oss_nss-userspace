@@ -21,6 +21,14 @@ static int ppecfg_acl_rule_prio_upd(struct ppecfg_param *param, struct ppecfg_pa
 /*
  * Rule add parameters
  */
+static struct ppecfg_param dev_params[PPECFG_ACL_DEV_MAX] = {
+	PPECFG_PARAM_INIT(PPECFG_ACL_DEV_NAME, "dev_name="),
+	PPECFG_PARAM_INIT(PPECFG_ACL_DEV_TYPE, "dev_type="),
+};
+
+/*
+ * Rule add parameters
+ */
 static struct ppecfg_param smac_params[PPECFG_ACL_SMAC_MAX] = {
 	PPECFG_PARAM_INIT(PPECFG_ACL_SMAC_VAL, "sval="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_SMAC_NVAL, "sval!="),
@@ -250,7 +258,7 @@ static struct ppecfg_param action_params[PPECFG_ACL_ACTION_MAX] = {
  */
 static struct ppecfg_param rule_add_params[PPECFG_ACL_RULE_ADD_MAX] = {
 	PPECFG_PARAM_INIT(PPECFG_ACL_RULE_ADD_RULE_ID, "rule_id="),
-	PPECFG_PARAM_INIT(PPECFG_ACL_RULE_ADD_DEV, "src_dev="),
+	PPECFG_PARAMARR_INIT(PPECFG_ACL_RULE_ADD_DEV, "dev", dev_params, ppecfg_param_iter_tbl),
 	PPECFG_PARAM_INIT(PPECFG_ACL_RULE_ADD_POST_ROUTE_EN, "post_route_en="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_RULE_ADD_FLOW_QOS_OVERRIDE, "flow_qos_override="),
 	PPECFG_PARAM_INIT(PPECFG_ACL_RULE_ADD_PRIORITY, "priority="),
@@ -362,36 +370,58 @@ static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_i
 			break;
 
 		case PPECFG_ACL_RULE_ADD_DEV:
-			error = ppecfg_param_get_str(sub_params->data, sizeof(nl_msg.rule.src.dev_name), &nl_msg.rule.src.dev_name);
+			char dev_type[16] = {0};
+
+			/* Derive dev_type */
+			sub_params = param->sub_params[PPECFG_ACL_RULE_ADD_DEV].sub_params;
+			data = sub_params[PPECFG_ACL_DEV_TYPE].data;
+			error = ppecfg_param_get_str(data, sizeof(dev_type), &dev_type);
 			if (error < 0) {
-				ppecfg_log_data_error(sub_params);
+				goto print_error;
+			}
+
+			data = sub_params[PPECFG_ACL_DEV_NAME].data;
+			/* Derive SC and dev_name */
+			if (strcmp(dev_type, "sc") == 0)
+				error = ppecfg_param_get_int(data, sizeof(nl_msg.rule.dev.sc), &nl_msg.rule.dev.sc);
+			else if (strcmp(dev_type, "flow") == 0)
+				error = ppecfg_param_get_str(data, sizeof(nl_msg.rule.dev.dev_name), &nl_msg.rule.dev.dev_name);
+
+			if (error < 0) {
+				ppecfg_log_warn("Missing required sc_val or dev_name\n");
+				ppecfg_log_arg_error(sub_params);
 				goto done;
 			}
 
-			if (strcmp("flow" , nl_msg.rule.src.dev_name) == 0) {
-				nl_msg.rule.stype = PPE_ACL_RULE_SRC_TYPE_FLOW;
-			} else if (strcmp("sc" , nl_msg.rule.src.dev_name) == 0) {
-				memset(nl_msg.rule.src.dev_name, 0, sizeof(nl_msg.rule.src.dev_name));
-				nl_msg.rule.stype = PPE_ACL_RULE_SRC_TYPE_SC;
+			if (strcmp(dev_type, "flow") == 0) {
+				nl_msg.rule.dev_type = PPE_ACL_RULE_DEV_TYPE_FLOW;
+			} else if (strcmp(dev_type, "sc") == 0) {
+				nl_msg.rule.dev_type = PPE_ACL_RULE_DEV_TYPE_SC;
+			} else if (strcmp(dev_type, "sport") == 0) {
+				nl_msg.rule.dev_type = PPE_ACL_RULE_DEV_TYPE_SRC_DEV;
+			} else if (strcmp(dev_type, "dport") == 0) {
+				nl_msg.rule.dev_type = PPE_ACL_RULE_DEV_TYPE_DEST_L2_PORT;
+			} else if (strcmp(dev_type, "dport_l3") == 0) {
+				nl_msg.rule.dev_type = PPE_ACL_RULE_DEV_TYPE_DEST_L3_PORT;
 			} else {
-				nl_msg.rule.stype = PPE_ACL_RULE_SRC_TYPE_DEV;
+				ppecfg_log_warn("Valid Inputs type=[flow|sc|sport|dport|dport_l3], name=[flow|sc value|dev_name]\n");
+				goto print_error;
 			}
-
 			break;
 
 		case PPECFG_ACL_RULE_ADD_SRC_SC:
-			if (nl_msg.rule.stype != PPE_ACL_RULE_SRC_TYPE_SC) {
+			if (nl_msg.rule.dev_type != PPE_ACL_RULE_DEV_TYPE_SC) {
 				ppecfg_log_data_error(sub_params);
 				goto done;
 			}
 
-			error = ppecfg_param_get_int(sub_params->data, sizeof(uint8_t), &nl_msg.rule.src.sc);
+			error = ppecfg_param_get_int(sub_params->data, sizeof(uint8_t), &nl_msg.rule.dev.sc);
 			if (error < 0) {
 				ppecfg_log_data_error(sub_params);
 				goto done;
 			}
 
-			ppecfg_log_info("nl_msg.rule.src.sc: %d\n", nl_msg.rule.src.sc);
+			ppecfg_log_info("nl_msg.rule.src.sc: %d\n", nl_msg.rule.dev.sc);
 			break;
 
 		case PPECFG_ACL_RULE_ADD_POST_ROUTE_EN:
@@ -492,6 +522,14 @@ static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_i
 			if (strcmp("us", flow_dir) == 0) {
 				nl_msg.rule.cmn.cmn_flags |= PPE_ACL_RULE_CMN_FLOW_DIR_TYPE_US;
 			} else if (strcmp("ds", flow_dir) == 0) {
+				/*
+				 * ACL rule shall be binded with destination info.
+				 */
+				if (nl_msg.rule.dev_type != PPE_ACL_RULE_DEV_TYPE_DEST_L2_PORT &&
+						nl_msg.rule.dev_type != PPE_ACL_RULE_DEV_TYPE_DEST_L3_PORT) {
+					printf("ACL rule shall be binded with dest_dev info\n");
+					goto print_error;
+				}
 				nl_msg.rule.cmn.cmn_flags &= ~PPE_ACL_RULE_CMN_FLOW_DIR_TYPE_US;
 			} else {
 				ppecfg_log_warn("Valid Inputs: [us][ds]\n");

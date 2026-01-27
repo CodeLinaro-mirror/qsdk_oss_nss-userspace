@@ -1590,20 +1590,21 @@ int ppecfg_acl_json_rule_add(struct json_object *rule_obj)
 	 */
 	val = ppecfg_json_object_handler(rule_obj, "src_dev");
 	if (val) {
-		error = ppecfg_param_get_str(val, sizeof(nl_msg.rule.src.dev_name), &nl_msg.rule.src.dev_name);
+		error = ppecfg_param_get_str(val, sizeof(nl_msg.rule.dev.dev_name), &nl_msg.rule.dev.dev_name);
 		if (error) {
 			ppecfg_log_info("src_dev, %s\n", val);
 			goto done;
 		}
 
-		if (strcmp("flow", nl_msg.rule.src.dev_name) == 0) {
-			nl_msg.rule.stype = PPE_ACL_RULE_SRC_TYPE_FLOW;
-		} else if (strcmp("sc", nl_msg.rule.src.dev_name) == 0) {
-			memset(nl_msg.rule.src.dev_name, 0, sizeof(nl_msg.rule.src.dev_name));
-			nl_msg.rule.stype = PPE_ACL_RULE_SRC_TYPE_SC;
+		if (strcmp("flow", nl_msg.rule.dev.dev_name) == 0) {
+			nl_msg.rule.dev_type = PPE_ACL_RULE_DEV_TYPE_FLOW;
+		} else if (strcmp("sc", nl_msg.rule.dev.dev_name) == 0) {
+			memset(nl_msg.rule.dev.dev_name, 0, sizeof(nl_msg.rule.dev.dev_name));
+			nl_msg.rule.dev_type = PPE_ACL_RULE_DEV_TYPE_SC;
 		} else {
-			nl_msg.rule.stype = PPE_ACL_RULE_SRC_TYPE_DEV;
+			nl_msg.rule.dev_type = PPE_ACL_RULE_DEV_TYPE_SRC_DEV;
 		}
+		/* TODO Add dest dev binding in json. */
 		ppecfg_log_info("SRC DEV : %s\n", val);
 	} else {
 		goto done;
@@ -1667,18 +1668,18 @@ int ppecfg_acl_json_rule_add(struct json_object *rule_obj)
 	 */
 	val = ppecfg_json_object_handler(rule_obj, "src_sc");
 	if (val) {
-		if (nl_msg.rule.stype != PPE_ACL_RULE_SRC_TYPE_SC) {
+		if (nl_msg.rule.dev_type != PPE_ACL_RULE_DEV_TYPE_SC) {
 			ppecfg_log_error("src_sc, %s\n", val);
 			goto done;
 		}
 
-		error = ppecfg_param_get_int(val, sizeof(uint8_t), &nl_msg.rule.src.sc);
+		error = ppecfg_param_get_int(val, sizeof(uint8_t), &nl_msg.rule.dev.sc);
 		if (error) {
 			ppecfg_log_error("src_sc, %s\n", val);
 			goto done;
 		}
 
-		ppecfg_log_info("nl_msg.rule.src.sc: %d\n", nl_msg.rule.src.sc);
+		ppecfg_log_info("nl_msg.rule.dev.sc: %d\n", nl_msg.rule.dev.sc);
 	}
 
 	/*
