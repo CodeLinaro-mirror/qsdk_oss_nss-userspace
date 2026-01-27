@@ -16,6 +16,7 @@
 static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_in *match);
 static int ppecfg_acl_rule_del(struct ppecfg_param *param, struct ppecfg_param_in *match);
 static int ppecfg_acl_rule_flush(struct ppecfg_param *param, struct ppecfg_param_in *match);
+static int ppecfg_acl_rule_prio_upd(struct ppecfg_param *param, struct ppecfg_param_in *match);
 
 /*
  * Rule add parameters
@@ -291,12 +292,21 @@ static struct ppecfg_param rule_del_params[PPECFG_ACL_RULE_DEL_MAX] = {
 };
 
 /*
+ * rule priority update parameters
+ */
+static struct ppecfg_param rule_prio_upd_params[PPECFG_ACL_RULE_UPDATE_PRI_MAX] = {
+	PPECFG_PARAM_INIT(PPECFG_ACL_RULE_UPDATE_PRI_RULE_ID, "rule_id="),
+	PPECFG_PARAM_INIT(PPECFG_ACL_RULE_UPDATE_PRI_PRIORITY, "priority="),
+};
+
+/*
  * NOTE: whenever this table is updated, the 'enum ppecfg_acl_cmd' should also get updated
  */
 struct ppecfg_param ppecfg_acl_params[PPECFG_ACL_CMD_MAX] = {
 	PPECFG_PARAMLIST_INIT("cmd=rule_add", rule_add_params, ppecfg_acl_rule_add),
 	PPECFG_PARAMLIST_INIT("cmd=rule_del", rule_del_params, ppecfg_acl_rule_del),
 	PPECFG_PARAMFUNC_INIT("cmd=flush", ppecfg_acl_rule_flush),
+	PPECFG_PARAMLIST_INIT("cmd=rule_prio_update", rule_prio_upd_params, ppecfg_acl_rule_prio_upd),
 };
 
 /*
@@ -1938,5 +1948,72 @@ static int ppecfg_acl_rule_flush(struct ppecfg_param *param, struct ppecfg_param
 		return error;
 	}
 
+	return error;
+}
+
+/*
+ * ppecfg_acl_rule_prio_upd()
+ *	Function to update priority of acl rules
+ */
+static int ppecfg_acl_rule_prio_upd(struct ppecfg_param *param, struct ppecfg_param_in *match)
+{
+	struct nss_ppenl_acl_rule nl_msg = {{0}};
+	struct ppecfg_param *sub_params;
+	int error;
+	bool rule_id_set = false;
+
+	if (!param || !match) {
+		ppecfg_log_warn("Param or match table is NULL \n");
+		return -EINVAL;
+	}
+
+	error = ppecfg_param_iter_tbl(param, match);
+	if (error) {
+		ppecfg_log_arg_error(param);
+		goto done;
+	}
+
+	nss_ppenl_acl_init_rule(&nl_msg, NSS_PPE_ACL_UPDATE_PRI_RULE_MSG);
+
+	for (int index = PPECFG_ACL_RULE_UPDATE_PRI_RULE_ID; index < PPECFG_ACL_RULE_UPDATE_PRI_MAX; index++) {
+		sub_params = &param->sub_params[index];
+		if (sub_params->valid == 0) {
+			continue;
+		}
+
+		switch (index) {
+		case PPECFG_ACL_RULE_UPDATE_PRI_RULE_ID:
+			error = ppecfg_param_get_int(sub_params->data, sizeof(uint32_t), &nl_msg.rule.rule_id);
+			if (error < 0) {
+				ppecfg_log_arg_error(sub_params);
+				goto done;
+			}
+			rule_id_set = true;
+			break;
+
+		case PPECFG_ACL_RULE_UPDATE_PRI_PRIORITY:
+			error = ppecfg_param_get_int(sub_params->data, sizeof(uint16_t), &nl_msg.rule.cmn.pri);
+			if (error < 0) {
+				ppecfg_log_data_error(sub_params);
+				goto done;
+			}
+
+			nl_msg.rule.cmn.cmn_flags |= PPE_ACL_RULE_CMN_FLAG_PRI_EN;
+			break;
+		}
+	}
+
+	if (!rule_id_set || !(nl_msg.rule.cmn.cmn_flags & PPE_ACL_RULE_CMN_FLAG_PRI_EN)) {
+		ppecfg_log_warn("Required both Rule ID and priority value\n");
+		goto done;
+	}
+
+	error = nss_ppenl_acl_rule_prio_upd(&nl_msg);
+	if (error < 0) {
+		ppecfg_log_warn("Unable to send message\n");
+		goto done;
+	}
+
+done:
 	return error;
 }

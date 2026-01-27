@@ -1,17 +1,6 @@
 /*
- * Copyright (c) 2023-2024, Qualcomm Innovation Center, Inc. All rights reserved.
- *
- * Permission to use, copy, modify, and/or distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+ * SPDX-License-Identifier: ISC
  */
 
 #include <nss_ppenl_base.h>
@@ -67,6 +56,16 @@ static void nss_ppenl_acl_resp(void *user_ctx, struct nss_ppenl_acl_rule *acl_ru
 		nss_ppenl_sock_log_info("ACL rule flush successful\n");
 		break;
 
+	case NSS_PPE_ACL_UPDATE_PRI_RULE_MSG:
+		ret = acl_rule->rule.ret;
+		if (ret != PPE_ACL_RET_SUCCESS) {
+			nss_ppenl_sock_log_error("ACL rule priority update failed with error: %d\n", ret);
+			return;
+		}
+
+		nss_ppenl_sock_log_info("ACL rule priority update is successful\n");
+		break;
+
 	default:
 		nss_ppenl_sock_log_error("unsupported message cmd type(%d)\n", cmd);
 	}
@@ -95,6 +94,7 @@ int nss_ppenl_acl_sock_cb(struct nl_msg *msg, void *arg)
 	case NSS_PPE_ACL_CREATE_RULE_MSG:
 	case NSS_PPE_ACL_DESTROY_RULE_MSG:
 	case NSS_PPE_ACL_FLUSH_RULE_MSG:
+	case NSS_PPE_ACL_UPDATE_PRI_RULE_MSG:
 	{
 		void *cb_data = nss_ppenl_cmn_get_cb_data(&rule->cm, sock->family_id);
 		if (!cb_data) {
@@ -313,6 +313,39 @@ done:
 	return error;
 }
 
+/*
+ * nss_ppenl_acl_rule_prio_upd)
+ * 	update priority of rules in PPE
+ */
+int nss_ppenl_acl_rule_prio_upd(struct nss_ppenl_acl_rule *rule)
+{
+	int error;
+
+	/*
+	 * open the NSS NL ACL socket
+	 */
+	error = nss_ppenl_acl_sock_open(&nss_acl_ctx, NULL);
+	if (error < 0) {
+		nss_ppenl_sock_log_error("Failed to open ACL socket; error(%d)\n", error);
+		return error;
+	}
+
+	/*
+	 * send message
+	 */
+	error = nss_ppenl_acl_sock_send(&nss_acl_ctx, rule, nss_ppenl_acl_resp);
+	if (error < 0) {
+		nss_ppenl_sock_log_error("Unable to send message; error(%d)\n", error);
+		goto done;
+	}
+
+done:
+	/*
+	 * close the socket
+	 */
+	nss_ppenl_acl_sock_close(&nss_acl_ctx);
+	return error;
+}
 /*
  * nss_ppenl_acl_init_rule()
  *	Init the rule message

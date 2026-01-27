@@ -25,6 +25,7 @@ enum ppecfg_acl_cmd {
 	PPECFG_ACL_CMD_RULE_ADD,		/* flow add */
 	PPECFG_ACL_CMD_RULE_DEL,		/* flow delete */
 	PPECFG_ACL_CMD_RULE_FLUSH,		/* flush rules */
+	PPECFG_ACL_CMD_RULE_PRIO_UPD,		/* Update rule priority */
 	PPECFG_ACL_CMD_MAX
 };
 
@@ -323,6 +324,15 @@ enum ppecfg_acl_rule_add {
 enum ppecfg_acl_rule_del {
 	PPECFG_ACL_RULE_DEL_RULE_ID,		/* Rule ID */
 	PPECFG_ACL_RULE_DEL_MAX
+};
+
+/*
+ * PPECFG ACL flow rule priority update
+ */
+enum ppecfg_acl_rule_prio_upd {
+	PPECFG_ACL_RULE_UPDATE_PRI_RULE_ID,	/* Rule ID */
+	PPECFG_ACL_RULE_UPDATE_PRI_PRIORITY,	/* New priority */
+	PPECFG_ACL_RULE_UPDATE_PRI_MAX
 };
 
 int ppecfg_acl_get_rule_id(uint32_t rule_id_external);
