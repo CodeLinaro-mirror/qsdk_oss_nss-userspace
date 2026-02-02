@@ -1,17 +1,6 @@
 /*
- * Copyright (c) 2024-2025, Qualcomm Innovation Center, Inc. All rights reserved.
- *
- * Permission to use, copy, modify, and/or distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+ * SPDX-License-Identifier: ISC
  */
 
 #include <stdio.h>
@@ -186,7 +175,7 @@ static int ppecfg_acl_json_get_cvid_obj(struct json_object *rule_obj, struct nss
 			ppecfg_log_error("cvid_mask, %s\n", mask);
 			return error;
 		}
-		nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule_flags |= PPE_ACL_RULE_FLAG_VID_MASK;
+		nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule_flags |= PPE_ACL_RULE_FLAG_CVID_MASK;
 		ppecfg_log_info("CVID MASK : %s\n", mask);
 	}
 
@@ -196,12 +185,12 @@ static int ppecfg_acl_json_get_cvid_obj(struct json_object *rule_obj, struct nss
 			ppecfg_log_error("cvid_range, %s\n", range);
 			return error;
 		}
-		if (!(nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule_flags & PPE_ACL_RULE_FLAG_VID_MASK)) {
+		if (!(nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule_flags & PPE_ACL_RULE_FLAG_CVID_MASK)) {
 			return error;
 		}
 		if (bool_val == true) {
-			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule_flags |= PPE_ACL_RULE_FLAG_VID_RANGE;
-			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule_flags &= ~PPE_ACL_RULE_FLAG_VID_MASK;
+			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule_flags |= PPE_ACL_RULE_FLAG_CVID_RANGE;
+			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule_flags &= ~PPE_ACL_RULE_FLAG_CVID_MASK;
 		}
 		ppecfg_log_info("CVID RANGE : %s\n", range);
 	}
@@ -254,7 +243,7 @@ static int ppecfg_acl_json_get_svid_obj(struct json_object *rule_obj, struct nss
 			ppecfg_log_error("svid_mask, %s\n", mask);
 			return error;
 		}
-		nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule_flags |= PPE_ACL_RULE_FLAG_VID_MASK;
+		nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule_flags |= PPE_ACL_RULE_FLAG_SVID_MASK;
 		ppecfg_log_info("SVID MASK : %s\n", mask);
 	}
 
@@ -264,12 +253,12 @@ static int ppecfg_acl_json_get_svid_obj(struct json_object *rule_obj, struct nss
 			ppecfg_log_error("svid_range, %s\n", range);
 			return error;
 		}
-		if (!(nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule_flags & PPE_ACL_RULE_FLAG_VID_MASK)) {
+		if (!(nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule_flags & PPE_ACL_RULE_FLAG_SVID_MASK)) {
 			return error;
 		}
 		if (bool_val == true) {
-			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule_flags |= PPE_ACL_RULE_FLAG_VID_RANGE;
-			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule_flags &= ~PPE_ACL_RULE_FLAG_VID_MASK;
+			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule_flags |= PPE_ACL_RULE_FLAG_SVID_RANGE;
+			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule_flags &= ~PPE_ACL_RULE_FLAG_SVID_MASK;
 		}
 		ppecfg_log_info("SVID RANGE : %s\n", range);
 	}
@@ -312,7 +301,7 @@ static int ppecfg_acl_json_get_cpcp_obj(struct json_object *rule_obj, struct nss
 			return error;
 		}
 
-		nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_CPCP].rule_flags |= PPE_ACL_RULE_FLAG_PCP_MASK;
+		nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_CPCP].rule_flags |= PPE_ACL_RULE_FLAG_CPCP_MASK;
 		ppecfg_log_info("CPCP MASK : %s\n", mask);
 	}
 
@@ -353,7 +342,7 @@ static int ppecfg_acl_json_get_spcp_obj(struct json_object *rule_obj, struct nss
 			return error;
 		}
 
-		nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_SPCP].rule_flags |= PPE_ACL_RULE_FLAG_PCP_MASK;
+		nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_SPCP].rule_flags |= PPE_ACL_RULE_FLAG_SPCP_MASK;
 		ppecfg_log_info("SPCP MASK : %s\n", mask);
 	}
 
