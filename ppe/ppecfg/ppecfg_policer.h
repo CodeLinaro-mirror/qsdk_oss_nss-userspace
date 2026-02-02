@@ -1,17 +1,6 @@
 /*
- * Copyright (c) 2023-2024, Qualcomm Innovation Center, Inc. All rights reserved.
- *
- * Permission to use, copy, modify, and/or distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ * Copyright (c) 2026, Qualcomm Innovation Center, Inc. All rights reserved.
+ * SPDX-License-Identifier: ISC
  */
 
 #ifndef __PPECFG_POLICER_H
@@ -49,13 +38,23 @@ enum ppecfg_policer_rule_add {
 	PPECFG_POLICER_RULE_ADD_METER_ENABLE,	/* meter flag */
 	PPECFG_POLICER_RULE_ADD_COUPLE_ENABLE,	/* coupling flag */
 	PPECFG_POLICER_RULE_ADD_COLOUR_AWARE,	/* colour flag */
+	PPECFG_POLICER_RULE_ADD_METER_FLAG,	/* meter flag */
 	PPECFG_POLICER_RULE_ADD_YELLOW_DP,	/* yellow dp */
 	PPECFG_POLICER_RULE_ADD_YELLOW_INT_PRI,	/* yellow pri */
 	PPECFG_POLICER_RULE_ADD_YELLOW_PCP,	/* yellow pcp */
 	PPECFG_POLICER_RULE_ADD_YELLOW_DEI,	/* yellow dei */
 	PPECFG_POLICER_RULE_ADD_YELLOW_DSCP,	/* yellow dscp */
-	PPECFG_POLICER_RULE_ADD_MAX	/* max attribute */
+	PPECFG_POLICER_RULE_ADD_MAX,	/* max attribute */
 };
+
+/*
+ * Meter flag bit definitions
+ */
+#define PPECFG_POLICER_METER_FLAG_UNICAST		(1 << 0)	/* bit0: uc (unicast) */
+#define PPECFG_POLICER_METER_FLAG_UNKNOWN_UNICAST	(1 << 1)	/* bit1: uuc (unknown unicast) */
+#define PPECFG_POLICER_METER_FLAG_MULTICAST		(1 << 2)	/* bit2: mc (multicast) */
+#define PPECFG_POLICER_METER_FLAG_UNKNOWN_MULTICAST	(1 << 3)	/* bit3: umc (unknown multicast) */
+#define PPECFG_POLICER_METER_FLAG_BROADCAST		(1 << 4)	/* bit4: bc (broadcast) */
 
 /*
  * PPECFG POLICER flow del
