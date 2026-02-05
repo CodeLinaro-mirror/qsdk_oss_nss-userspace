@@ -28,6 +28,9 @@ static struct ppecfg_param cfg_param[] = {
 #ifdef NSS_PPE_EXT_VLAN_FEATURE
 	PPECFG_PARAMLIST_INIT("family=vlan", ppecfg_vlan_params, ppecfg_param_iter_tbl),
 #endif
+#ifdef NSS_PPE_PORT_MGMT_FEATURE
+	PPECFG_PARAMLIST_INIT("family=port_mgmt", ppecfg_port_mgmt_params, ppecfg_param_iter_tbl),
+#endif
 };
 
 static struct ppecfg_param root = PPECFG_PARAMLIST_INIT("ppecfg", cfg_param, NULL);

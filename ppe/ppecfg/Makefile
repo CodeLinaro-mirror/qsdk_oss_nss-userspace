@@ -15,10 +15,12 @@ ifneq ($(filter $(SoC),ipq96xx ipq52xx),)
 EXTRA_CFLAGS += -DNSS_PPE_DSCP_FEATURE
 EXTRA_CFLAGS += -DNSS_PPE_PM_FEATURE
 EXTRA_CFLAGS += -DNSS_PPE_EXT_VLAN_FEATURE
+EXTRA_CFLAGS += -DNSS_PPE_PORT_MGMT_FEATURE
 else
 SOURCES := $(filter-out $(SRCDIR)/ppecfg_dscp.c, $(SOURCES))
 SOURCES := $(filter-out $(SRCDIR)/ppecfg_pm.c, $(SOURCES))
 SOURCES := $(filter-out $(SRCDIR)/ppecfg_vlan.c, $(SOURCES))
+SOURCES := $(filter-out $(SRCDIR)/ppecfg_port_mgmt.c, $(SOURCES))
 endif
 
 OBJECTS = $(SOURCES:$(SRCDIR)/%.c=$(OBJPATH)/%.o)
