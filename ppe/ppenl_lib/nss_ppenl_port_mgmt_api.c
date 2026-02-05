@@ -53,6 +53,15 @@ static void nss_ppenl_port_mgmt_resp(void *user_ctx, struct nss_ppenl_port_mgmt_
 			nss_ppenl_sock_log_info("Action Control set successful\n");
 			break;
 
+		case NSS_PPE_PORT_MGMT_MAC_LRN_LIMIT_SET_MSG:
+			ret = port_mgmt_info->mac_lrn_limit.ret;
+			if (ret != PPE_PORT_MGMT_RET_SUCCESS) {
+				nss_ppenl_sock_log_error("PORT_MGMT mac learn limit set failed with error: %d\n", ret);
+				return;
+			}
+			nss_ppenl_sock_log_info("PORT_MGMT mac learn limit set successful\n");
+			break;
+
 		default:
 			nss_ppenl_sock_log_error("unsupported message cmd type(%d)\n", cmd);
 	}
@@ -81,6 +90,7 @@ int nss_ppenl_port_mgmt_sock_cb(struct nl_msg *msg, void *arg)
 		case NSS_PPE_PORT_MGMT_PORT_ISOL_SET_MSG:
 		case NSS_PPE_PORT_MGMT_ACT_CTRL_SET_MSG:
 		case NSS_PPE_PORT_MGMT_PORT_ISOL_DEF_MSG:
+		case NSS_PPE_PORT_MGMT_MAC_LRN_LIMIT_SET_MSG:
 			{
 				void *cb_data = nss_ppenl_cmn_get_cb_data(&port_mgmt_info->cm, sock->family_id);
 				if (!cb_data) {
@@ -287,6 +297,43 @@ int nss_ppenl_port_mgmt_isol_default(struct nss_ppenl_port_mgmt_info *port_mgmt_
 		goto done;
 	}
 
+done:
+	/*
+	 * close the socket
+	 */
+	nss_ppenl_port_mgmt_sock_close(&nss_port_mgmt_ctx);
+	return error;
+}
+
+/*
+ * nss_ppenl_port_mgmt_mac_lrn_limit_set()
+ *      Set the PORT_MGMT mac learn limit
+ */
+int nss_ppenl_port_mgmt_mac_lrn_limit_set(struct nss_ppenl_port_mgmt_info *port_mgmt_info) {
+	int error;
+
+	if (!port_mgmt_info) {
+		nss_ppenl_sock_log_error("Invalid mac_learn_info\n");
+		return -EINVAL;
+	}
+
+	/*
+	 * open the NSS NL PORT_MGMT socket
+	 */
+	error = nss_ppenl_port_mgmt_sock_open(&nss_port_mgmt_ctx, NULL);
+	if (error < 0) {
+		nss_ppenl_sock_log_error("Failed to open PORT_MGMT socket; error(%d)\n", error);
+		return error;
+	}
+
+	/*
+	 * send message
+	 */
+	error = nss_ppenl_port_mgmt_sock_send(&nss_port_mgmt_ctx, port_mgmt_info, nss_ppenl_port_mgmt_resp);
+	if (error < 0) {
+		nss_ppenl_sock_log_error("Unable to send message\n");
+		goto done;
+	}
 done:
 	/*
 	 * close the socket
