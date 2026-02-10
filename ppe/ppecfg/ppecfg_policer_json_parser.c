@@ -1,17 +1,6 @@
 /*
- * Copyright (c) 2024, Qualcomm Innovation Center, Inc. All rights reserved.
- *
- * Permission to use, copy, modify, and/or distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ * Copyright (c) 2026, Qualcomm Innovation Center, Inc. All rights reserved.
+ * SPDX-License-Identifier: ISC
  */
 
 #include <stdio.h>
@@ -210,6 +199,133 @@ int ppecfg_policer_json_rule_add(struct json_object *rule_obj)
 			goto done;
 		}
 		ppecfg_log_info("COLOUR_AWARE : %s\n", val);
+	}
+
+	/*
+	 * extracting METER_FLAG
+	 */
+	val = ppecfg_json_object_handler(rule_obj, "meter_flag");
+	if (val) {
+		/*
+		 * Parse optional meter_flag from user_config, default 0
+		 * Accepts single or multiple flag values separated by underscore
+		 *
+		 * Valid packet types (5 types total):
+		 *   - uc
+		 *   - uuc
+		 *   - mc
+		 *   - umc
+		 *   - bc
+		 *
+		 * Single type examples:
+		 *   meter_flag=uc, meter_flag=mc, meter_flag=bc
+		 *
+		 * Multiple type examples (ALL combinations are supported):
+		 *   meter_flag=bc_mc
+		 *   meter_flag=uc_mc_bc
+		 *   meter_flag=uc_uuc_mc_umc_bc
+		 *   ... any combination of the 5 packet types is valid
+		 */
+		char meter_flag_str[128];
+		char *token;
+		char *saveptr;
+		char temp_str[128];
+		uint32_t combined_flags = 0;
+		bool flag_found = false;
+		uint32_t duplicate_check = 0;
+
+		error = ppecfg_param_get_str(val, sizeof(meter_flag_str), meter_flag_str);
+		if (error < 0) {
+			ppecfg_log_error("meter_flag");
+			goto done;
+		}
+
+		/*
+		 * Make a copy of the input string for tokenization
+		 * since strtok_r modifies the original string
+		 */
+		strlcpy(temp_str, meter_flag_str, sizeof(temp_str) - 1);
+		temp_str[sizeof(temp_str) - 1] = '\0';
+
+		/*
+		 * Parse the string and combine multiple flags using underscore as delimiter
+		 */
+		token = strtok_r(temp_str, "_", &saveptr);
+		while (token != NULL) {
+			flag_found = false;
+
+			if (strcasecmp(token, "uc") == 0) {
+				if (duplicate_check & PPECFG_POLICER_METER_FLAG_UNICAST) {
+					ppecfg_log_error("Duplicate meter_flag: 'uc' specified multiple times\n");
+					error = -EINVAL;
+					goto done;
+				}
+				combined_flags |= PPECFG_POLICER_METER_FLAG_UNICAST;
+				duplicate_check |= PPECFG_POLICER_METER_FLAG_UNICAST;
+				flag_found = true;
+			} else if (strcasecmp(token, "uuc") == 0) {
+				if (duplicate_check & PPECFG_POLICER_METER_FLAG_UNKNOWN_UNICAST) {
+					ppecfg_log_error("Duplicate meter_flag: 'uuc' specified multiple times\n");
+					error = -EINVAL;
+					goto done;
+				}
+				combined_flags |= PPECFG_POLICER_METER_FLAG_UNKNOWN_UNICAST;
+				duplicate_check |= PPECFG_POLICER_METER_FLAG_UNKNOWN_UNICAST;
+				flag_found = true;
+			} else if (strcasecmp(token, "umc") == 0) {
+				if (duplicate_check & PPECFG_POLICER_METER_FLAG_UNKNOWN_MULTICAST) {
+					ppecfg_log_error("Duplicate meter_flag: 'umc' specified multiple times\n");
+					error = -EINVAL;
+					goto done;
+				}
+				combined_flags |= PPECFG_POLICER_METER_FLAG_UNKNOWN_MULTICAST;
+				duplicate_check |= PPECFG_POLICER_METER_FLAG_UNKNOWN_MULTICAST;
+				flag_found = true;
+			} else if (strcasecmp(token, "mc") == 0) {
+				if (duplicate_check & PPECFG_POLICER_METER_FLAG_MULTICAST) {
+					ppecfg_log_error("Duplicate meter_flag: 'mc' specified multiple times\n");
+					error = -EINVAL;
+					goto done;
+				}
+				combined_flags |= PPECFG_POLICER_METER_FLAG_MULTICAST;
+				duplicate_check |= PPECFG_POLICER_METER_FLAG_MULTICAST;
+				flag_found = true;
+			} else if (strcasecmp(token, "bc") == 0) {
+				if (duplicate_check & PPECFG_POLICER_METER_FLAG_BROADCAST) {
+					ppecfg_log_error("Duplicate meter_flag: 'bc' specified multiple times\n");
+					error = -EINVAL;
+					goto done;
+				}
+				combined_flags |= PPECFG_POLICER_METER_FLAG_BROADCAST;
+				duplicate_check |= PPECFG_POLICER_METER_FLAG_BROADCAST;
+				flag_found = true;
+			}
+
+			if (!flag_found) {
+				ppecfg_log_error("Invalid meter_flag token: '%s'\n", token);
+				ppecfg_log_error("Valid packet types: 'uc', 'uuc', 'mc', 'umc', 'bc'\n");
+				ppecfg_log_error("Combine multiple types using underscore (e.g., 'bc_mc')\n");
+				error = -EINVAL;
+				goto done;
+			}
+
+			token = strtok_r(NULL, "_", &saveptr);
+		}
+
+		/*
+		 * Check if at least one valid flag was parsed
+		 */
+		if (combined_flags == 0) {
+			ppecfg_log_error("No valid meter_flag found in: '%s'\n", meter_flag_str);
+			ppecfg_log_error("Valid packet types: 'uc', 'uuc', 'mc', 'umc', 'bc'\n");
+			ppecfg_log_error("Combine multiple types using underscore (e.g., 'bc_mc')\n");
+			error = -EINVAL;
+			goto done;
+		}
+
+		nl_msg.config.meter_flag = combined_flags;
+		nl_msg.config.meter_flag_valid = 1;
+		ppecfg_log_info("METER_FLAG : %s (0x%x)\n", meter_flag_str, combined_flags);
 	}
 
 	/*
