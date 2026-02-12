@@ -23,6 +23,18 @@ static int ppecfg_port_mgmt_port_isolation_set(struct ppecfg_param *param, struc
 static int ppecfg_port_mgmt_act_ctrl_set(struct ppecfg_param *param, struct ppecfg_param_in *match);
 static int ppecfg_port_mgmt_isol_default(struct ppecfg_param *param, struct ppecfg_param_in *match);
 
+static int ppecfg_port_mgmt_mac_lrn_limit_set(struct ppecfg_param *param, struct ppecfg_param_in *match);
+
+/*
+ * PORT_MGMT mac learn limit set parameters
+ */
+static struct ppecfg_param port_lrn_limit_set_params[PPECFG_PORT_MGMT_PORT_LRN_LIMIT_SET_MAX] = {
+	PPECFG_PARAM_INIT(PPECFG_PORT_MGMT_PORT_LRN_LIMIT_SET_ENABLE, "mac_learn_limit_en="),
+	PPECFG_PARAM_INIT(PPECFG_PORT_MGMT_PORT_LRN_LIMIT_SET_PORT_NAME, "port_name="),
+	PPECFG_PARAM_INIT(PPECFG_PORT_MGMT_PORT_LRN_LIMIT_SET_PORT_LEARN_LIMIT, "port_learn_limit="),
+	PPECFG_PARAM_INIT(PPECFG_PORT_MGMT_PORT_LRN_LIMIT_SET_LRN_EXCEED_ACTION, "lrn_exceed_action="),
+};
+
 /*
  * PORT_MGMT port isolation set parameters
  */
@@ -46,6 +58,7 @@ struct ppecfg_param ppecfg_port_mgmt_params[PPECFG_PORT_MGMT_CMD_MAX] = {
 	PPECFG_PARAMLIST_INIT("cmd=port_isol_set", port_isol_set_params, ppecfg_port_mgmt_port_isolation_set),
 	PPECFG_PARAMLIST_INIT("cmd=act_ctrl_set", act_ctrl_set_params, ppecfg_port_mgmt_act_ctrl_set),
 	PPECFG_PARAMFUNC_INIT("cmd=isol_default", ppecfg_port_mgmt_isol_default),
+	PPECFG_PARAMLIST_INIT("cmd=mac_learn_limit_set", port_lrn_limit_set_params, ppecfg_port_mgmt_mac_lrn_limit_set),
 };
 
 /*
@@ -144,7 +157,7 @@ static int ppecfg_port_mgmt_act_ctrl_set(struct ppecfg_param *param, struct ppec
 	 * extract MC Isolation Enable
 	 */
 	struct ppecfg_param *sub_params = &param->sub_params[PPECFG_PORT_MGMT_ACT_CTRL_SET_MC_ISOL_EN];
-	if (sub_params) {
+	if (sub_params->valid != 0) {
 		error = ppecfg_param_get_bool(sub_params->data, &nl_msg.isol.mc_isol_en);
 		if (error) {
 			ppecfg_log_arg_error(sub_params);
@@ -156,7 +169,7 @@ static int ppecfg_port_mgmt_act_ctrl_set(struct ppecfg_param *param, struct ppec
 	 * extract BC Isolation Enable
 	 */
 	sub_params = &param->sub_params[PPECFG_PORT_MGMT_ACT_CTRL_SET_BC_ISOL_EN];
-	if (sub_params) {
+	if (sub_params->valid != 0) {
 		error = ppecfg_param_get_bool(sub_params->data, &nl_msg.isol.bc_isol_en);
 		if (error) {
 			ppecfg_log_arg_error(sub_params);
@@ -198,6 +211,108 @@ static int ppecfg_port_mgmt_isol_default(struct ppecfg_param *param, struct ppec
 	}
 
 	ppecfg_log_info("Isol is set to default successfully\n");
+done:
+	return error;
+}
+
+/*
+ * ppecfg_port_mgmt_mac_lrn_limit_set()
+ *      Handle PORT_MGMT mac learn limit set
+ */
+static int ppecfg_port_mgmt_mac_lrn_limit_set(struct ppecfg_param *param, struct ppecfg_param_in *match)
+{
+	struct nss_ppenl_port_mgmt_info nl_msg = {{0}};
+	struct ppecfg_param *sub_params;
+	int error;
+
+	if (!param || !match) {
+		ppecfg_log_warn("Param or match table is NULL \n");
+		return -EINVAL;
+	}
+
+	/*
+	 * iterate through the param table to identify the matched arguments and
+	 * populate the argument list
+	 */
+	error = ppecfg_param_iter_tbl(param, match);
+	if (error) {
+		ppecfg_log_arg_error(param);
+		goto done;
+	}
+
+	/*
+	 * Initialize the PORT_MGMT message
+	 */
+	nss_ppenl_rule_port_mgmt_init(&nl_msg, NSS_PPE_PORT_MGMT_MAC_LRN_LIMIT_SET_MSG);
+
+	/*
+	 * extract enable flag
+	 */
+	sub_params = &param->sub_params[PPECFG_PORT_MGMT_PORT_LRN_LIMIT_SET_ENABLE];
+	error = ppecfg_param_get_bool(sub_params->data, &nl_msg.mac_lrn_limit.port_learn_limit_en);
+	if (error) {
+                ppecfg_log_arg_error(sub_params);
+                goto done;
+        }
+
+	/*
+	 * extract port name
+	 */
+	sub_params = &param->sub_params[PPECFG_PORT_MGMT_PORT_LRN_LIMIT_SET_PORT_NAME];
+	error = ppecfg_param_get_str(sub_params->data, IFNAMSIZ, &nl_msg.mac_lrn_limit.port_name);
+	if (error) {
+		ppecfg_log_arg_error(sub_params);
+		goto done;
+	}
+
+	/*
+	 * extract port learn limit
+	 */
+	sub_params = &param->sub_params[PPECFG_PORT_MGMT_PORT_LRN_LIMIT_SET_PORT_LEARN_LIMIT];
+	error = ppecfg_param_get_int(sub_params->data, sizeof(uint32_t), &nl_msg.mac_lrn_limit.port_learn_limit);
+	if (error) {
+		ppecfg_log_arg_error(sub_params);
+		goto done;
+	}
+
+	/*
+	 * extract learn exceed action
+	 */
+	sub_params = &param->sub_params[PPECFG_PORT_MGMT_PORT_LRN_LIMIT_SET_LRN_EXCEED_ACTION];
+	char fwd_cmd[10];
+	if (sub_params->valid != 0) {
+		error = ppecfg_param_get_str(sub_params->data, sizeof(fwd_cmd), &fwd_cmd);
+		if (error) {
+			ppecfg_log_arg_error(sub_params);
+			goto done;
+		}
+
+		if (strcmp("FWD", fwd_cmd) == 0) {
+			nl_msg.mac_lrn_limit.lrn_exceed_action = PPE_PORT_MGMT_FWD_CMD_FWD;
+		} else if (strcmp("DROP", fwd_cmd) == 0) {
+			nl_msg.mac_lrn_limit.lrn_exceed_action = PPE_PORT_MGMT_FWD_CMD_DROP;
+		} else if (strcmp("COPY", fwd_cmd) == 0) {
+			nl_msg.mac_lrn_limit.lrn_exceed_action = PPE_PORT_MGMT_FWD_CMD_COPY;
+		} else if (strcmp("REDIR", fwd_cmd) == 0) {
+			nl_msg.mac_lrn_limit.lrn_exceed_action = PPE_PORT_MGMT_FWD_CMD_REDIR;
+		} else {
+			ppecfg_log_info("Valid Inputs: [FWD][DROP][COPY][REDIR]\n");
+			goto done;
+		}
+
+		nl_msg.mac_lrn_limit.lrn_exceed_action_en = true;
+	}
+
+	/*
+	 * send message
+	 */
+	error = nss_ppenl_port_mgmt_mac_lrn_limit_set(&nl_msg);
+	if (error < 0) {
+		ppecfg_log_warn("Unable to send message\n");
+		goto done;
+	}
+
+	ppecfg_log_info("Configured successfully, Port_name: %s learn_limit: %d exceed_action %d\n", nl_msg.mac_lrn_limit.port_name, nl_msg.mac_lrn_limit.port_learn_limit, nl_msg.mac_lrn_limit.lrn_exceed_action);
 done:
 	return error;
 }
