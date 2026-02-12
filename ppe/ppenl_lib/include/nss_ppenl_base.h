@@ -48,6 +48,8 @@
 #include <nss_ppenl_dscp_api.h>
 #include <nss_ppenl_pm_if.h>
 #include <nss_ppenl_pm_api.h>
+#include <nss_ppenl_port_mgmt_if.h>
+#include <nss_ppenl_port_mgmt_api.h>
 #include <nss_ppenl_vlan_if.h>
 #include <nss_ppenl_vlan_api.h>
 

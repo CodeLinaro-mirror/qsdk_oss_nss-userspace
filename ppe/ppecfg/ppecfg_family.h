@@ -19,6 +19,9 @@
 #ifdef NSS_PPE_EXT_VLAN_FEATURE
 #include "ppecfg_vlan.h"
 #endif
+#ifdef NSS_PPE_PORT_MGMT_FEATURE
+#include "ppecfg_port_mgmt.h"
+#endif
 #include <nss_ppenl_base.h>
 
 /*
@@ -36,6 +39,9 @@ extern struct ppecfg_param ppecfg_pm_params[PPECFG_PM_CMD_MAX];
 #endif
 #ifdef NSS_PPE_EXT_VLAN_FEATURE
 extern struct ppecfg_param ppecfg_vlan_params[PPECFG_VLAN_CMD_MAX];
+#endif
+#ifdef NSS_PPE_PORT_MGMT_FEATURE
+extern struct ppecfg_param ppecfg_port_mgmt_params[PPECFG_PORT_MGMT_CMD_MAX];
 #endif
 
 #endif /* __PPECFG_FAMILY_H*/
