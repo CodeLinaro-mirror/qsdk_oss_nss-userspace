@@ -22,8 +22,9 @@
 static int ppecfg_port_mgmt_port_isolation_set(struct ppecfg_param *param, struct ppecfg_param_in *match);
 static int ppecfg_port_mgmt_act_ctrl_set(struct ppecfg_param *param, struct ppecfg_param_in *match);
 static int ppecfg_port_mgmt_isol_default(struct ppecfg_param *param, struct ppecfg_param_in *match);
-
 static int ppecfg_port_mgmt_mac_lrn_limit_set(struct ppecfg_param *param, struct ppecfg_param_in *match);
+static int ppecfg_port_mgmt_mac_filter_set(struct ppecfg_param *param, struct ppecfg_param_in *match);
+static int ppecfg_port_mgmt_mac_filter_clear(struct ppecfg_param *param, struct ppecfg_param_in *match);
 
 /*
  * PORT_MGMT mac learn limit set parameters
@@ -52,6 +53,22 @@ static struct ppecfg_param act_ctrl_set_params[PPECFG_PORT_MGMT_ACT_CTRL_SET_MAX
 };
 
 /*
+ * PORT_MGMT port isolation get parameters
+ */
+static struct ppecfg_param mac_filter_set_params[PPECFG_PORT_MGMT_MAC_FILTER_SET_MAX] = {
+        PPECFG_PARAM_INIT(PPECFG_PORT_MGMT_MAC_FILTER_SET_BLOCK, "mac_addr="),
+	PPECFG_PARAM_INIT(PPECFG_PORT_MGMT_MAC_FILTER_SET_FID_NAME, "fid_name="),
+};
+
+/*
+ * PORT_MGMT port isolation get parameters
+ */
+static struct ppecfg_param mac_filter_clr_params[PPECFG_PORT_MGMT_MAC_FILTER_CLR_MAX] = {
+        PPECFG_PARAM_INIT(PPECFG_PORT_MGMT_MAC_FILTER_CLR_BLOCK, "mac_addr="),
+        PPECFG_PARAM_INIT(PPECFG_PORT_MGMT_MAC_FILTER_CLR_FID_NAME, "fid_name="),
+};
+
+/*
  * NOTE: whenever this table is updated, the 'enum ppecfg_port_mgmt_cmd' should also get updated
  */
 struct ppecfg_param ppecfg_port_mgmt_params[PPECFG_PORT_MGMT_CMD_MAX] = {
@@ -59,6 +76,8 @@ struct ppecfg_param ppecfg_port_mgmt_params[PPECFG_PORT_MGMT_CMD_MAX] = {
 	PPECFG_PARAMLIST_INIT("cmd=act_ctrl_set", act_ctrl_set_params, ppecfg_port_mgmt_act_ctrl_set),
 	PPECFG_PARAMFUNC_INIT("cmd=isol_default", ppecfg_port_mgmt_isol_default),
 	PPECFG_PARAMLIST_INIT("cmd=mac_learn_limit_set", port_lrn_limit_set_params, ppecfg_port_mgmt_mac_lrn_limit_set),
+	PPECFG_PARAMLIST_INIT("cmd=mac_filter_set", mac_filter_set_params, ppecfg_port_mgmt_mac_filter_set),
+	PPECFG_PARAMLIST_INIT("cmd=mac_filter_clear", mac_filter_clr_params, ppecfg_port_mgmt_mac_filter_clear),
 };
 
 /*
@@ -313,6 +332,140 @@ static int ppecfg_port_mgmt_mac_lrn_limit_set(struct ppecfg_param *param, struct
 	}
 
 	ppecfg_log_info("Configured successfully, Port_name: %s learn_limit: %d exceed_action %d\n", nl_msg.mac_lrn_limit.port_name, nl_msg.mac_lrn_limit.port_learn_limit, nl_msg.mac_lrn_limit.lrn_exceed_action);
+done:
+	return error;
+}
+
+/*
+ * ppecfg_port_mgmt_mac_filter_set()
+ *      Handle PORT_MGMT mac filter set
+ */
+static int ppecfg_port_mgmt_mac_filter_set(struct ppecfg_param *param, struct ppecfg_param_in *match)
+{
+	struct nss_ppenl_port_mgmt_info nl_msg = {{0}};
+	struct ppecfg_param *sub_params;
+	int error;
+
+	if (!param || !match) {
+		ppecfg_log_warn("Param or match table is NULL \n");
+		return -EINVAL;
+	}
+
+	/*
+	 * iterate through the param table to identify the matched arguments and
+	 * populate the argument list
+	 */
+	error = ppecfg_param_iter_tbl(param, match);
+	if (error) {
+		ppecfg_log_arg_error(param);
+		goto done;
+	}
+
+	/*
+	 * Initialize the PORT_MGMT message
+	 */
+	nss_ppenl_rule_port_mgmt_init(&nl_msg, NSS_PPE_PORT_MGMT_MAC_FILTER_SET_MSG);
+
+	/*
+	 * extract mac address
+	 */
+	sub_params = &param->sub_params[PPECFG_PORT_MGMT_MAC_FILTER_SET_BLOCK];
+	error = ppecfg_param_verify_mac(sub_params->data, nl_msg.mac_filter.mac);
+	if (error) {
+                ppecfg_log_arg_error(sub_params);
+		goto done;
+	}
+	/*
+	 * extract vsi name
+	 */
+	sub_params = &param->sub_params[PPECFG_PORT_MGMT_MAC_FILTER_SET_FID_NAME];
+	if (sub_params->valid != 0) {
+		error = ppecfg_param_get_str(sub_params->data, IFNAMSIZ, &nl_msg.mac_filter.fid_name);
+		if (error) {
+			ppecfg_log_arg_error(sub_params);
+			goto done;
+		}
+
+		nl_msg.mac_filter.fid_valid = true;
+	}
+
+	/*
+	 * send message
+	 */
+	error = nss_ppenl_port_mgmt_mac_filter_set(&nl_msg);
+	if (error < 0) {
+		ppecfg_log_warn("Unable to send message\n");
+		goto done;
+	}
+
+	ppecfg_log_info("Configured successfully\n");
+done:
+	return error;
+}
+
+/*
+ * ppecfg_port_mgmt_mac_filter_clear()
+ *      Handle PORT_MGMT mac filter clear
+ */
+static int ppecfg_port_mgmt_mac_filter_clear(struct ppecfg_param *param, struct ppecfg_param_in *match)
+{
+	struct nss_ppenl_port_mgmt_info nl_msg = {{0}};
+	struct ppecfg_param *sub_params;
+	int error;
+
+	if (!param || !match) {
+		ppecfg_log_warn("Param or match table is NULL \n");
+		return -EINVAL;
+	}
+
+	/*
+	 * iterate through the param table to identify the matched arguments and
+	 * populate the argument list
+	 */
+	error = ppecfg_param_iter_tbl(param, match);
+	if (error) {
+		ppecfg_log_arg_error(param);
+		goto done;
+	}
+
+	/*
+	 * Initialize the PORT_MGMT message
+	 */
+	nss_ppenl_rule_port_mgmt_init(&nl_msg, NSS_PPE_PORT_MGMT_MAC_FILTER_CLR_MSG);
+
+	/*
+	 * extract mac address
+	 */
+	sub_params = &param->sub_params[PPECFG_PORT_MGMT_MAC_FILTER_CLR_BLOCK];
+	error = ppecfg_param_verify_mac(sub_params->data, nl_msg.mac_filter.mac);
+	if (error) {
+                ppecfg_log_arg_error(sub_params);
+		goto done;
+	}
+	/*
+	 * extract vsi name
+	 */
+	sub_params = &param->sub_params[PPECFG_PORT_MGMT_MAC_FILTER_CLR_FID_NAME];
+	if (sub_params->valid != 0) {
+		error = ppecfg_param_get_str(sub_params->data, IFNAMSIZ, &nl_msg.mac_filter.fid_name);
+		if (error) {
+			ppecfg_log_arg_error(sub_params);
+			goto done;
+		}
+
+		nl_msg.mac_filter.fid_valid = true;
+	}
+
+	/*
+	 * send message
+	 */
+	error = nss_ppenl_port_mgmt_mac_filter_clear(&nl_msg);
+	if (error < 0) {
+		ppecfg_log_warn("Unable to send message\n");
+		goto done;
+	}
+
+	ppecfg_log_info("Configured successfully\n");
 done:
 	return error;
 }
