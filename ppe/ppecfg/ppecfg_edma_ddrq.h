@@ -52,7 +52,7 @@ enum ppecfg_edma_ddrq_rule_ddrq_cfg {
 	PPECFG_EDMA_DDRQ_CFG_RULE_SHARED_CEILING,	/* Shared ceiling */
 	PPECFG_EDMA_DDRQ_CFG_RULE_SHARED_DYNAMIC,	/* Shared dynamic */
 	PPECFG_EDMA_DDRQ_CFG_RULE_SHARED_WEIGHT,	/* Shared weight */
-	PPECFG_EDMA_DDRQ_CFG_RULE_WRED_EN,		/* WRED enable knob *?
+	PPECFG_EDMA_DDRQ_CFG_RULE_WRED_EN,		/* WRED enable knob */
 	PPECFG_EDMA_DDRQ_CFG_RULE_MAX,			/* Maximum configuration */
 };
 

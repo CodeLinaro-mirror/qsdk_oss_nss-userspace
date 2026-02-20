@@ -15,11 +15,13 @@ EXTRA_CFLAGS += -DNSS_PPE_DSCP_FEATURE
 EXTRA_CFLAGS += -DNSS_PPE_PM_FEATURE
 EXTRA_CFLAGS += -DNSS_PPE_EXT_VLAN_FEATURE
 EXTRA_CFLAGS += -DNSS_PPE_PORT_MGMT_FEATURE
+EXTRA_CFLAGS += -DNSS_EDMA_DDRQ_FEATURE
 else
 SOURCES := $(filter-out $(SRCPATH)/nss_ppenl_dscp_api.c, $(SOURCES))
 SOURCES := $(filter-out $(SRCPATH)/nss_ppenl_pm_api.c, $(SOURCES))
 SOURCES := $(filter-out $(SRCPATH)/nss_ppenl_vlan_api.c, $(SOURCES))
 SOURCES := $(filter-out $(SRCPATH)/nss_ppenl_port_mgmt_api.c, $(SOURCES))
+SOURCES := $(filter-out $(SRCPATH)/nss_ppenl_edma_ddrq_api.c, $(SOURCES))
 endif
 ifneq ($(filter $(SoC),ipq52xx),)
 EXTRA_CFLAGS += -DNSS_PPE_DOT1P_FEATURE
@@ -32,9 +34,6 @@ SOURCES := $(filter-out $(SRCPATH)/nss_ppenl_dot1p_api.c, $(SOURCES))
 SOURCES := $(filter-out $(SRCPATH)/nss_ppenl_gemport_api.c, $(SOURCES))
 SOURCES := $(filter-out $(SRCPATH)/nss_ppenl_mcast_api.c, $(SOURCES))
 endif
-
-# Compile out nss_ppenl_edma_ddrq_api.c currently. This will be enabled later
-SOURCES := $(filter-out $(SRCPATH)/nss_ppenl_edma_ddrq_api.c, $(SOURCES))
 
 OBJECTS = $(SOURCES:$(SRCPATH)/%.c=$(OBJPATH)/%.o)
 
