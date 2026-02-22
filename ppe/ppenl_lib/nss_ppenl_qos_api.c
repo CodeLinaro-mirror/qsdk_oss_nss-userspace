@@ -167,6 +167,26 @@ static void nss_ppenl_qos_resp(void *user_ctx, struct nss_ppenl_qos_req *qos_req
 			nss_ppenl_sock_log_info("queue control set successful\n");
 			break;
 
+	case NSS_PPE_QOS_SET_UCAST_PRIO_MAP:
+			ret = qos_req->msg.ucast_prio_map_info.ret;
+			if (ret == PPECFG_QOS_RET_SET_UCAST_PRIO_MAP_FAIL) {
+				nss_ppenl_sock_log_error("unicast priority map config failed with error: %d\n", ret);
+				return;
+			}
+
+			nss_ppenl_sock_log_info("unicast priority map config successful\n");
+			break;
+
+	case NSS_PPE_QOS_SET_MCAST_PRIO_MAP:
+			ret = qos_req->msg.mcast_prio_map_info.ret;
+			if (ret == PPECFG_QOS_RET_SET_MCAST_PRIO_MAP_FAIL) {
+				nss_ppenl_sock_log_error("multicast priority map config failed with error: %d\n", ret);
+				return;
+			}
+
+			nss_ppenl_sock_log_info("multicast priority map config successful\n");
+			break;
+
 		default:
 			nss_ppenl_sock_log_error("unsupported message cmd type(%d)", cmd);
 	}
@@ -203,6 +223,8 @@ int nss_ppenl_qos_sock_cb(struct nl_msg *msg, void *arg)
 	case NSS_PPE_QOS_CREATE_SHAPER:
 	case NSS_PPE_QOS_DELETE_SHAPER:
 	case NSS_PPE_QOS_SET_INTERFACE_QUEUE_CTRL:
+	case NSS_PPE_QOS_SET_UCAST_PRIO_MAP:
+	case NSS_PPE_QOS_SET_MCAST_PRIO_MAP:
 	{
 		void *cb_data = nss_ppenl_cmn_get_cb_data(&req->cm, sock->family_id);
 
