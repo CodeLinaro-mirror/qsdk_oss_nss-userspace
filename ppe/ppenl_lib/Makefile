@@ -30,6 +30,10 @@ else
 SOURCES := $(filter-out $(SRCPATH)/nss_ppenl_dot1p_api.c, $(SOURCES))
 SOURCES := $(filter-out $(SRCPATH)/nss_ppenl_gemport_api.c, $(SOURCES))
 endif
+
+# Compile out nss_ppenl_edma_ddrq_api.c currently. This will be enabled later
+SOURCES := $(filter-out $(SRCPATH)/nss_ppenl_edma_ddrq_api.c, $(SOURCES))
+
 OBJECTS = $(SOURCES:$(SRCPATH)/%.c=$(OBJPATH)/%.o)
 
 EXTRA_LDFLAGS = -pie -Wl,-z,relro -Wl,-z,now
