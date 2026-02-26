@@ -10,13 +10,13 @@ OBJECTS = $(SOURCES:$(SRCDIR)/%.c=$(OBJPATH)/%.o)
 
 INCLUDE += -I./include
 EXTRA_CFLAGS = -Wall -Werror -fpie -Wl,-z,relro -Wl,-z,now
+EXTRA_CFLAGS += -DNSS_PPE_MCAST_FEATURE
 EXTRA_LDFLAGS = -lnetlink -lnl-genl-3 -lnl-ppe -pie -Wl,-z,relro -Wl,-z,now
 LDLIBS  = -L../ppe_mcast_mgr_lib/obj
 
 all: release
 
 release: $(BINARY)
-
 
 $(OBJPATH)/%.o: $(SRCPATH)/%.c $(HEADERS)
 	$(MKDIR)

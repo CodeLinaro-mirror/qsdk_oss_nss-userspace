@@ -43,7 +43,7 @@ int ppe_mcast_mgr_handle_mdb_event(struct rtnl_ctrl_data *ctrl, struct nlmsghdr 
 	struct rtattr *mdb_tb[MDBA_MDB_MAX + 1];
 	struct rtattr *entry_tb[MDBA_MDB_ENTRY_MAX + 1];
 	struct rtattr *eattr_tb[MDBA_MDB_EATTR_MAX + 1];
-	struct nss_ppenl_mcast_req nl_msg = {{0}};
+	struct nss_ppenl_mcast_req nl_msg = {0};
 	char ifname[IFNAMSIZ];
 	char ip_str[INET_ADDRSTRLEN];
 	char ip6_str[INET6_ADDRSTRLEN];
@@ -65,7 +65,7 @@ int ppe_mcast_mgr_handle_mdb_event(struct rtnl_ctrl_data *ctrl, struct nlmsghdr 
 	 * Check message length.
 	 */
 	if (len < NLMSG_LENGTH(sizeof(*bpm))) {
-		ppe_mcast_mgr_log_error("Invalid MDB message length: %d, expected at least %lu\n",
+		ppe_mcast_mgr_log_error("Invalid MDB message length: %d, expected at least %zu\n",
 				len, NLMSG_LENGTH(sizeof(*bpm)));
 		return 0;
 	}
@@ -117,7 +117,7 @@ int ppe_mcast_mgr_handle_mdb_event(struct rtnl_ctrl_data *ctrl, struct nlmsghdr 
 	int entry_len = RTA_PAYLOAD(entry_tb[MDBA_MDB_ENTRY_INFO]);
 
 	if (entry_len < sizeof(*entry)) {
-		ppe_mcast_mgr_log_error("Invalid MDB entry length: %d, expected at least %lu\n",
+		ppe_mcast_mgr_log_error("Invalid MDB entry length: %d, expected at least %zu\n",
 				entry_len, sizeof(*entry));
 		return 0;
 	}
