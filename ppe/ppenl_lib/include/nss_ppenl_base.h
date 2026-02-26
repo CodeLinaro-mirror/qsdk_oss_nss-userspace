@@ -42,6 +42,8 @@
 #include <nss_ppenl_policer_api.h>
 #include <nss_ppenl_qos_if.h>
 #include <nss_ppenl_qos_api.h>
+#include <nss_ppenl_cos_map_if.h>
+#include <nss_ppenl_cos_map_api.h>
 #include <nss_ppenl_exception_if.h>
 #include <nss_ppenl_exception_api.h>
 #include <nss_ppenl_dscp_if.h>
@@ -52,5 +54,9 @@
 #include <nss_ppenl_port_mgmt_api.h>
 #include <nss_ppenl_vlan_if.h>
 #include <nss_ppenl_vlan_api.h>
+#include <nss_ppenl_dot1p_if.h>
+#include <nss_ppenl_dot1p_api.h>
+#include <nss_ppenl_gemport_if.h>
+#include <nss_ppenl_gemport_api.h>
 
 #endif /* __NSS_PPENL_BASE_H__ */

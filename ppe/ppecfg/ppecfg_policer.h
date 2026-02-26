@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2026, Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
  * SPDX-License-Identifier: ISC
  */
 
@@ -12,6 +12,9 @@
 #define PPECFG_POLICER_MAX_INFO_RATE_FRAME 0xE310E8	/* HW supported frame based max rate 14881000 pps */
 #define PPECFG_POLICER_MAX_BURST_SIZE_FRAME 0x1FF2B60	/* HW supported frame based max burst size 4.29 Gbyte */
 #define PPECFG_POLICER_MAX_BURST_SIZE_BYTE 0x4A817C80	/* HW supported byte based max burst size 33.5 million packet */
+
+#define PPECFG_POLICER_MAX_DIRECTION 2
+
 /*
  * PPECFG POLICER commands
  */
@@ -29,6 +32,7 @@ enum ppecfg_policer_rule_add {
 	PPECFG_POLICER_RULE_ADD_IS_PORT_POLICER = 0,	/* port policer */
 	PPECFG_POLICER_RULE_ADD_DEV,	/*dev */
 	PPECFG_POLICER_RULE_ADD_RULE_ID,	/* policer id */
+	PPECFG_POLICER_RULE_ADD_DIRECTION,	/* Direction */
 	PPECFG_POLICER_RULE_ADD_METER_MODE,	/* meter mode */
 	PPECFG_POLICER_RULE_ADD_METER_UNIT,	/* meter unit */
 	PPECFG_POLICER_RULE_ADD_COMMITTED_RATE,	/* CIR */
