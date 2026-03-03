@@ -232,12 +232,23 @@ static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_par
 			/*
 			 * parse optional direction from user_config, default 0
 			 */
-			error = ppecfg_param_get_int(sub_params->data, sizeof(uint32_t), &nl_msg.config.dir);
-			if (error < 0) {
-				ppecfg_log_arg_error(sub_params);
+			char dir[5];
+
+			error = ppecfg_param_get_str(sub_params->data, sizeof(dir), &dir);
+			if (error) {
+				ppecfg_log_data_error(sub_params);
 				goto done;
 			}
 
+			if (strcmp("us", dir) == 0) {
+				nl_msg.config.dir = PPECFG_POLICER_DIRECTION_US;
+			} else if (strcmp("ds", dir) == 0) {
+				nl_msg.config.dir = PPECFG_POLICER_DIRECTION_DS;
+			} else {
+				ppecfg_log_warn("Valid Inputs: [us][ds]\n");
+				error = -EINVAL;
+				goto done;
+			}
 			break;
 
 		case PPECFG_POLICER_RULE_ADD_METER_MODE:
@@ -606,12 +617,6 @@ static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_par
 			error = -EINVAL;
 			goto done;
 		}
-	}
-
-	if (nl_msg.config.dir > PPECFG_POLICER_MAX_DIRECTION) {
-		ppecfg_log_error("Invalid direction value: %d. Valid values are 0 (default), 1 (US), or 2 (DS)\n", nl_msg.config.dir);
-		error = -EINVAL;
-		goto done;
 	}
 
 	/*

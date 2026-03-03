@@ -13,7 +13,15 @@
 #define PPECFG_POLICER_MAX_BURST_SIZE_FRAME 0x1FF2B60	/* HW supported frame based max burst size 4.29 Gbyte */
 #define PPECFG_POLICER_MAX_BURST_SIZE_BYTE 0x4A817C80	/* HW supported byte based max burst size 33.5 million packet */
 
-#define PPECFG_POLICER_MAX_DIRECTION 2
+/*
+ * PPECFG Policer direction
+ */
+enum ppecfg_policer_direction {
+	PPECFG_POLICER_DIRECTION_INVALID,	/* Invalid direction */
+	PPECFG_POLICER_DIRECTION_US,		/* Upstream direction */
+	PPECFG_POLICER_DIRECTION_DS,		/* Downstream direction */
+	PPECFG_POLICER_DIRECTION_MAX
+};
 
 /*
  * PPECFG POLICER commands
