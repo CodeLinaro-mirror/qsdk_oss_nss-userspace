@@ -1060,7 +1060,7 @@ static int ppecfg_vlan_rule_add(struct ppecfg_param *param, struct ppecfg_param_
 
 				data = sub_params[PPECFG_VLAN_ACTION_SRC_INFO_VAL].data;
 				if (data) {
-					error = ppecfg_param_get_int(data, sizeof(nl_msg.rule.action_f.src_info), &nl_msg.rule.action_f.src_info);
+					error = ppecfg_param_get_str(data, sizeof(nl_msg.rule.action_f.src_info), &nl_msg.rule.action_f.src_info);
 					if (error) {
 						goto print_error;
 					}
