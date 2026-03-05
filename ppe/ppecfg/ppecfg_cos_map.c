@@ -66,7 +66,7 @@ static struct ppecfg_param rule_del_params[PPECFG_COS_MAP_RULE_DEL_MAX] = {
  * port group set parameters
  */
 static struct ppecfg_param port_group_set_params[PPECFG_COS_MAP_GROUP_ADD_MAX] = {
-	PPECFG_PARAM_INIT(PPECFG_COS_MAP_GROUP_ADD_PORT_ID, "port_id="),
+	PPECFG_PARAM_INIT(PPECFG_COS_MAP_GROUP_ADD_DEV, "dev="),
 	PPECFG_PARAM_INIT(PPECFG_COS_MAP_GROUP_ADD_TCI_GROUP_ID, "tci_group_id="),
 	PPECFG_PARAM_INIT(PPECFG_COS_MAP_GROUP_ADD_TOS_GROUP_ID, "tos_group_id="),
 };
@@ -116,10 +116,11 @@ static int ppecfg_cos_map_port_group_set(struct ppecfg_param *param, struct ppec
 		}
 
 		switch (index) {
-		case PPECFG_COS_MAP_GROUP_ADD_PORT_ID:
-			error = ppecfg_param_get_int(sub_params->data, sizeof(uint32_t), &nl_msg.msg.config.port_id);
+		case PPECFG_COS_MAP_GROUP_ADD_DEV:
+			sub_params = &param->sub_params[PPECFG_COS_MAP_GROUP_ADD_DEV];
+			error = ppecfg_param_get_str(sub_params->data, sizeof(nl_msg.msg.config.dev), &nl_msg.msg.config.dev);
 			if (error < 0) {
-				ppecfg_log_arg_error(sub_params);
+				ppecfg_log_error("Device name is required\n");
 				goto done;
 			}
 

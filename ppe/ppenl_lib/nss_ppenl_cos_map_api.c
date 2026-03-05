@@ -28,7 +28,7 @@ static void nss_ppenl_cos_map_resp(void *user_ctx, struct nss_ppenl_cos_map_conf
 	switch (cmd) {
 	case NSS_PPE_COS_MAP_CREATE_RULE_MSG:
 			ret = config->msg.rule.ret;
-			if (ret == NSS_PPENL_COS_MAP_CREATE_RULE_FAIL) {
+			if (ret == PPE_COS_MAP_CREATE_RULE_FAIL) {
 				nss_ppenl_sock_log_error("cos map rule create failed with error: %d\n", ret);
 				return;
 			}
@@ -38,7 +38,7 @@ static void nss_ppenl_cos_map_resp(void *user_ctx, struct nss_ppenl_cos_map_conf
 
 	case NSS_PPE_COS_MAP_DESTROY_RULE_MSG:
 			ret = config->msg.rule.ret;
-			if (ret == NSS_PPENL_COS_MAP_DESTROY_RULE_FAIL) {
+			if (ret == PPE_COS_MAP_DESTROY_RULE_FAIL) {
 				nss_ppenl_sock_log_error("cos map rule destroy failed with error: %d\n", ret);
 				return;
 			}
@@ -48,7 +48,7 @@ static void nss_ppenl_cos_map_resp(void *user_ctx, struct nss_ppenl_cos_map_conf
 
 	case NSS_PPE_COS_MAP_FLUSH_RULE_MSG:
 			ret = config->msg.rule.ret;
-			if (ret == NSS_PPENL_COS_MAP_FLUSH_RULE_FAIL) {
+			if (ret == PPE_COS_MAP_FLUSH_RULE_FAIL) {
 				nss_ppenl_sock_log_error("cos map rules flush failed with error: %d\n", ret);
 				return;
 			}
@@ -58,12 +58,12 @@ static void nss_ppenl_cos_map_resp(void *user_ctx, struct nss_ppenl_cos_map_conf
 
 	case NSS_PPE_COS_MAP_PORT_GROUP_SET:
 			ret = config->msg.config.ret;
-			if (ret == NSS_PPENL_COS_MAP_PORT_GROUP_SET_FAIL) {
+			if (ret == PPE_COS_MAP_PORT_GROUP_SET_FAIL) {
 				nss_ppenl_sock_log_error("port group config failed with error: %d\n", ret);
 				return;
 			}
 
-			nss_ppenl_sock_log_info("port group config successful for port id %d\n", config->msg.config.port_id);
+			nss_ppenl_sock_log_info("port group config successful for dev %s\n", config->msg.config.dev);
 			break;
 
 	default:
