@@ -33,6 +33,13 @@ SOURCES := $(filter-out $(SRCDIR)/ppecfg_dot1p.c, $(SOURCES))
 SOURCES := $(filter-out $(SRCDIR)/ppecfg_gemport.c, $(SOURCES))
 endif
 
+ifeq ($(PPE_TUN_RPS_ENABLED), y)
+EXTRA_CFLAGS += -DNSS_PPE_TUN_RPS_FEATURE
+else
+SOURCES := $(filter-out $(SRCDIR)/ppecfg_tun_rps.c, $(SOURCES))
+SOURCES := $(filter-out $(SRCDIR)/ppecfg_tun_rps_json_parser.c, $(SOURCES))
+endif
+
 # Compile out ppecfg_edma_ddrq.c currently. This will be enabled later
 SOURCES := $(filter-out $(SRCDIR)/ppecfg_edma_ddrq.c, $(SOURCES))
 

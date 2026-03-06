@@ -33,6 +33,12 @@ SOURCES := $(filter-out $(SRCPATH)/nss_ppenl_gemport_api.c, $(SOURCES))
 SOURCES := $(filter-out $(SRCPATH)/nss_ppenl_mcast_api.c, $(SOURCES))
 endif
 
+ifeq ($(PPE_TUN_RPS_ENABLED), y)
+EXTRA_CFLAGS += -DNSS_PPE_TUN_RPS_FEATURE
+else
+SOURCES := $(filter-out $(SRCPATH)/nss_ppenl_tun_rps_api.c, $(SOURCES))
+endif
+
 # Compile out nss_ppenl_edma_ddrq_api.c currently. This will be enabled later
 SOURCES := $(filter-out $(SRCPATH)/nss_ppenl_edma_ddrq_api.c, $(SOURCES))
 
