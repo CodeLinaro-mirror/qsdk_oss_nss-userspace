@@ -380,11 +380,24 @@ static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_i
 				goto print_error;
 			}
 
+			if (strcmp(dev_type, "flow") == 0) {
+				nl_msg.rule.dev_type = PPE_ACL_RULE_DEV_TYPE_FLOW;
+			} else if (strcmp(dev_type, "sc") == 0) {
+				nl_msg.rule.dev_type = PPE_ACL_RULE_DEV_TYPE_SC;
+			} else if (strcmp(dev_type, "dst") == 0) {
+				nl_msg.rule.dev_type = PPE_ACL_RULE_DEV_TYPE_DEST_L2_PORT;
+			} else if (strcmp(dev_type, "dst_l3") == 0) {
+				nl_msg.rule.dev_type = PPE_ACL_RULE_DEV_TYPE_DEST_L3_PORT;
+			} else {
+				nl_msg.rule.dev_type = PPE_ACL_RULE_DEV_TYPE_SRC_DEV;
+				ppecfg_log_info("Valid Inputs type=[flow|sc|src|dst|dst_l3], name=[flow|sc_value|dev_name]\n");
+			}
+
 			data = sub_params[PPECFG_ACL_DEV_NAME].data;
 			/* Derive SC and dev_name */
 			if (strcmp(dev_type, "sc") == 0)
 				error = ppecfg_param_get_int(data, sizeof(nl_msg.rule.dev.sc), &nl_msg.rule.dev.sc);
-			else if (strcmp(dev_type, "flow") == 0)
+			else if (strcmp(dev_type, "flow") != 0)
 				error = ppecfg_param_get_str(data, sizeof(nl_msg.rule.dev.dev_name), &nl_msg.rule.dev.dev_name);
 
 			if (error < 0) {
@@ -393,20 +406,6 @@ static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_i
 				goto done;
 			}
 
-			if (strcmp(dev_type, "flow") == 0) {
-				nl_msg.rule.dev_type = PPE_ACL_RULE_DEV_TYPE_FLOW;
-			} else if (strcmp(dev_type, "sc") == 0) {
-				nl_msg.rule.dev_type = PPE_ACL_RULE_DEV_TYPE_SC;
-			} else if (strcmp(dev_type, "sport") == 0) {
-				nl_msg.rule.dev_type = PPE_ACL_RULE_DEV_TYPE_SRC_DEV;
-			} else if (strcmp(dev_type, "dport") == 0) {
-				nl_msg.rule.dev_type = PPE_ACL_RULE_DEV_TYPE_DEST_L2_PORT;
-			} else if (strcmp(dev_type, "dport_l3") == 0) {
-				nl_msg.rule.dev_type = PPE_ACL_RULE_DEV_TYPE_DEST_L3_PORT;
-			} else {
-				ppecfg_log_warn("Valid Inputs type=[flow|sc|sport|dport|dport_l3], name=[flow|sc value|dev_name]\n");
-				goto print_error;
-			}
 			break;
 
 		case PPECFG_ACL_RULE_ADD_SRC_SC:
