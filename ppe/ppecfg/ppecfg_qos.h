@@ -14,14 +14,16 @@
  */
 enum ppecfg_qos_cmd {
 	PPECFG_QOS_GET_INT_PRI,	/* GET INTRERNAL PRIORITY */
-	PPECFG_QOS_CREATE_SHAPER,	/* Cretae shaper profile */
+	PPECFG_QOS_CREATE_SHAPER,	/* Create shaper profile */
 	PPECFG_QOS_DELETE_SHAPER,	/* Delete shaper profile */
 	PPECFG_QOS_CREATE_INTERFACE_QUEUES,	/* Create interface queues */
 	PPECFG_QOS_FLUSH_INTERFACE_QUEUES,	/* Delete interface queues */
 	PPECFG_QOS_SET_INTERFACE_SHAPER,	/* Configure interface shaper */
+#ifdef NSS_PPE_PON_PORT_FEATURE
 	PPECFG_QOS_MAP_PQ_TO_TCONT, 	/* Map Priority Queue to T-cont */
 	PPECFG_QOS_GET_TCONT_STATS, 	/* Get Tcont stats */
 	PPECFG_QOS_RESET_TCONT_CREDIT, 	/* Reset Tcont credit */
+#endif
 	PPECFG_QOS_SET_QUEUE_TM, 	/* Set Queue traffic managemment */
 	PPECFG_QOS_SET_QUEUE_LIMIT, 	/* Set Queue limit*/
 	PPECFG_QOS_SET_INTERFACE_QUEUE_CTRL, 	/* Set interface queue control */
@@ -44,7 +46,7 @@ enum ppecfg_qos_get_int_pri {
  */
 enum ppecfg_qos_shaper {
 	PPECFG_QOS_SHAPER_NAME,	/* Shaper name. */
-	PPECFG_QOS_SHAPER_DELETE_MAX,	/* Get max attribute */
+	PPECFG_QOS_SHAPER_DELETE_MAX,	/* Shaper delete max attribute */
 	PPECFG_QOS_SHAPER_CIR = PPECFG_QOS_SHAPER_DELETE_MAX,	/* Committed Information Rate. */
 	PPECFG_QOS_SHAPER_EIR,	/* Exceed Information Rate. */
 	PPECFG_QOS_SHAPER_CBS,	/* Committed burst size. */

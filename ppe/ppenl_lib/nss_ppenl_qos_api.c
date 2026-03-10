@@ -27,20 +27,20 @@ static void nss_ppenl_qos_resp(void *user_ctx, struct nss_ppenl_qos_req *qos_req
 	switch (cmd) {
 		case NSS_PPE_QOS_GET_INT_PRI:
 			ret = qos_req->msg.config.ret;
-			if (ret == PPECFG_QOS_RET_CLASS_NON_LEAF) {
+			if (ret == PPE_QOS_CLASS_NON_LEAF) {
 				nss_ppenl_sock_log_error("PPE queues are attached to only leaf classes and "
 						"the class_id entered is not a leaf class.\n"
 						"Please enter a leaf class_id or leaf qdisc handle_id.\n");
 				return;
-			} else if (ret == PPECFG_QOS_RET_INVALID_CLASS) {
+			} else if (ret == PPE_QOS_INVALID_HANDLE_ID) {
 				nss_ppenl_sock_log_error("The input handle_id does not exist in the"
 						"qdisc heirarchy configured on the given interface\n");
 				return;
-			} else if (ret == PPECFG_QOS_RET_INVALID_DEV) {
+			} else if (ret == PPE_QOS_INVALID_DEV) {
 				nss_ppenl_sock_log_error("The physical interface name is invalid.\n"
 						"Please enter a valid interface name.");
 				return;
-			} else if ((ret != PPECFG_QOS_RET_SUCCESS)) {
+			} else if ((ret != PPE_QOS_SUCCESS)) {
 				nss_ppenl_sock_log_error("QoS req create failed with error: %d\n", ret);
 				return;
 			}
@@ -51,7 +51,7 @@ static void nss_ppenl_qos_resp(void *user_ctx, struct nss_ppenl_qos_req *qos_req
 
 	case NSS_PPE_QOS_CREATE_SHAPER:
 			ret = qos_req->msg.shaper_info.ret;
-			if (ret == PPECFG_QOS_RET_SHAPER_CREATE_FAIL) {
+			if (ret != PPE_QOS_SUCCESS) {
 				nss_ppenl_sock_log_error("shaper rule create failed with error: %d\n", ret);
 				return;
 			}
@@ -61,7 +61,7 @@ static void nss_ppenl_qos_resp(void *user_ctx, struct nss_ppenl_qos_req *qos_req
 
 	case NSS_PPE_QOS_DELETE_SHAPER:
 			ret = qos_req->msg.shaper_info.ret;
-			if (ret == PPECFG_QOS_RET_SHAPER_DELETE_FAIL) {
+			if (ret != PPE_QOS_SUCCESS) {
 				nss_ppenl_sock_log_error("shaper rule delete ush failed with error: %d\n", ret);
 				return;
 			}
@@ -71,7 +71,7 @@ static void nss_ppenl_qos_resp(void *user_ctx, struct nss_ppenl_qos_req *qos_req
 
 	case NSS_PPE_QOS_CREATE_INTERFACE_QUEUES:
 			ret = qos_req->msg.if_info.ret;
-			if (ret == PPECFG_QOS_RET_IF_QUEUES_CREATE_FAIL) {
+			if (ret != PPE_QOS_SUCCESS) {
 				nss_ppenl_sock_log_error("interface queue creation failed with error: %d\n", ret);
 				return;
 			}
@@ -83,7 +83,7 @@ static void nss_ppenl_qos_resp(void *user_ctx, struct nss_ppenl_qos_req *qos_req
 
 	case NSS_PPE_QOS_FLUSH_INTERFACE_QUEUES:
 			ret = qos_req->msg.if_info.ret;
-			if (ret == PPECFG_QOS_RET_IF_QUEUES_FLUSH_FAIL) {
+			if (ret != PPE_QOS_SUCCESS) {
 				nss_ppenl_sock_log_error("interface queue flush failed with error: %d\n", ret);
 				return;
 			}
@@ -95,7 +95,7 @@ static void nss_ppenl_qos_resp(void *user_ctx, struct nss_ppenl_qos_req *qos_req
 
 	case NSS_PPE_QOS_SET_INTERFACE_SHAPER:
 			ret = qos_req->msg.if_shaper_info.ret;
-			if (ret == PPECFG_QOS_RET_IF_SHAPER_SET_FAIL) {
+			if (ret != PPE_QOS_SUCCESS) {
 				nss_ppenl_sock_log_error("shaper set failed with error: %d\n", ret);
 				return;
 			}
@@ -108,7 +108,7 @@ static void nss_ppenl_qos_resp(void *user_ctx, struct nss_ppenl_qos_req *qos_req
 #ifdef NSS_PPE_PON_PORT_FEATURE
 	case NSS_PPE_QOS_MAP_PQ_TO_TCONT:
 			ret = qos_req->msg.pq_info.ret;
-			if (ret == PPECFG_QOS_RET_QUEUE_PQ_MAPPING_FAIL) {
+			if (ret != PPE_QOS_SUCCESS) {
 				nss_ppenl_sock_log_error("queue mapping failed with error: %d\n", ret);
 				return;
 			}
@@ -118,7 +118,7 @@ static void nss_ppenl_qos_resp(void *user_ctx, struct nss_ppenl_qos_req *qos_req
 
 	case NSS_PPE_QOS_GET_TCONT_STATS:
 			ret = qos_req->msg.stats_info.ret;
-			if (ret == PPECFG_QOS_RET_TCONT_STATS_GET_FAIL) {
+			if (ret != PPE_QOS_SUCCESS) {
 				nss_ppenl_sock_log_error("tcont stats get failed with error: %d\n", ret);
 				return;
 			}
@@ -128,7 +128,7 @@ static void nss_ppenl_qos_resp(void *user_ctx, struct nss_ppenl_qos_req *qos_req
 
 	case NSS_PPE_QOS_RESET_TCONT_CREDIT:
 			ret = qos_req->msg.stats_info.ret;
-			if (ret == PPECFG_QOS_RET_RESET_TCONT_CREDIT_FAIL) {
+			if (ret == PPE_QOS_RESET_TCONT_CREDIT_FAIL) {
 				nss_ppenl_sock_log_error("reset tcont credit failed with error: %d\n", ret);
 				return;
 			}
@@ -139,7 +139,7 @@ static void nss_ppenl_qos_resp(void *user_ctx, struct nss_ppenl_qos_req *qos_req
 
 	case NSS_PPE_QOS_SET_QUEUE_TM:
 			ret = qos_req->msg.tm_info.ret;
-			if (ret == PPECFG_QOS_RET_QUEUE_TM_CONFIG_FAIL) {
+			if (ret != PPE_QOS_SUCCESS) {
 				nss_ppenl_sock_log_error("queue TM config failed with error: %d\n", ret);
 				return;
 			}
@@ -149,7 +149,7 @@ static void nss_ppenl_qos_resp(void *user_ctx, struct nss_ppenl_qos_req *qos_req
 
 	case NSS_PPE_QOS_SET_QUEUE_LIMIT:
 			ret = qos_req->msg.limit_info.ret;
-			if (ret == PPECFG_QOS_RET_QUEUE_LIMIT_CONFIG_FAIL) {
+			if (ret != PPE_QOS_SUCCESS) {
 				nss_ppenl_sock_log_error("queue limit config failed with error: %d\n", ret);
 				return;
 			}
@@ -159,7 +159,7 @@ static void nss_ppenl_qos_resp(void *user_ctx, struct nss_ppenl_qos_req *qos_req
 
 	case NSS_PPE_QOS_SET_INTERFACE_QUEUE_CTRL:
 			ret = qos_req->msg.queue_ctrl_info.ret;
-			if (ret == PPECFG_QOS_RET_QUEUE_CTRL_SET_FAIL) {
+			if (ret != PPE_QOS_SUCCESS) {
 				nss_ppenl_sock_log_error("queue control set failed with error: %d\n", ret);
 				return;
 			}
@@ -169,7 +169,7 @@ static void nss_ppenl_qos_resp(void *user_ctx, struct nss_ppenl_qos_req *qos_req
 
 	case NSS_PPE_QOS_SET_UCAST_PRIO_MAP:
 			ret = qos_req->msg.ucast_prio_map_info.ret;
-			if (ret == PPECFG_QOS_RET_SET_UCAST_PRIO_MAP_FAIL) {
+			if (ret != PPE_QOS_SUCCESS) {
 				nss_ppenl_sock_log_error("unicast priority map config failed with error: %d\n", ret);
 				return;
 			}
@@ -179,7 +179,7 @@ static void nss_ppenl_qos_resp(void *user_ctx, struct nss_ppenl_qos_req *qos_req
 
 	case NSS_PPE_QOS_SET_MCAST_PRIO_MAP:
 			ret = qos_req->msg.mcast_prio_map_info.ret;
-			if (ret == PPECFG_QOS_RET_SET_MCAST_PRIO_MAP_FAIL) {
+			if (ret != PPE_QOS_SUCCESS) {
 				nss_ppenl_sock_log_error("multicast priority map config failed with error: %d\n", ret);
 				return;
 			}

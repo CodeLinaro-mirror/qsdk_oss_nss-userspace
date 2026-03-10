@@ -273,9 +273,6 @@ static int ppecfg_qos_create_shaper(struct ppecfg_param *param, struct ppecfg_pa
 		}
 	}
 
-	/*
-	 * TODO: Add min/max checks for rates and bursts
-	 */
 	if (!strlen(nl_msg.msg.shaper_info.name)) {
 		ppecfg_log_error("Please provide valid shaper name\n");
 		error = -EINVAL;
@@ -668,8 +665,14 @@ static int ppecfg_qos_create_interface_queues(struct ppecfg_param *param, struct
 			nl_msg.msg.if_info.queue_type = PPE_QOS_QUEUE_TYPE_UCAST;
 			data = sub_params->data;
 			if (data) {
-				if (!strcmp(data, "mcast")) {
+				if (!strcmp(data, "ucast")) {
+					nl_msg.msg.if_info.queue_type = PPE_QOS_QUEUE_TYPE_UCAST;
+				} else if (!strcmp(data, "mcast")) {
 					nl_msg.msg.if_info.queue_type = PPE_QOS_QUEUE_TYPE_MCAST;
+				} else {
+					ppecfg_log_error("Only ucast/mcast string is allowed\n");
+					error = -EINVAL;
+					goto done;
 				}
 			}
 			break;
@@ -1164,8 +1167,14 @@ static int ppecfg_qos_set_queue_tm(struct ppecfg_param *param, struct ppecfg_par
 			nl_msg.msg.tm_info.queue_type = PPE_QOS_QUEUE_TYPE_UCAST;
 			data = sub_params->data;
 			if (data) {
-				if (!strcmp(data, "mcast")) {
+				if (!strcmp(data, "ucast")) {
+					nl_msg.msg.tm_info.queue_type = PPE_QOS_QUEUE_TYPE_UCAST;
+				} else if (!strcmp(data, "mcast")) {
 					nl_msg.msg.tm_info.queue_type = PPE_QOS_QUEUE_TYPE_MCAST;
+				} else {
+					ppecfg_log_error("Only ucast/mcast string is allowed\n");
+					error = -EINVAL;
+					goto done;
 				}
 			}
 			break;
@@ -1309,9 +1318,14 @@ static int ppecfg_qos_set_queue_limit(struct ppecfg_param *param, struct ppecfg_
 			data = sub_params->data;
 			if (data) {
 				if (!strcmp(data, "mcast")) {
+					nl_msg.msg.limit_info.queue_type = PPE_QOS_QUEUE_TYPE_UCAST;
+				} else if (!strcmp(data, "mcast")) {
 					nl_msg.msg.limit_info.queue_type = PPE_QOS_QUEUE_TYPE_MCAST;
-				}
-			}
+				} else {
+					ppecfg_log_error("Only ucast/mcast string is allowed\n");
+					error = -EINVAL;
+					goto done;
+				}			}
 			break;
 
 		case PPECFG_QOS_QUEUE_LIMIT_ID:
