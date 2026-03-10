@@ -1,17 +1,6 @@
 /*
- * Copyright (c) 2023-2024, Qualcomm Innovation Center, Inc. All rights reserved.
- *
- * Permission to use, copy, modify, and/or distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+ * SPDX-License-Identifier: ISC
  */
 
 /*
@@ -202,6 +191,7 @@ static int nss_ppenl_sock_msg_init(struct nss_ppenl_sock_ctx *sock, struct nss_p
 
 	/*
 	 * create space for user header
+	 * The hdrlen parameter specifies the size of user header to allocate
 	 */
 	user_hdr = genlmsg_put(msg, pid, NL_AUTO_SEQ, sock->family_id, len, 0, cmd, ver);
 	if (!user_hdr) {
@@ -282,6 +272,7 @@ int nss_ppenl_sock_send(struct nss_ppenl_sock_ctx *sock, struct nss_ppenl_cmn *c
 	 * In case firmware response is sent before nl_recvmsgs is invoked,
 	 * the response will be queued until the listener is available.
 	 */
+
 	error = nl_send_sync(sock->nl_sk, msg);
 	if (error < 0) {
 		nss_ppenl_sock_log_error("%d:failed to send (family:%s, error:%d)\n", pid, sock->family_name, error);

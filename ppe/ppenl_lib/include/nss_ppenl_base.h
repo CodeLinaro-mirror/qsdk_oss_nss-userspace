@@ -42,9 +42,32 @@
 #include <nss_ppenl_policer_api.h>
 #include <nss_ppenl_qos_if.h>
 #include <nss_ppenl_qos_api.h>
+#include <nss_ppenl_cos_map_if.h>
+#include <nss_ppenl_cos_map_api.h>
 #include <nss_ppenl_exception_if.h>
 #include <nss_ppenl_exception_api.h>
 #include <nss_ppenl_dscp_if.h>
 #include <nss_ppenl_dscp_api.h>
-
+#include <nss_ppenl_pm_if.h>
+#include <nss_ppenl_pm_api.h>
+#include <nss_ppenl_port_mgmt_if.h>
+#include <nss_ppenl_port_mgmt_api.h>
+#include <nss_ppenl_vlan_if.h>
+#include <nss_ppenl_vlan_api.h>
+#include <nss_ppenl_dot1p_if.h>
+#include <nss_ppenl_dot1p_api.h>
+#include <nss_ppenl_gemport_if.h>
+#include <nss_ppenl_gemport_api.h>
+#ifdef NSS_EDMA_DDRQ_FEATURE
+#include <nss_ppenl_edma_ddrq_if.h>
+#include <nss_ppenl_edma_ddrq_api.h>
+#endif
+#ifdef NSS_PPE_MCAST_FEATURE
+#include <nss_ppenl_mcast_if.h>
+#include <nss_ppenl_mcast_api.h>
+#endif
+#ifdef NSS_PPE_TUN_RPS_FEATURE
+#include <nss_ppenl_tun_rps_if.h>
+#include <nss_ppenl_tun_rps_api.h>
+#endif
 #endif /* __NSS_PPENL_BASE_H__ */

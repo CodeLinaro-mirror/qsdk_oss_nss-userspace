@@ -1,17 +1,6 @@
 /*
- * Copyright (c) 2023-2024, Qualcomm Innovation Center, Inc. All rights reserved.
- *
- * Permission to use, copy, modify, and/or distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+ * SPDX-License-Identifier: ISC
  */
 
 #include "ppecfg_hlos.h"
@@ -31,6 +20,7 @@ static struct ppecfg_param rule_add_params[PPECFG_POLICER_RULE_ADD_MAX] = {
 	PPECFG_PARAM_INIT(PPECFG_POLICER_RULE_ADD_IS_PORT_POLICER, "port_policer="),
 	PPECFG_PARAM_INIT(PPECFG_POLICER_RULE_ADD_DEV,"dev="),
 	PPECFG_PARAM_INIT(PPECFG_POLICER_RULE_ADD_RULE_ID, "rule_id="),
+	PPECFG_PARAM_INIT(PPECFG_POLICER_RULE_ADD_DIRECTION, "direction="),
 	PPECFG_PARAM_INIT(PPECFG_POLICER_RULE_ADD_METER_MODE,"meter_mode="),
 	PPECFG_PARAM_INIT(PPECFG_POLICER_RULE_ADD_METER_UNIT,"meter_unit="),
 	PPECFG_PARAM_INIT(PPECFG_POLICER_RULE_ADD_COMMITTED_RATE, "committed_rate="),
@@ -40,6 +30,7 @@ static struct ppecfg_param rule_add_params[PPECFG_POLICER_RULE_ADD_MAX] = {
 	PPECFG_PARAM_INIT(PPECFG_POLICER_RULE_ADD_METER_ENABLE, "meter_enable="),
 	PPECFG_PARAM_INIT(PPECFG_POLICER_RULE_ADD_COUPLE_ENABLE, "couple_enable="),
 	PPECFG_PARAM_INIT(PPECFG_POLICER_RULE_ADD_COLOUR_AWARE, "colour_aware_enable="),
+	PPECFG_PARAM_INIT(PPECFG_POLICER_RULE_ADD_METER_FLAG, "meter_flag="),
 	PPECFG_PARAM_INIT(PPECFG_POLICER_RULE_ADD_YELLOW_DP, "yellow_dp="),
 	PPECFG_PARAM_INIT(PPECFG_POLICER_RULE_ADD_YELLOW_INT_PRI, "yellow_int_pri="),
 	PPECFG_PARAM_INIT(PPECFG_POLICER_RULE_ADD_YELLOW_PCP, "yellow_pcp="),
@@ -139,8 +130,8 @@ static int ppecfg_policer_rule_del(struct ppecfg_param *param, struct ppecfg_par
 				}
 
 				break;
-			}
 		}
+	}
 
 	/*
 	 * send message
@@ -187,8 +178,12 @@ static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_par
 	nl_msg.config.meter_enable = 1;
 	nl_msg.config.couple_enable = 1;
 	nl_msg.config.colour_aware = 1;
+	/*
+	 * setting direction, user should pass 1/2 to set US/DS
+	 */
+	nl_msg.config.dir = 0;
 
-	for (int index = PPECFG_POLICER_RULE_ADD_IS_PORT_POLICER; index <= PPECFG_POLICER_RULE_ADD_YELLOW_DSCP; index++) {
+	for (int index = PPECFG_POLICER_RULE_ADD_IS_PORT_POLICER; index < PPECFG_POLICER_RULE_ADD_MAX; index++) {
 		sub_params = &param->sub_params[index];
 		if (sub_params->valid == false) {
 			continue;
@@ -232,6 +227,18 @@ static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_par
 				}
 
 				break;
+
+		case PPECFG_POLICER_RULE_ADD_DIRECTION:
+			/*
+			 * parse optional direction from user_config, default 0
+			 */
+			error = ppecfg_param_get_int(sub_params->data, sizeof(uint32_t), &nl_msg.config.dir);
+			if (error < 0) {
+				ppecfg_log_arg_error(sub_params);
+				goto done;
+			}
+
+			break;
 
 		case PPECFG_POLICER_RULE_ADD_METER_MODE:
 			/*
@@ -345,6 +352,131 @@ static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_par
 
 			break;
 
+		case PPECFG_POLICER_RULE_ADD_METER_FLAG:
+			/*
+			* Parse optional meter_flag from user_config, default 0
+			* Accepts single or multiple flag values separated by underscore
+			*
+			* Valid packet types (5 types total):
+			*   - uc
+			*   - uuc
+			*   - mc
+			*   - umc
+			*   - bc
+			*
+			* Single type examples:
+			*   meter_flag=uc, meter_flag=mc, meter_flag=bc
+			*
+			* Multiple type examples (ALL combinations are supported):
+			*   meter_flag=bc_mc
+			*   meter_flag=uc_mc_bc
+			*   meter_flag=uc_uuc_mc_umc_bc
+			*   ... any combination of the 5 packet types is valid
+			*/
+			{
+				char meter_flag_str[128];
+				char *token;
+				char *saveptr;
+				char temp_str[128];
+				uint32_t combined_flags = 0;
+				bool flag_found = false;
+				uint32_t duplicate_check = 0;
+
+				error = ppecfg_param_get_str(sub_params->data, sizeof(meter_flag_str), meter_flag_str);
+				if (error < 0) {
+					ppecfg_log_arg_error(sub_params);
+					goto done;
+				}
+
+				/*
+				 * Make a copy of the input string for tokenization
+				 * since strtok_r modifies the original string
+				 */
+				strlcpy(temp_str, meter_flag_str, sizeof(temp_str) - 1);
+				temp_str[sizeof(temp_str) - 1] = '\0';
+
+				/*
+				 * Parse the string and combine multiple flags using underscore as delimiter
+				 */
+				token = strtok_r(temp_str, "_", &saveptr);
+				while (token != NULL) {
+					flag_found = false;
+
+					if (strcasecmp(token, "uc") == 0) {
+						if (duplicate_check & PPECFG_POLICER_METER_FLAG_UNICAST) {
+							ppecfg_log_error("Duplicate meter_flag: \'uc\' specified multiple times\n");
+							error = -EINVAL;
+							goto done;
+						}
+						combined_flags |= PPECFG_POLICER_METER_FLAG_UNICAST;
+						duplicate_check |= PPECFG_POLICER_METER_FLAG_UNICAST;
+						flag_found = true;
+					} else if (strcasecmp(token, "uuc") == 0) {
+						if (duplicate_check & PPECFG_POLICER_METER_FLAG_UNKNOWN_UNICAST) {
+							ppecfg_log_error("Duplicate meter_flag: 'uuc' specified multiple times\n");
+							error = -EINVAL;
+							goto done;
+						}
+						combined_flags |= PPECFG_POLICER_METER_FLAG_UNKNOWN_UNICAST;
+						duplicate_check |= PPECFG_POLICER_METER_FLAG_UNKNOWN_UNICAST;
+						flag_found = true;
+					} else if (strcasecmp(token, "umc") == 0) {
+						if (duplicate_check & PPECFG_POLICER_METER_FLAG_UNKNOWN_MULTICAST) {
+							ppecfg_log_error("Duplicate meter_flag: 'umc' specified multiple times\n");
+							error = -EINVAL;
+							goto done;
+						}
+						combined_flags |= PPECFG_POLICER_METER_FLAG_UNKNOWN_MULTICAST;
+						duplicate_check |= PPECFG_POLICER_METER_FLAG_UNKNOWN_MULTICAST;
+						flag_found = true;
+					} else if (strcasecmp(token, "mc") == 0) {
+						if (duplicate_check & PPECFG_POLICER_METER_FLAG_MULTICAST) {
+							ppecfg_log_error("Duplicate meter_flag: \'mc\' specified multiple times\n");
+							error = -EINVAL;
+							goto done;
+						}
+						combined_flags |= PPECFG_POLICER_METER_FLAG_MULTICAST;
+						duplicate_check |= PPECFG_POLICER_METER_FLAG_MULTICAST;
+						flag_found = true;
+					} else if (strcasecmp(token, "bc") == 0) {
+						if (duplicate_check & PPECFG_POLICER_METER_FLAG_BROADCAST) {
+							ppecfg_log_error("Duplicate meter_flag: \'bc\' specified multiple times\n");
+							error = -EINVAL;
+							goto done;
+						}
+						combined_flags |= PPECFG_POLICER_METER_FLAG_BROADCAST;
+						duplicate_check |= PPECFG_POLICER_METER_FLAG_BROADCAST;
+						flag_found = true;
+					}
+
+					if (!flag_found) {
+						ppecfg_log_error("Invalid meter_flag token: '%s'\n", token);
+						ppecfg_log_error("Valid packet types: 'uc', 'uuc', 'mc', 'umc', 'bc'\n");
+						ppecfg_log_error("Combine multiple types using underscore (e.g., 'bc_mc')\n");
+						error = -EINVAL;
+						goto done;
+					}
+
+					token = strtok_r(NULL, "_", &saveptr);
+				}
+
+				/*
+				 * Check if at least one valid flag was parsed
+				 */
+				if (combined_flags == 0) {
+					ppecfg_log_error("No valid meter_flag found in: '%s'\n", meter_flag_str);
+					ppecfg_log_error("Valid packet types: 'uc', 'uuc', 'mc', 'umc', 'bc'\n");
+					ppecfg_log_error("Combine multiple types using underscore (e.g., 'bc_mc')\n");
+					error = -EINVAL;
+					goto done;
+				}
+
+				nl_msg.config.meter_flag = combined_flags;
+				nl_msg.config.meter_flag_valid = 1;
+			}
+
+			break;
+
 		case PPECFG_POLICER_RULE_ADD_YELLOW_DP:
 			/*
 			* Parse optional yellow_dp from user_config, default 0
@@ -413,42 +545,50 @@ static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_par
 	if(!nl_msg.config.meter_unit) {
 		if (nl_msg.config.committed_rate < PPECFG_POLICER_MIN_INFO_RATE_BYTE) {
 			ppecfg_log_error("Minimum committed rate : %d\n", PPECFG_POLICER_MIN_INFO_RATE_BYTE);
+			error = -EINVAL;
 			goto done;
 		}
 
 		if (nl_msg.config.committed_rate > PPECFG_POLICER_MAX_INFO_RATE_BYTE) {
 			ppecfg_log_error("Maximum committed rate : %d\n", PPECFG_POLICER_MAX_INFO_RATE_BYTE);
+			error = -EINVAL;
 			goto done;
 		}
 
 		if (nl_msg.config.peak_rate < PPECFG_POLICER_MIN_INFO_RATE_BYTE) {
 			ppecfg_log_error("Minimum peak rate : %d\n", PPECFG_POLICER_MIN_INFO_RATE_BYTE);
+			error = -EINVAL;
 			goto done;
 		}
 
 		if (nl_msg.config.peak_rate > PPECFG_POLICER_MAX_INFO_RATE_BYTE) {
 			ppecfg_log_error("Maximum peak rate : %d\n", PPECFG_POLICER_MAX_INFO_RATE_BYTE);
+			error = -EINVAL;
 			goto done;
 		}
 
 	} else {
 		if (nl_msg.config.committed_rate < PPECFG_POLICER_MIN_INFO_RATE_FRAME) {
 			ppecfg_log_error("Minimum committed rate : %d\n", PPECFG_POLICER_MIN_INFO_RATE_FRAME);
+			error = -EINVAL;
 			goto done;
 		}
 
 		if (nl_msg.config.committed_rate > PPECFG_POLICER_MAX_INFO_RATE_FRAME) {
 			ppecfg_log_error("Maximum committed rate : %d\n", PPECFG_POLICER_MAX_INFO_RATE_FRAME);
+			error = -EINVAL;
 			goto done;
 		}
 
 		if (nl_msg.config.peak_rate < PPECFG_POLICER_MIN_INFO_RATE_FRAME) {
 			ppecfg_log_error("Minimum peak rate : %d\n", PPECFG_POLICER_MIN_INFO_RATE_FRAME);
+			error = -EINVAL;
 			goto done;
 		}
 
 		if (nl_msg.config.peak_rate > PPECFG_POLICER_MAX_INFO_RATE_FRAME) {
 			ppecfg_log_error("Maximum peak rate : %d\n", PPECFG_POLICER_MAX_INFO_RATE_FRAME);
+			error = -EINVAL;
 			goto done;
 		}
 	}
@@ -456,14 +596,22 @@ static int ppecfg_policer_rule_add(struct ppecfg_param *param, struct ppecfg_par
 	if (!nl_msg.config.meter_unit) {
 		if ((nl_msg.config.peak_burst_size > PPECFG_POLICER_MAX_BURST_SIZE_BYTE) || (nl_msg.config.committed_burst_size > PPECFG_POLICER_MAX_BURST_SIZE_BYTE)) {
 			ppecfg_log_error("Maximum burst size : %d\n", PPECFG_POLICER_MAX_BURST_SIZE_BYTE);
+			error = -EINVAL;
 			goto done;
 		}
 
 	} else {
 		if ((nl_msg.config.peak_burst_size > PPECFG_POLICER_MAX_BURST_SIZE_FRAME) || (nl_msg.config.committed_burst_size > PPECFG_POLICER_MAX_BURST_SIZE_FRAME)) {
 			ppecfg_log_error("Maximum burst size : %d\n", PPECFG_POLICER_MAX_BURST_SIZE_FRAME);
+			error = -EINVAL;
 			goto done;
 		}
+	}
+
+	if (nl_msg.config.dir > PPECFG_POLICER_MAX_DIRECTION) {
+		ppecfg_log_error("Invalid direction value: %d. Valid values are 0 (default), 1 (US), or 2 (DS)\n", nl_msg.config.dir);
+		error = -EINVAL;
+		goto done;
 	}
 
 	/*

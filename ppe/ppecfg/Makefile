@@ -13,9 +13,35 @@ EXTRA_CFLAGS += -DNSS_PPE_FEATURE_EXCEPTION_EDIT
 
 ifneq ($(filter $(SoC),ipq96xx ipq52xx),)
 EXTRA_CFLAGS += -DNSS_PPE_DSCP_FEATURE
+EXTRA_CFLAGS += -DNSS_PPE_PM_FEATURE
+EXTRA_CFLAGS += -DNSS_PPE_EXT_VLAN_FEATURE
+EXTRA_CFLAGS += -DNSS_PPE_PORT_MGMT_FEATURE
 else
 SOURCES := $(filter-out $(SRCDIR)/ppecfg_dscp.c, $(SOURCES))
+SOURCES := $(filter-out $(SRCDIR)/ppecfg_pm.c, $(SOURCES))
+SOURCES := $(filter-out $(SRCDIR)/ppecfg_vlan.c, $(SOURCES))
+SOURCES := $(filter-out $(SRCDIR)/ppecfg_port_mgmt.c, $(SOURCES))
 endif
+
+ifneq ($(filter $(SoC),ipq52xx),)
+EXTRA_CFLAGS += -DNSS_PPE_DOT1P_FEATURE
+EXTRA_CFLAGS += -DNSS_PPE_GEMPORT_FEATURE
+EXTRA_CFLAGS += -DNSS_PPE_PON_PORT_FEATURE
+EXTRA_CFLAGS += -DCONFIG_NSS_PPENL_PON_PORT
+else
+SOURCES := $(filter-out $(SRCDIR)/ppecfg_dot1p.c, $(SOURCES))
+SOURCES := $(filter-out $(SRCDIR)/ppecfg_gemport.c, $(SOURCES))
+endif
+
+ifeq ($(PPE_TUN_RPS_ENABLED), y)
+EXTRA_CFLAGS += -DNSS_PPE_TUN_RPS_FEATURE
+else
+SOURCES := $(filter-out $(SRCDIR)/ppecfg_tun_rps.c, $(SOURCES))
+SOURCES := $(filter-out $(SRCDIR)/ppecfg_tun_rps_json_parser.c, $(SOURCES))
+endif
+
+# Compile out ppecfg_edma_ddrq.c currently. This will be enabled later
+SOURCES := $(filter-out $(SRCDIR)/ppecfg_edma_ddrq.c, $(SOURCES))
 
 OBJECTS = $(SOURCES:$(SRCDIR)/%.c=$(OBJPATH)/%.o)
 

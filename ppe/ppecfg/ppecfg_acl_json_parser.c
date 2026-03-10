@@ -1,17 +1,6 @@
 /*
- * Copyright (c) 2024-2025, Qualcomm Innovation Center, Inc. All rights reserved.
- *
- * Permission to use, copy, modify, and/or distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+ * SPDX-License-Identifier: ISC
  */
 
 #include <stdio.h>
@@ -186,7 +175,7 @@ static int ppecfg_acl_json_get_cvid_obj(struct json_object *rule_obj, struct nss
 			ppecfg_log_error("cvid_mask, %s\n", mask);
 			return error;
 		}
-		nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule_flags |= PPE_ACL_RULE_FLAG_VID_MASK;
+		nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule_flags |= PPE_ACL_RULE_FLAG_CVID_MASK;
 		ppecfg_log_info("CVID MASK : %s\n", mask);
 	}
 
@@ -196,12 +185,12 @@ static int ppecfg_acl_json_get_cvid_obj(struct json_object *rule_obj, struct nss
 			ppecfg_log_error("cvid_range, %s\n", range);
 			return error;
 		}
-		if (!(nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule_flags & PPE_ACL_RULE_FLAG_VID_MASK)) {
+		if (!(nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule_flags & PPE_ACL_RULE_FLAG_CVID_MASK)) {
 			return error;
 		}
 		if (bool_val == true) {
-			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule_flags |= PPE_ACL_RULE_FLAG_VID_RANGE;
-			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule_flags &= ~PPE_ACL_RULE_FLAG_VID_MASK;
+			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule_flags |= PPE_ACL_RULE_FLAG_CVID_RANGE;
+			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_CVID].rule_flags &= ~PPE_ACL_RULE_FLAG_CVID_MASK;
 		}
 		ppecfg_log_info("CVID RANGE : %s\n", range);
 	}
@@ -254,7 +243,7 @@ static int ppecfg_acl_json_get_svid_obj(struct json_object *rule_obj, struct nss
 			ppecfg_log_error("svid_mask, %s\n", mask);
 			return error;
 		}
-		nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule_flags |= PPE_ACL_RULE_FLAG_VID_MASK;
+		nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule_flags |= PPE_ACL_RULE_FLAG_SVID_MASK;
 		ppecfg_log_info("SVID MASK : %s\n", mask);
 	}
 
@@ -264,12 +253,12 @@ static int ppecfg_acl_json_get_svid_obj(struct json_object *rule_obj, struct nss
 			ppecfg_log_error("svid_range, %s\n", range);
 			return error;
 		}
-		if (!(nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule_flags & PPE_ACL_RULE_FLAG_VID_MASK)) {
+		if (!(nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule_flags & PPE_ACL_RULE_FLAG_SVID_MASK)) {
 			return error;
 		}
 		if (bool_val == true) {
-			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule_flags |= PPE_ACL_RULE_FLAG_VID_RANGE;
-			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule_flags &= ~PPE_ACL_RULE_FLAG_VID_MASK;
+			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule_flags |= PPE_ACL_RULE_FLAG_SVID_RANGE;
+			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_SVID].rule_flags &= ~PPE_ACL_RULE_FLAG_SVID_MASK;
 		}
 		ppecfg_log_info("SVID RANGE : %s\n", range);
 	}
@@ -312,7 +301,7 @@ static int ppecfg_acl_json_get_cpcp_obj(struct json_object *rule_obj, struct nss
 			return error;
 		}
 
-		nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_CPCP].rule_flags |= PPE_ACL_RULE_FLAG_PCP_MASK;
+		nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_CPCP].rule_flags |= PPE_ACL_RULE_FLAG_CPCP_MASK;
 		ppecfg_log_info("CPCP MASK : %s\n", mask);
 	}
 
@@ -353,7 +342,7 @@ static int ppecfg_acl_json_get_spcp_obj(struct json_object *rule_obj, struct nss
 			return error;
 		}
 
-		nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_SPCP].rule_flags |= PPE_ACL_RULE_FLAG_PCP_MASK;
+		nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_SPCP].rule_flags |= PPE_ACL_RULE_FLAG_SPCP_MASK;
 		ppecfg_log_info("SPCP MASK : %s\n", mask);
 	}
 
@@ -1601,20 +1590,21 @@ int ppecfg_acl_json_rule_add(struct json_object *rule_obj)
 	 */
 	val = ppecfg_json_object_handler(rule_obj, "src_dev");
 	if (val) {
-		error = ppecfg_param_get_str(val, sizeof(nl_msg.rule.src.dev_name), &nl_msg.rule.src.dev_name);
+		error = ppecfg_param_get_str(val, sizeof(nl_msg.rule.dev.dev_name), &nl_msg.rule.dev.dev_name);
 		if (error) {
 			ppecfg_log_info("src_dev, %s\n", val);
 			goto done;
 		}
 
-		if (strcmp("flow", nl_msg.rule.src.dev_name) == 0) {
-			nl_msg.rule.stype = PPE_ACL_RULE_SRC_TYPE_FLOW;
-		} else if (strcmp("sc", nl_msg.rule.src.dev_name) == 0) {
-			memset(nl_msg.rule.src.dev_name, 0, sizeof(nl_msg.rule.src.dev_name));
-			nl_msg.rule.stype = PPE_ACL_RULE_SRC_TYPE_SC;
+		if (strcmp("flow", nl_msg.rule.dev.dev_name) == 0) {
+			nl_msg.rule.dev_type = PPE_ACL_RULE_DEV_TYPE_FLOW;
+		} else if (strcmp("sc", nl_msg.rule.dev.dev_name) == 0) {
+			memset(nl_msg.rule.dev.dev_name, 0, sizeof(nl_msg.rule.dev.dev_name));
+			nl_msg.rule.dev_type = PPE_ACL_RULE_DEV_TYPE_SC;
 		} else {
-			nl_msg.rule.stype = PPE_ACL_RULE_SRC_TYPE_DEV;
+			nl_msg.rule.dev_type = PPE_ACL_RULE_DEV_TYPE_SRC_DEV;
 		}
+		/* TODO Add dest dev binding in json. */
 		ppecfg_log_info("SRC DEV : %s\n", val);
 	} else {
 		goto done;
@@ -1678,18 +1668,18 @@ int ppecfg_acl_json_rule_add(struct json_object *rule_obj)
 	 */
 	val = ppecfg_json_object_handler(rule_obj, "src_sc");
 	if (val) {
-		if (nl_msg.rule.stype != PPE_ACL_RULE_SRC_TYPE_SC) {
+		if (nl_msg.rule.dev_type != PPE_ACL_RULE_DEV_TYPE_SC) {
 			ppecfg_log_error("src_sc, %s\n", val);
 			goto done;
 		}
 
-		error = ppecfg_param_get_int(val, sizeof(uint8_t), &nl_msg.rule.src.sc);
+		error = ppecfg_param_get_int(val, sizeof(uint8_t), &nl_msg.rule.dev.sc);
 		if (error) {
 			ppecfg_log_error("src_sc, %s\n", val);
 			goto done;
 		}
 
-		ppecfg_log_info("nl_msg.rule.src.sc: %d\n", nl_msg.rule.src.sc);
+		ppecfg_log_info("nl_msg.rule.dev.sc: %d\n", nl_msg.rule.dev.sc);
 	}
 
 	/*

@@ -1,17 +1,6 @@
 /*
- * Copyright (c) 2024-2025, Qualcomm Innovation Center, Inc. All rights reserved.
- *
- * Permission to use, copy, modify, and/or distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+ * SPDX-License-Identifier: ISC
  */
 
 #include <stdint.h>
@@ -25,8 +14,10 @@
 #include "ppecfg_param.h"
 #include "ppecfg_acl_json_parser.h"
 #include "ppecfg_policer_json_parser.h"
+#ifdef NSS_PPE_TUN_RPS_FEATURE
+#include "ppecfg_tun_rps_json_parser.h"
+#endif
 #include "ppecfg_json_parser.h"
-
 #define RULES "rules"
 #define PPECFG_JSON_PARSER_CONFIG_DEF_PATH_LENGTH 100
 
@@ -63,6 +54,7 @@ static int ppecfg_json_parser(const char *file_path)
 
 	if (stat(file_path, &filestat) != 0) {
 		ppecfg_log_error("File not found\n");
+		fclose(fp);
 		return -ENOENT;
 	}
 
@@ -87,6 +79,17 @@ static int ppecfg_json_parser(const char *file_path)
 	fclose(fp);
 
 	jobj = json_tokener_parse(json_data);
+
+	/*
+	 * We can free the raw JSON data now as the object tree is built
+	 */
+	free(json_data);
+
+	if (!jobj) {
+		ppecfg_log_error("Failed to parse JSON\n");
+		return -EINVAL;
+	}
+
 	include_file_obj = ppecfg_get_json_object(jobj, "include");
 
 	if (include_file_obj != NULL) {
@@ -94,6 +97,7 @@ static int ppecfg_json_parser(const char *file_path)
 		error = ppecfg_json_parser((const char *)new_file_path);
 		if (error) {
 			ppecfg_log_error("Failed to get policer config\n");
+			json_object_put(jobj);
 			return error;
 		}
 	}
@@ -101,7 +105,6 @@ static int ppecfg_json_parser(const char *file_path)
 	rule_list = ppecfg_get_json_object(jobj, RULES);
 	if (rule_list == NULL) {
 		ppecfg_log_error("Error: %s info not present!\n", RULES);
-		free(json_data);
 		json_object_put(jobj);
 		return -EINVAL;
 	}
@@ -110,27 +113,58 @@ static int ppecfg_json_parser(const char *file_path)
 
 	for (int i = 0; i < rule_count; i++) {
 		current_rule = json_object_array_get_idx(rule_list, i);
+
+#ifdef NSS_PPE_TUN_RPS_FEATURE
+		/*
+		 * Try Tunnel RPS rule
+		 */
+		rule_obj = ppecfg_get_json_object(current_rule, "tun_rps");
+		if (rule_obj) {
+			error = ppecfg_tun_rps_json_rule_handler(rule_obj);
+			if (error) {
+				ppecfg_log_error("Failed to process tunnel RPS rule\n");
+				break;
+			}
+			continue;
+		}
+#endif
+
+		/*
+		 * Try Policer rule
+		 */
 		rule_obj = ppecfg_get_json_object(current_rule, "policer");
-		if (rule_obj != NULL) {
+		if (rule_obj) {
 			error = ppecfg_policer_json_rule_add(rule_obj);
 			if (error) {
 				ppecfg_log_error("Failed to get Policer rule\n");
 				break;
 			}
-		} else {
-			rule_obj = ppecfg_get_json_object(current_rule, "acl");
-			if (rule_obj != NULL) {
-				error = ppecfg_acl_json_rule_add(rule_obj);
-				if (error) {
-					ppecfg_log_error("Failed to get ACL rule\n");
-					break;
-				}
-			} else {
-				ppecfg_log_warn("Enter a valid type of rule\n");
-				continue;
-			}
+			continue;
 		}
+
+		/*
+		 * Try ACL rule
+		 */
+		rule_obj = ppecfg_get_json_object(current_rule, "acl");
+		if (rule_obj) {
+			error = ppecfg_acl_json_rule_add(rule_obj);
+			if (error) {
+				ppecfg_log_error("Failed to get ACL rule\n");
+				break;
+			}
+			continue;
+		}
+
+		/*
+		 * No valid rule type found notify and exit
+		 */
+		ppecfg_log_warn("Enter a valid type of rule\n");
 	}
+
+	/*
+	 * Free the JSON object tree
+	 */
+	json_object_put(jobj);
 
 	return error;
 }
@@ -188,6 +222,8 @@ int ppecfg_json_parser_handler(struct ppecfg_param *param, struct ppecfg_param_i
 		return -EINVAL;
 	}
 
+	ppecfg_log_info("ppecfg_json_parser_handler called\n");
+
 	error = ppecfg_json_acl_rule_flush();
 	if (error) {
 		ppecfg_log_error("Flush for ACL failed");
@@ -199,7 +235,7 @@ int ppecfg_json_parser_handler(struct ppecfg_param *param, struct ppecfg_param_i
 	}
 
 	/*
-	 * Iterate through the param table to identify the matched arguments and 
+	 * Iterate through the param table to identify the matched arguments and
 	 * populate the argument list
 	 */
 	error = ppecfg_param_iter_tbl(param, match);
@@ -212,6 +248,7 @@ int ppecfg_json_parser_handler(struct ppecfg_param *param, struct ppecfg_param_i
 		ppecfg_log_info("New path for configuration: %s\n", path);
 	}
 
+	ppecfg_log_info("JSON file path: %s\n", path);
 	error = ppecfg_json_parser((const char *)path);
 	return error;
 }
