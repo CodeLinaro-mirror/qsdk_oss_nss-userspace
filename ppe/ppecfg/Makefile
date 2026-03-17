@@ -16,11 +16,13 @@ EXTRA_CFLAGS += -DNSS_PPE_DSCP_FEATURE
 EXTRA_CFLAGS += -DNSS_PPE_PM_FEATURE
 EXTRA_CFLAGS += -DNSS_PPE_EXT_VLAN_FEATURE
 EXTRA_CFLAGS += -DNSS_PPE_PORT_MGMT_FEATURE
+EXTRA_CFLAGS += -DNSS_EDMA_DDRQ_FEATURE
 else
 SOURCES := $(filter-out $(SRCDIR)/ppecfg_dscp.c, $(SOURCES))
 SOURCES := $(filter-out $(SRCDIR)/ppecfg_pm.c, $(SOURCES))
 SOURCES := $(filter-out $(SRCDIR)/ppecfg_vlan.c, $(SOURCES))
 SOURCES := $(filter-out $(SRCDIR)/ppecfg_port_mgmt.c, $(SOURCES))
+SOURCES := $(filter-out $(SRCDIR)/ppecfg_edma_ddrq.c, $(SOURCES))
 endif
 
 ifneq ($(filter $(SoC),ipq52xx),)
@@ -32,9 +34,6 @@ else
 SOURCES := $(filter-out $(SRCDIR)/ppecfg_dot1p.c, $(SOURCES))
 SOURCES := $(filter-out $(SRCDIR)/ppecfg_gemport.c, $(SOURCES))
 endif
-
-# Compile out ppecfg_edma_ddrq.c currently. This will be enabled later
-SOURCES := $(filter-out $(SRCDIR)/ppecfg_edma_ddrq.c, $(SOURCES))
 
 OBJECTS = $(SOURCES:$(SRCDIR)/%.c=$(OBJPATH)/%.o)
 

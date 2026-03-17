@@ -80,16 +80,16 @@ static int ppecfg_edma_ddrq_config_validate(struct nss_ppenl_edma_ddrq_config *d
 	 * general ranges/values for the input configuration parameters
 	 * before proceeding to invoke the base module's configuration API.
 	 */
-	if (ddrq_cfg->ddrq_obj.ip_type == NSS_DP_DDRQ_IP_TYPE_PORT) {
-		if ((ddrq_cfg->ddrq_obj.obj_id < PPECFG_EDMA_DDRQ_PORT_MIN) ||
-				 (ddrq_cfg->ddrq_obj.obj_id > PPECFG_EDMA_DDRQ_PORT_MAX)) {
+	if (ddrq_cfg->ddrq_obj.cfg_type == NSS_DP_DDRQ_CFG_TYPE_PORT) {
+		if ((ddrq_cfg->ddrq_obj.cfg_id < PPECFG_EDMA_DDRQ_PORT_MIN) ||
+				 (ddrq_cfg->ddrq_obj.cfg_id > PPECFG_EDMA_DDRQ_PORT_MAX)) {
 			ppecfg_log_error("Invalid DDRQ port number. Allowed range is %d to %d\n",
 					PPECFG_EDMA_DDRQ_PORT_MIN, PPECFG_EDMA_DDRQ_PORT_MAX);
 			return -EINVAL;
 		}
-	} else if (ddrq_cfg->ddrq_obj.ip_type == NSS_DP_DDRQ_IP_TYPE_QUEUE) {
-		if ((ddrq_cfg->ddrq_obj.obj_id < PPECFG_EDMA_DDRQ_QUEUE_ID_MIN) ||
-				 (ddrq_cfg->ddrq_obj.obj_id > PPECFG_EDMA_DDRQ_QUEUE_ID_MAX)) {
+	} else if (ddrq_cfg->ddrq_obj.cfg_type== NSS_DP_DDRQ_CFG_TYPE_QUEUE) {
+		if ((ddrq_cfg->ddrq_obj.cfg_id < PPECFG_EDMA_DDRQ_QUEUE_ID_MIN) ||
+				 (ddrq_cfg->ddrq_obj.cfg_id > PPECFG_EDMA_DDRQ_QUEUE_ID_MAX)) {
 			ppecfg_log_error("Invalid DDRQ queue number. Allowed range is %d to %d\n",
 					PPECFG_EDMA_DDRQ_QUEUE_ID_MIN, PPECFG_EDMA_DDRQ_QUEUE_ID_MAX);
 			return -EINVAL;
@@ -322,7 +322,7 @@ static int ppecfg_edma_ddrq_config(struct ppecfg_param *param, struct ppecfg_par
 	 * Set the initial invalid value to all the available parameters
 	 * before commencing the parsing of the user provided inputs.
 	 */
-	ddrq_cfg->ddrq_obj.ip_type = NSS_DP_DDRQ_IP_TYPE_NONE;
+	ddrq_cfg->ddrq_obj.cfg_type = NSS_DP_DDRQ_CFG_TYPE_NONE;
 	ddrq_cfg->ddrq_ac_cfg.ac_cfg_gap_grn_grn_min = NSS_DP_DDRQ_INV_VAL;
 	ddrq_cfg->ddrq_ac_cfg.ac_cfg_gap_grn_red_min= NSS_DP_DDRQ_INV_VAL;
 	ddrq_cfg->ddrq_ac_cfg.ac_cfg_gap_grn_red_max = NSS_DP_DDRQ_INV_VAL;
@@ -352,22 +352,22 @@ static int ppecfg_edma_ddrq_config(struct ppecfg_param *param, struct ppecfg_par
 
 		switch (index) {
 			case PPECFG_EDMA_DDRQ_CFG_RULE_PORT_ID:
-				error = ppecfg_param_get_int(sub_params->data, sizeof(int16_t), &ddrq_cfg->ddrq_obj.obj_id);
+				error = ppecfg_param_get_int(sub_params->data, sizeof(int16_t), &ddrq_cfg->ddrq_obj.cfg_id);
 				if (error < 0) {
 					ppecfg_log_arg_error(sub_params);
 					goto done;
 				}
-				ddrq_cfg->ddrq_obj.ip_type = NSS_DP_DDRQ_IP_TYPE_PORT;
+				ddrq_cfg->ddrq_obj.cfg_type = NSS_DP_DDRQ_CFG_TYPE_PORT;
 				count++;
 				break;
 
 			case PPECFG_EDMA_DDRQ_CFG_RULE_QUEUE_ID:
-				error = ppecfg_param_get_int(sub_params->data, sizeof(int16_t), &ddrq_cfg->ddrq_obj.obj_id);
+				error = ppecfg_param_get_int(sub_params->data, sizeof(int16_t), &ddrq_cfg->ddrq_obj.cfg_id);
 				if (error < 0) {
 					ppecfg_log_arg_error(sub_params);
 					goto done;
 				}
-				ddrq_cfg->ddrq_obj.ip_type = NSS_DP_DDRQ_IP_TYPE_QUEUE;
+				ddrq_cfg->ddrq_obj.cfg_type = NSS_DP_DDRQ_CFG_TYPE_QUEUE;
 				count++;
 				break;
 
