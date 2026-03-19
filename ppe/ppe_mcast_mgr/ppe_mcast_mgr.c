@@ -207,7 +207,6 @@ static int ppe_mcast_mgr_netlink_msg_process(struct nlmsghdr *hdr) {
 	if (error < 0) {
 		ppe_mcast_mgr_log_warn("Unable to send message for %s operation, error: %d\n",
 			(hdr->nlmsg_type == RTM_NEWMDB) ? "add" : "delete", error);
-		return 0;
 	}
 
 	return 0;
@@ -239,7 +238,7 @@ static int ppe_mcast_mgr_netlink_msg_setup(void) {
 	/* Create netlink socket */
 	ppe_mcast_mgr_netlink_socket = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
 	if (ppe_mcast_mgr_netlink_socket < 0) {
-		perror("socket");
+		ppe_mcast_mgr_log_error("socket: %s\n", strerror(errno));
 		return -1;
 	}
 
@@ -250,7 +249,7 @@ static int ppe_mcast_mgr_netlink_msg_setup(void) {
 
 	/* Bind socket */
 	if (bind(ppe_mcast_mgr_netlink_socket, (struct sockaddr *)&local, sizeof(local)) < 0) {
-		perror("bind");
+		ppe_mcast_mgr_log_error("socket bind: %s\n", strerror(errno));
 		close(ppe_mcast_mgr_netlink_socket);
 		return -1;
 	}
@@ -258,7 +257,7 @@ static int ppe_mcast_mgr_netlink_msg_setup(void) {
 	/* Join multicast group for MDB events */
 	ret = setsockopt(ppe_mcast_mgr_netlink_socket, SOL_NETLINK, NETLINK_ADD_MEMBERSHIP, &group, sizeof(group));
 	if (ret < 0) {
-		perror("setsockopt");
+		ppe_mcast_mgr_log_error("socket setsockopt: %s\n", strerror(errno));
 		close(ppe_mcast_mgr_netlink_socket);
 		return -1;
 	}
