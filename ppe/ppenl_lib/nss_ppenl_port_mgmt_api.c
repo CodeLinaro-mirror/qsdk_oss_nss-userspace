@@ -80,6 +80,33 @@ static void nss_ppenl_port_mgmt_resp(void *user_ctx, struct nss_ppenl_port_mgmt_
 			nss_ppenl_sock_log_info("PORT_MGMT mac filter clear successful\n");
 			break;
 
+		case NSS_PPE_PORT_MGMT_OMCI_PORT_ADD_MSG:
+			ret = port_mgmt_info->omci_port.ret;
+			if (ret != PPE_PORT_MGMT_RET_SUCCESS) {
+				nss_ppenl_sock_log_error("PORT_MGMT OMCI port add failed with error: %d\n", ret);
+				return;
+			}
+			nss_ppenl_sock_log_info("PORT_MGMT OMCI port add successful\n");
+			break;
+
+		case NSS_PPE_PORT_MGMT_OMCI_PORT_DEL_MSG:
+			ret = port_mgmt_info->omci_port.ret;
+			if (ret != PPE_PORT_MGMT_RET_SUCCESS) {
+				nss_ppenl_sock_log_error("PORT_MGMT OMCI port del failed with error: %d\n", ret);
+				return;
+			}
+			nss_ppenl_sock_log_info("PORT_MGMT OMCI port del successful\n");
+			break;
+
+		case NSS_PPE_PORT_MGMT_OMCI_PORT_FLUSH_MSG:
+			ret = port_mgmt_info->omci_port.ret;
+			if (ret != PPE_PORT_MGMT_RET_SUCCESS) {
+				nss_ppenl_sock_log_error("PORT_MGMT OMCI port flush failed with error: %d\n", ret);
+				return;
+			}
+			nss_ppenl_sock_log_info("PORT_MGMT OMCI port flush successful\n");
+			break;
+
 		default:
 			nss_ppenl_sock_log_error("unsupported message cmd type(%d)\n", cmd);
 	}
@@ -111,6 +138,9 @@ int nss_ppenl_port_mgmt_sock_cb(struct nl_msg *msg, void *arg)
 		case NSS_PPE_PORT_MGMT_MAC_LRN_LIMIT_SET_MSG:
 		case NSS_PPE_PORT_MGMT_MAC_FILTER_SET_MSG:
 		case NSS_PPE_PORT_MGMT_MAC_FILTER_CLR_MSG:
+		case NSS_PPE_PORT_MGMT_OMCI_PORT_ADD_MSG:
+		case NSS_PPE_PORT_MGMT_OMCI_PORT_DEL_MSG:
+		case NSS_PPE_PORT_MGMT_OMCI_PORT_FLUSH_MSG:
 			{
 				void *cb_data = nss_ppenl_cmn_get_cb_data(&port_mgmt_info->cm, sock->family_id);
 				if (!cb_data) {
@@ -434,4 +464,97 @@ done:
          */
         nss_ppenl_port_mgmt_sock_close(&nss_port_mgmt_ctx);
         return error;
+}
+
+/*
+ * nss_ppenl_port_mgmt_omci_port_add()
+ *	Add a port to the OMCI-managed port list.
+ */
+int nss_ppenl_port_mgmt_omci_port_add(struct nss_ppenl_port_mgmt_info *port_mgmt_info)
+{
+	int error;
+
+	if (!port_mgmt_info) {
+		nss_ppenl_sock_log_error("Invalid port_mgmt_info\n");
+		return -EINVAL;
+	}
+
+	nss_ppenl_rule_port_mgmt_init(port_mgmt_info, NSS_PPE_PORT_MGMT_OMCI_PORT_ADD_MSG);
+
+	error = nss_ppenl_port_mgmt_sock_open(&nss_port_mgmt_ctx, NULL);
+	if (error < 0) {
+		nss_ppenl_sock_log_error("Failed to open PORT_MGMT socket; error(%d)\n", error);
+		return error;
+	}
+
+	error = nss_ppenl_port_mgmt_sock_send(&nss_port_mgmt_ctx, port_mgmt_info, nss_ppenl_port_mgmt_resp);
+	if (error < 0) {
+		nss_ppenl_sock_log_error("Unable to send OMCI port add message\n");
+		goto done;
+	}
+done:
+	nss_ppenl_port_mgmt_sock_close(&nss_port_mgmt_ctx);
+	return error;
+}
+
+/*
+ * nss_ppenl_port_mgmt_omci_port_del()
+ *	Remove a port from the OMCI-managed port list.
+ */
+int nss_ppenl_port_mgmt_omci_port_del(struct nss_ppenl_port_mgmt_info *port_mgmt_info)
+{
+	int error;
+
+	if (!port_mgmt_info) {
+		nss_ppenl_sock_log_error("Invalid port_mgmt_info\n");
+		return -EINVAL;
+	}
+
+	nss_ppenl_rule_port_mgmt_init(port_mgmt_info, NSS_PPE_PORT_MGMT_OMCI_PORT_DEL_MSG);
+
+	error = nss_ppenl_port_mgmt_sock_open(&nss_port_mgmt_ctx, NULL);
+	if (error < 0) {
+		nss_ppenl_sock_log_error("Failed to open PORT_MGMT socket; error(%d)\n", error);
+		return error;
+	}
+
+	error = nss_ppenl_port_mgmt_sock_send(&nss_port_mgmt_ctx, port_mgmt_info, nss_ppenl_port_mgmt_resp);
+	if (error < 0) {
+		nss_ppenl_sock_log_error("Unable to send OMCI port del message\n");
+		goto done;
+	}
+done:
+	nss_ppenl_port_mgmt_sock_close(&nss_port_mgmt_ctx);
+	return error;
+}
+
+/*
+ * nss_ppenl_port_mgmt_omci_port_flush()
+ *	Flush all ports from the OMCI-managed port list.
+ */
+int nss_ppenl_port_mgmt_omci_port_flush(struct nss_ppenl_port_mgmt_info *port_mgmt_info)
+{
+	int error;
+
+	if (!port_mgmt_info) {
+		nss_ppenl_sock_log_error("Invalid port_mgmt_info\n");
+		return -EINVAL;
+	}
+
+	nss_ppenl_rule_port_mgmt_init(port_mgmt_info, NSS_PPE_PORT_MGMT_OMCI_PORT_FLUSH_MSG);
+
+	error = nss_ppenl_port_mgmt_sock_open(&nss_port_mgmt_ctx, NULL);
+	if (error < 0) {
+		nss_ppenl_sock_log_error("Failed to open PORT_MGMT socket; error(%d)\n", error);
+		return error;
+	}
+
+	error = nss_ppenl_port_mgmt_sock_send(&nss_port_mgmt_ctx, port_mgmt_info, nss_ppenl_port_mgmt_resp);
+	if (error < 0) {
+		nss_ppenl_sock_log_error("Unable to send OMCI port flush message\n");
+		goto done;
+	}
+done:
+	nss_ppenl_port_mgmt_sock_close(&nss_port_mgmt_ctx);
+	return error;
 }

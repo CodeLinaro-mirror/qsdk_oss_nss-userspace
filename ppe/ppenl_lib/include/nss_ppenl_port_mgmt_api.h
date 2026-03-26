@@ -76,4 +76,37 @@ int nss_ppenl_port_mgmt_mac_filter_set(struct nss_ppenl_port_mgmt_info *port_mgm
  */
 int nss_ppenl_port_mgmt_mac_filter_clear(struct nss_ppenl_port_mgmt_info *port_mgmt_info);
 
+/**
+ * nss_ppenl_port_mgmt_omci_port_add()
+ *	Add a port to the OMCI-managed port list.
+ *
+ * @param[in] port_mgmt_info	PPE port management info with omci_port.port_name set.
+ *
+ * @return
+ * 0 on success or negative on failure.
+ */
+int nss_ppenl_port_mgmt_omci_port_add(struct nss_ppenl_port_mgmt_info *port_mgmt_info);
+
+/**
+ * nss_ppenl_port_mgmt_omci_port_del()
+ *	Remove a port from the OMCI-managed port list.
+ *
+ * @param[in] port_mgmt_info	PPE port management info with omci_port.port_name set.
+ *
+ * @return
+ * 0 on success or negative on failure.
+ */
+int nss_ppenl_port_mgmt_omci_port_del(struct nss_ppenl_port_mgmt_info *port_mgmt_info);
+
+/**
+ * nss_ppenl_port_mgmt_omci_port_flush()
+ *	Flush all ports from the OMCI-managed port list.
+ *
+ * @param[in] port_mgmt_info	PPE port management info (omci_port field used for response).
+ *
+ * @return
+ * 0 on success or negative on failure.
+ */
+int nss_ppenl_port_mgmt_omci_port_flush(struct nss_ppenl_port_mgmt_info *port_mgmt_info);
+
 #endif /* __NSS_PPENL_PORT_MGMT_API_H__ */
