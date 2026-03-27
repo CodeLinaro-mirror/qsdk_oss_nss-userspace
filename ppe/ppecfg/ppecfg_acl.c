@@ -377,7 +377,8 @@ static int ppecfg_acl_rule_add(struct ppecfg_param *param, struct ppecfg_param_i
 			data = sub_params[PPECFG_ACL_DEV_TYPE].data;
 			error = ppecfg_param_get_str(data, sizeof(dev_type), &dev_type);
 			if (error < 0) {
-				goto print_error;
+				nl_msg.rule.dev_type = PPE_ACL_RULE_DEV_TYPE_SRC_DEV;
+				ppecfg_log_info("Take the default as src info\n");
 			}
 
 			if (strcmp(dev_type, "flow") == 0) {
