@@ -371,7 +371,7 @@ static int ppecfg_port_mgmt_mac_filter_set(struct ppecfg_param *param, struct pp
 	 */
 	sub_params = &param->sub_params[PPECFG_PORT_MGMT_MAC_FILTER_SET_BLOCK];
 	error = ppecfg_param_verify_mac(sub_params->data, nl_msg.mac_filter.mac);
-	if (error) {
+	if (!error) {
                 ppecfg_log_arg_error(sub_params);
 		goto done;
 	}
@@ -438,7 +438,7 @@ static int ppecfg_port_mgmt_mac_filter_clear(struct ppecfg_param *param, struct 
 	 */
 	sub_params = &param->sub_params[PPECFG_PORT_MGMT_MAC_FILTER_CLR_BLOCK];
 	error = ppecfg_param_verify_mac(sub_params->data, nl_msg.mac_filter.mac);
-	if (error) {
+	if (!error) {
                 ppecfg_log_arg_error(sub_params);
 		goto done;
 	}
