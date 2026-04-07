@@ -76,7 +76,7 @@ static void nss_ppenl_qos_resp(void *user_ctx, struct nss_ppenl_qos_req *qos_req
 				return;
 			}
 
-			qos_req->msg.if_info.if_data.type == PPE_QOS_INTERFACE_TYPE_PHYSICAL ?
+			qos_req->msg.if_info.if_data.type == PPE_QOS_INTERFACE_TYPE_PHYSICAL_VP ?
 				nss_ppenl_sock_log_info("interface queue creation successful for dev %s\n", qos_req->msg.if_info.if_data.interface.dev):
 				 nss_ppenl_sock_log_info("interface queue creation successful for tcont %d\n", qos_req->msg.if_info.if_data.interface.tcont_id);
 			break;
@@ -88,7 +88,7 @@ static void nss_ppenl_qos_resp(void *user_ctx, struct nss_ppenl_qos_req *qos_req
 				return;
 			}
 
-			qos_req->msg.if_info.if_data.type == PPE_QOS_INTERFACE_TYPE_PHYSICAL ?
+			qos_req->msg.if_info.if_data.type == PPE_QOS_INTERFACE_TYPE_PHYSICAL_VP ?
 				nss_ppenl_sock_log_info("interface queues flush successful for dev %s\n", qos_req->msg.if_info.if_data.interface.dev):
 				 nss_ppenl_sock_log_info("interface queues flush successful for tcont %d\n", qos_req->msg.if_info.if_data.interface.tcont_id);
 			break;
@@ -100,7 +100,7 @@ static void nss_ppenl_qos_resp(void *user_ctx, struct nss_ppenl_qos_req *qos_req
 				return;
 			}
 
-			qos_req->msg.if_shaper_info.if_data.type == PPE_QOS_INTERFACE_TYPE_PHYSICAL ?
+			qos_req->msg.if_shaper_info.if_data.type == PPE_QOS_INTERFACE_TYPE_PHYSICAL_VP ?
 				nss_ppenl_sock_log_info("shaper set successful for dev %s\n", qos_req->msg.if_shaper_info.if_data.interface.dev):
 				 nss_ppenl_sock_log_info("shaper set successful for tcont %d\n", qos_req->msg.if_shaper_info.if_data.interface.tcont_id);
 			break;
