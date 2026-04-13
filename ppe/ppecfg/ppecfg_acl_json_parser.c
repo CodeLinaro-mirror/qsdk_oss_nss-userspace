@@ -1143,21 +1143,33 @@ static int ppecfg_acl_json_get_udf_obj(struct json_object *rule_obj, struct nss_
 
 	char *udf_a_min = ppecfg_json_object_handler(obj, "udf_a_min");
 	char *udf_b_min = ppecfg_json_object_handler(obj, "udf_b_min");
-	char *udf_c = ppecfg_json_object_handler(obj, "udf_c");
+	char *udf_c_min = ppecfg_json_object_handler(obj, "udf_c_min");
 	char *udf_d = ppecfg_json_object_handler(obj, "udf_d");
 	char *udf_a_mask_max = ppecfg_json_object_handler(obj, "udf_a_max_mask");
 	char *udf_b_mask_max = ppecfg_json_object_handler(obj, "udf_b_mask_max");
-	char *udf_c_mask = ppecfg_json_object_handler(obj, "udf_c_mask");
+	char *udf_c_mask_max = ppecfg_json_object_handler(obj, "udf_c_mask_max");
 	char *udf_d_mask = ppecfg_json_object_handler(obj, "udf_d_mask");
-	char *udf_a_valid = ppecfg_json_object_handler(obj, "udf_a_valid");
-	char *udf_b_valid = ppecfg_json_object_handler(obj, "udf_b_valid");
-	char *udf_c_valid = ppecfg_json_object_handler(obj, "udf_c_valid");
-	char *udf_d_valid = ppecfg_json_object_handler(obj, "udf_d_valid");
+	char *udf_a_valid_op = ppecfg_json_object_handler(obj, "udf_a_valid_op");
+	char *udf_b_valid_op = ppecfg_json_object_handler(obj, "udf_b_valid_op");
+	char *udf_c_valid_op = ppecfg_json_object_handler(obj, "udf_c_valid_op");
+	char *udf_d_valid_op = ppecfg_json_object_handler(obj, "udf_d_valid_op");
 	char *udf_a_range = ppecfg_json_object_handler(obj, "udf_a_range");
 	char *udf_b_range = ppecfg_json_object_handler(obj, "udf_b_range");
+	char *udf_a_offset_base = ppecfg_json_object_handler(obj, "udf_a_offset_base");
+	char *udf_b_offset_base = ppecfg_json_object_handler(obj, "udf_b_offset_base");
+	char *udf_c_offset_base = ppecfg_json_object_handler(obj, "udf_c_offset_base");
+	char *udf_d_offset_base = ppecfg_json_object_handler(obj, "udf_d_offset_base");
+	char *udf_a_proto = ppecfg_json_object_handler(obj, "udf_a_proto");
+	char *udf_b_proto = ppecfg_json_object_handler(obj, "udf_b_proto");
+	char *udf_c_proto = ppecfg_json_object_handler(obj, "udf_c_proto");
+	char *udf_d_proto = ppecfg_json_object_handler(obj, "udf_d_proto");
+	char *udf_a_offset = ppecfg_json_object_handler(obj, "udf_a_offset");
+	char *udf_b_offset = ppecfg_json_object_handler(obj, "udf_b_offset");
+	char *udf_c_offset = ppecfg_json_object_handler(obj, "udf_c_offset");
+	char *udf_d_offset = ppecfg_json_object_handler(obj, "udf_d_offset");
 
 	if (udf_a_min) {
-		error = ppecfg_param_get_int(udf_a_min, sizeof(uint16_t), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_a_min);
+		error = ppecfg_param_get_int(udf_a_min, sizeof(uint16_t), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_a.min);
 		if (error) {
 			ppecfg_log_error("udf_a_min, %s\n", udf_a_min);
 			return error;
@@ -1165,49 +1177,81 @@ static int ppecfg_acl_json_get_udf_obj(struct json_object *rule_obj, struct nss_
 
 		ppecfg_log_info("UDF A MIN: %s\n", udf_a_min);
 
+		/*
+		 * For UDF to be valid, we need offset, proto, and offset_base
+		 */
+		if (!udf_a_offset || !udf_a_proto || !udf_a_offset_base) {
+			ppecfg_log_error("UDF A requires offset, proto, and offset_base to be specified\n");
+			return -EINVAL;
+		}
+
+		error = ppecfg_param_get_int(udf_a_offset, sizeof(uint32_t), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_a.offset);
+		if (error) {
+			ppecfg_log_error("udf_a_offset, %s\n", udf_a_offset);
+			return error;
+		}
+		ppecfg_log_info("UDF A OFFSET: %s\n", udf_a_offset);
+
+		error = ppecfg_param_get_int(udf_a_proto, sizeof(int), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_a.proto);
+		if (error) {
+			ppecfg_log_error("udf_a_proto, %s\n", udf_a_proto);
+			return error;
+		}
+		ppecfg_log_info("UDF A PROTO: %s\n", udf_a_proto);
+
+		error = ppecfg_param_get_int(udf_a_offset_base, sizeof(int), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_a.offset_base);
+		if (error) {
+			ppecfg_log_error("udf_a_offset_base, %s\n", udf_a_offset_base);
+			return error;
+		}
+		ppecfg_log_info("UDF A OFFSET BASE: %s\n", udf_a_offset_base);
+
+		/*
+		 * Set mask_max if provided
+		 */
 		if (udf_a_mask_max) {
-			error = ppecfg_param_get_int(udf_a_mask_max, sizeof(uint16_t), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_a_mask_max);
+			error = ppecfg_param_get_int(udf_a_mask_max, sizeof(uint16_t), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_a.mask_max);
 			if (error) {
 				ppecfg_log_error("udf_a_mask_max, %s\n", udf_a_mask_max);
 				return error;
 			}
-
-			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule_flags |= PPE_ACL_RULE_FLAG_UDFA_MASK;
 			ppecfg_log_info("UDF A MAX MASK: %s\n", udf_a_mask_max);
+		} else {
+			/* Default mask_max to 0xFFFF if not specified */
+			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_a.mask_max = 0xFFFF;
 		}
 
-		if (udf_a_range) {
+		/*
+		 * Determine the operation type
+		 * Priority: explicit valid_op > range flag > default to MASK
+		 */
+		if (udf_a_valid_op) {
+			error = ppecfg_param_get_int(udf_a_valid_op, sizeof(int), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_a.valid_op);
+			if (error) {
+				ppecfg_log_error("udf_a_valid_op, %s\n", udf_a_valid_op);
+				return error;
+			}
+			ppecfg_log_info("UDF A VALID OP: %s\n", udf_a_valid_op);
+		} else if (udf_a_range) {
 			error = ppecfg_param_get_bool(udf_a_range, &bool_val);
 			if (error) {
 				ppecfg_log_error("udf_a_range, %s\n", udf_a_range);
 				return error;
 			}
-
 			if (bool_val) {
-				if (!(nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule_flags & PPE_ACL_RULE_FLAG_UDFA_MASK)) {
-					ppecfg_log_error("udf_a_range, %s\n", udf_a_range);
-					return error;
-				}
-				nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule_flags |= PPE_ACL_RULE_FLAG_UDFA_RANGE;
-				nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule_flags &= ~PPE_ACL_RULE_FLAG_UDFA_MASK;
-				ppecfg_log_info("UDF A RANGE: %s\n", udf_a_range);
+				nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_a.valid_op = PPE_ACL_UDF_OP_RANGE;
+				ppecfg_log_info("UDF A RANGE: enabled\n");
+			} else {
+				nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_a.valid_op = PPE_ACL_UDF_OP_MASK;
 			}
-		}
-
-		if (udf_a_valid) {
-			error = ppecfg_param_get_int(udf_a_valid, sizeof(uint8_t), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_a_valid);
-			if (error) {
-				ppecfg_log_error("udf_a_valid, %s\n", udf_a_valid);
-				return error;
-			}
-
-			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule_flags |= PPE_ACL_RULE_FLAG_UDFA_RANGE;
-			ppecfg_log_info("UDF A VALID: %s\n", udf_a_valid);
+		} else {
+			/* Default to MASK operation */
+			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_a.valid_op = PPE_ACL_UDF_OP_MASK;
 		}
 	}
 
 	if (udf_b_min) {
-		error = ppecfg_param_get_int(udf_b_min, sizeof(uint16_t), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_b_min);
+		error = ppecfg_param_get_int(udf_b_min, sizeof(uint16_t), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_b.min);
 		if (error) {
 			ppecfg_log_error("udf_b_min, %s\n", udf_b_min);
 			return error;
@@ -1215,80 +1259,152 @@ static int ppecfg_acl_json_get_udf_obj(struct json_object *rule_obj, struct nss_
 
 		ppecfg_log_info("UDF B MIN: %s\n", udf_b_min);
 
+		/*
+		 * For UDF to be valid, we need offset, proto, and offset_base
+		 */
+		if (!udf_b_offset || !udf_b_proto || !udf_b_offset_base) {
+			ppecfg_log_error("UDF B requires offset, proto, and offset_base to be specified\n");
+			return -EINVAL;
+		}
+
+		error = ppecfg_param_get_int(udf_b_offset, sizeof(uint32_t), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_b.offset);
+		if (error) {
+			ppecfg_log_error("udf_b_offset, %s\n", udf_b_offset);
+			return error;
+		}
+		ppecfg_log_info("UDF B OFFSET: %s\n", udf_b_offset);
+
+		error = ppecfg_param_get_int(udf_b_proto, sizeof(int), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_b.proto);
+		if (error) {
+			ppecfg_log_error("udf_b_proto, %s\n", udf_b_proto);
+			return error;
+		}
+		ppecfg_log_info("UDF B PROTO: %s\n", udf_b_proto);
+
+		error = ppecfg_param_get_int(udf_b_offset_base, sizeof(int), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_b.offset_base);
+		if (error) {
+			ppecfg_log_error("udf_b_offset_base, %s\n", udf_b_offset_base);
+			return error;
+		}
+		ppecfg_log_info("UDF B OFFSET BASE: %s\n", udf_b_offset_base);
+
+		/*
+		 * Set mask_max if provided
+		 */
 		if (udf_b_mask_max) {
-			error = ppecfg_param_get_int(udf_b_mask_max, sizeof(uint16_t), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_b_mask_max);
+			error = ppecfg_param_get_int(udf_b_mask_max, sizeof(uint16_t), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_b.mask_max);
 			if (error) {
 				ppecfg_log_error("udf_b_mask_max, %s\n", udf_b_mask_max);
 				return error;
 			}
-
-			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule_flags |= PPE_ACL_RULE_FLAG_UDFB_MASK;
 			ppecfg_log_info("UDF B MAX MASK: %s\n", udf_b_mask_max);
+		} else {
+			/* Default mask_max to 0xFFFF if not specified */
+			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_b.mask_max = 0xFFFF;
 		}
 
-		if (udf_b_range) {
+		/*
+		 * Determine the operation type
+		 * Priority: explicit valid_op > range flag > default to MASK
+		 */
+		if (udf_b_valid_op) {
+			error = ppecfg_param_get_int(udf_b_valid_op, sizeof(int), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_b.valid_op);
+			if (error) {
+				ppecfg_log_error("udf_b_valid_op, %s\n", udf_b_valid_op);
+				return error;
+			}
+			ppecfg_log_info("UDF B VALID OP: %s\n", udf_b_valid_op);
+		} else if (udf_b_range) {
 			error = ppecfg_param_get_bool(udf_b_range, &bool_val);
 			if (error) {
 				ppecfg_log_error("udf_b_range, %s\n", udf_b_range);
 				return error;
 			}
-
 			if (bool_val) {
-				if (!(nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule_flags & PPE_ACL_RULE_FLAG_UDFB_MASK)) {
-					ppecfg_log_error("udf_b_range, %s\n", udf_b_range);
-					return error;
-				}
-				nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule_flags |= PPE_ACL_RULE_FLAG_UDFB_RANGE;
-				nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule_flags &= ~PPE_ACL_RULE_FLAG_UDFB_MASK;
-				ppecfg_log_info("UDF B RANGE: %s\n", udf_b_range);
+				nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_b.valid_op = PPE_ACL_UDF_OP_RANGE;
+				ppecfg_log_info("UDF B RANGE: enabled\n");
+			} else {
+				nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_b.valid_op = PPE_ACL_UDF_OP_MASK;
 			}
-		}
-
-		if (udf_b_valid) {
-			error = ppecfg_param_get_int(udf_b_valid, sizeof(uint8_t), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_b_valid);
-			if (error) {
-				ppecfg_log_error("udf_b_valid, %s\n", udf_b_valid);
-				return error;
-			}
-
-			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule_flags |= PPE_ACL_RULE_FLAG_UDFB_RANGE;
-			ppecfg_log_info("UDF B VALID: %s\n", udf_b_valid);
+		} else {
+			/* Default to MASK operation */
+			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_b.valid_op = PPE_ACL_UDF_OP_MASK;
 		}
 	}
 
-	if (udf_c) {
-		error = ppecfg_param_get_int(udf_c, sizeof(uint16_t), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_c);
+	if (udf_c_min) {
+		error = ppecfg_param_get_int(udf_c_min, sizeof(uint16_t), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_c.min);
 		if (error) {
-			ppecfg_log_error("udf_c, %s\n", udf_c);
+			ppecfg_log_error("udf_c_min, %s\n", udf_c_min);
 			return error;
 		}
 
-		ppecfg_log_info("UDF C: %s\n", udf_c);
+		ppecfg_log_info("UDF C MIN: %s\n", udf_c_min);
 
-		if (udf_c_mask) {
-			error = ppecfg_param_get_int(udf_c_mask, sizeof(uint16_t), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_c_mask);
-			if (error) {
-				ppecfg_log_error("udf_c_mask, %s\n", udf_c_mask);
-				return error;
-			}
-
-			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule_flags |= PPE_ACL_RULE_FLAG_UDFC_MASK;
-			ppecfg_log_info("UDF C MASK: %s\n", udf_c_mask);
+		/*
+		 * For UDF to be valid, we need offset, proto, and offset_base
+		 */
+		if (!udf_c_offset || !udf_c_proto || !udf_c_offset_base) {
+			ppecfg_log_error("UDF C requires offset, proto, and offset_base to be specified\n");
+			return -EINVAL;
 		}
 
-		if (udf_c_valid) {
-			error = ppecfg_param_get_int(udf_c_valid, sizeof(uint8_t), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_c_valid);
+		error = ppecfg_param_get_int(udf_c_offset, sizeof(uint32_t), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_c.offset);
+		if (error) {
+			ppecfg_log_error("udf_c_offset, %s\n", udf_c_offset);
+			return error;
+		}
+		ppecfg_log_info("UDF C OFFSET: %s\n", udf_c_offset);
+
+		error = ppecfg_param_get_int(udf_c_proto, sizeof(int), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_c.proto);
+		if (error) {
+			ppecfg_log_error("udf_c_proto, %s\n", udf_c_proto);
+			return error;
+		}
+		ppecfg_log_info("UDF C PROTO: %s\n", udf_c_proto);
+
+		error = ppecfg_param_get_int(udf_c_offset_base, sizeof(int), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_c.offset_base);
+		if (error) {
+			ppecfg_log_error("udf_c_offset_base, %s\n", udf_c_offset_base);
+			return error;
+		}
+		ppecfg_log_info("UDF C OFFSET BASE: %s\n", udf_c_offset_base);
+
+		/*
+		 * Set mask_max if provided
+		 */
+		if (udf_c_mask_max) {
+			error = ppecfg_param_get_int(udf_c_mask_max, sizeof(uint16_t), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_c.mask_max);
 			if (error) {
-				ppecfg_log_error("udf_c_valid %s\n", udf_c_valid);
+				ppecfg_log_error("udf_c_mask_max, %s\n", udf_c_mask_max);
 				return error;
 			}
+			ppecfg_log_info("UDF C MASK MAX: %s\n", udf_c_mask_max);
+		} else {
+			/* Default mask_max to 0xFFFF if not specified */
+			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_c.mask_max = 0xFFFF;
+		}
 
-			ppecfg_log_info("UDF C VALID: %s\n", udf_c_valid);
+		/*
+		 * Determine the operation type
+		 * UDF-C does not support range operation
+		 * Priority: explicit valid_op > default to MASK
+		 */
+		if (udf_c_valid_op) {
+			error = ppecfg_param_get_int(udf_c_valid_op, sizeof(int), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_c.valid_op);
+			if (error) {
+				ppecfg_log_error("udf_c_valid_op, %s\n", udf_c_valid_op);
+				return error;
+			}
+			ppecfg_log_info("UDF C VALID OP: %s\n", udf_c_valid_op);
+		} else {
+			/* Default to MASK operation */
+			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_c.valid_op = PPE_ACL_UDF_OP_MASK;
 		}
 	}
 
 	if (udf_d) {
-		error = ppecfg_param_get_int(udf_d, sizeof(uint16_t), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_d);
+		error = ppecfg_param_get_int(udf_d, sizeof(uint16_t), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_d.min);
 		if (error) {
 			ppecfg_log_error("udf_d, %s\n", udf_d);
 			return error;
@@ -1296,25 +1412,70 @@ static int ppecfg_acl_json_get_udf_obj(struct json_object *rule_obj, struct nss_
 
 		ppecfg_log_info("UDF D: %s\n", udf_d);
 
+		/*
+		 * For UDF to be valid, we need offset, proto, and offset_base
+		 */
+		if (!udf_d_offset || !udf_d_proto || !udf_d_offset_base) {
+			ppecfg_log_error("UDF D requires offset, proto, and offset_base to be specified\n");
+			return -EINVAL;
+		}
+
+		error = ppecfg_param_get_int(udf_d_offset, sizeof(uint32_t), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_d.offset);
+		if (error) {
+			ppecfg_log_error("udf_d_offset, %s\n", udf_d_offset);
+			return error;
+		}
+		ppecfg_log_info("UDF D OFFSET: %s\n", udf_d_offset);
+
+		error = ppecfg_param_get_int(udf_d_proto, sizeof(int), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_d.proto);
+		if (error) {
+			ppecfg_log_error("udf_d_proto, %s\n", udf_d_proto);
+			return error;
+		}
+		ppecfg_log_info("UDF D PROTO: %s\n", udf_d_proto);
+
+		error = ppecfg_param_get_int(udf_d_offset_base, sizeof(int), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_d.offset_base);
+		if (error) {
+			ppecfg_log_error("udf_d_offset_base, %s\n", udf_d_offset_base);
+			return error;
+		}
+		ppecfg_log_info("UDF D OFFSET BASE: %s\n", udf_d_offset_base);
+
+		/*
+		 * Set mask_max if provided
+		 */
 		if (udf_d_mask) {
-			error = ppecfg_param_get_int(udf_d_mask, sizeof(uint16_t), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_d_mask);
+			error = ppecfg_param_get_int(udf_d_mask, sizeof(uint16_t), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_d.mask_max);
 			if (error) {
 				ppecfg_log_error("udf_d_mask, %s\n", udf_d_mask);
 				return error;
 			}
-
-			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule_flags |= PPE_ACL_RULE_FLAG_UDFD_MASK;
 			ppecfg_log_info("UDF D MASK: %s\n", udf_d_mask);
+		} else {
+			/* Default mask_max to 0xFFFF if not specified */
+			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_d.mask_max = 0xFFFF;
 		}
 
-		if (udf_d_valid) {
-			error = ppecfg_param_get_int(udf_d_valid, sizeof(uint8_t), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_d_valid);
+		/*
+		 * Determine the operation type
+		 * UDF-D supports only MASK operation
+		 * Priority: explicit valid_op > default to MASK
+		 */
+		if (udf_d_valid_op) {
+			error = ppecfg_param_get_int(udf_d_valid_op, sizeof(int), &nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_d.valid_op);
 			if (error) {
-				ppecfg_log_error("udf_d_valid%s\n", udf_d_valid);
+				ppecfg_log_error("udf_d_valid_op, %s\n", udf_d_valid_op);
 				return error;
 			}
-
-			ppecfg_log_info("UDF D VALID: %s\n", udf_d_valid);
+			/* Validate that only MASK operation is used for UDF-D */
+			if (nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_d.valid_op != PPE_ACL_UDF_OP_MASK) {
+				ppecfg_log_error("UDF D supports only MASK operation\n");
+				return -EINVAL;
+			}
+			ppecfg_log_info("UDF D VALID OP: %s\n", udf_d_valid_op);
+		} else {
+			/* Default to MASK operation (only supported operation for UDF-D) */
+			nl_msg->rule.rules[PPE_ACL_RULE_MATCH_TYPE_UDF].rule.udf.udf_d.valid_op = PPE_ACL_UDF_OP_MASK;
 		}
 	}
 

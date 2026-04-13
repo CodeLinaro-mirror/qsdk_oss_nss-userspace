@@ -110,6 +110,7 @@ int nss_ppenl_port_mgmt_sock_cb(struct nl_msg *msg, void *arg)
 		case NSS_PPE_PORT_MGMT_PORT_ISOL_DEF_MSG:
 		case NSS_PPE_PORT_MGMT_MAC_LRN_LIMIT_SET_MSG:
 		case NSS_PPE_PORT_MGMT_MAC_FILTER_SET_MSG:
+		case NSS_PPE_PORT_MGMT_MAC_FILTER_CLR_MSG:
 			{
 				void *cb_data = nss_ppenl_cmn_get_cb_data(&port_mgmt_info->cm, sock->family_id);
 				if (!cb_data) {
