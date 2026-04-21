@@ -84,7 +84,7 @@ enum ppecfg_cos_map_rule_del {
  * PPECFG COS MAP group set parameters
  */
 enum ppecfg_cos_map_group_set {
-	PPECFG_COS_MAP_GROUP_ADD_PORT_ID,		/* Port ID */
+	PPECFG_COS_MAP_GROUP_ADD_DEV,			/* Device name */
 	PPECFG_COS_MAP_GROUP_ADD_TCI_GROUP_ID,		/* PCP Group ID */
 	PPECFG_COS_MAP_GROUP_ADD_TOS_GROUP_ID,		/* DSCP Group ID */
 	PPECFG_COS_MAP_GROUP_ADD_MAX			/* Maximum group set parameter */
