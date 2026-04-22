@@ -28,7 +28,7 @@ static void nss_ppenl_mcast_resp(void *user_ctx, struct nss_ppenl_mcast_req *mca
 	switch (cmd) {
 	case NSS_PPE_MCAST_CREATE_ENTRY:
 			ret = mcast_req->ret;
-			if (ret == PPENL_MCAST_RET_MC_ENTRY_CREATE_FAIL) {
+			if (ret != PPE_MCAST_SUCCESS) {
 				nss_ppenl_sock_log_error("multicast entry creation failed with error: %d\n", ret);
 				return;
 			}
@@ -38,7 +38,7 @@ static void nss_ppenl_mcast_resp(void *user_ctx, struct nss_ppenl_mcast_req *mca
 
 	case NSS_PPE_MCAST_DELETE_ENTRY:
 			ret = mcast_req->ret;
-			if (ret == PPENL_MCAST_RET_MC_ENTRY_DELETE_FAIL) {
+			if (ret != PPE_MCAST_SUCCESS) {
 				nss_ppenl_sock_log_error("multicast entry deletion failed with error: %d\n", ret);
 				return;
 			}
