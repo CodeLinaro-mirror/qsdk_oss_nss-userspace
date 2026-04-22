@@ -25,6 +25,9 @@ static int ppecfg_port_mgmt_isol_default(struct ppecfg_param *param, struct ppec
 static int ppecfg_port_mgmt_mac_lrn_limit_set(struct ppecfg_param *param, struct ppecfg_param_in *match);
 static int ppecfg_port_mgmt_mac_filter_set(struct ppecfg_param *param, struct ppecfg_param_in *match);
 static int ppecfg_port_mgmt_mac_filter_clear(struct ppecfg_param *param, struct ppecfg_param_in *match);
+static int ppecfg_port_mgmt_omci_port_add(struct ppecfg_param *param, struct ppecfg_param_in *match);
+static int ppecfg_port_mgmt_omci_port_del(struct ppecfg_param *param, struct ppecfg_param_in *match);
+static int ppecfg_port_mgmt_omci_port_flush(struct ppecfg_param *param, struct ppecfg_param_in *match);
 
 /*
  * PORT_MGMT mac learn limit set parameters
@@ -69,6 +72,13 @@ static struct ppecfg_param mac_filter_clr_params[PPECFG_PORT_MGMT_MAC_FILTER_CLR
 };
 
 /*
+ * PORT_MGMT OMCI port add/del parameters
+ */
+static struct ppecfg_param omci_port_set_params[PPECFG_PORT_MGMT_OMCI_PORT_SET_MAX] = {
+	PPECFG_PARAM_INIT(PPECFG_PORT_MGMT_OMCI_PORT_SET_DEV, "dev="),
+};
+
+/*
  * NOTE: whenever this table is updated, the 'enum ppecfg_port_mgmt_cmd' should also get updated
  */
 struct ppecfg_param ppecfg_port_mgmt_params[PPECFG_PORT_MGMT_CMD_MAX] = {
@@ -78,6 +88,9 @@ struct ppecfg_param ppecfg_port_mgmt_params[PPECFG_PORT_MGMT_CMD_MAX] = {
 	PPECFG_PARAMLIST_INIT("cmd=mac_learn_limit_set", port_lrn_limit_set_params, ppecfg_port_mgmt_mac_lrn_limit_set),
 	PPECFG_PARAMLIST_INIT("cmd=mac_filter_set", mac_filter_set_params, ppecfg_port_mgmt_mac_filter_set),
 	PPECFG_PARAMLIST_INIT("cmd=mac_filter_clear", mac_filter_clr_params, ppecfg_port_mgmt_mac_filter_clear),
+	PPECFG_PARAMLIST_INIT("cmd=omci_port_add", omci_port_set_params, ppecfg_port_mgmt_omci_port_add),
+	PPECFG_PARAMLIST_INIT("cmd=omci_port_del", omci_port_set_params, ppecfg_port_mgmt_omci_port_del),
+	PPECFG_PARAMFUNC_INIT("cmd=omci_port_flush", ppecfg_port_mgmt_omci_port_flush),
 };
 
 /*
@@ -399,6 +412,110 @@ static int ppecfg_port_mgmt_mac_filter_set(struct ppecfg_param *param, struct pp
 	}
 
 	ppecfg_log_info("Configured successfully\n");
+done:
+	return error;
+}
+
+/*
+ * ppecfg_port_mgmt_omci_port_add()
+ *	Handle PORT_MGMT OMCI port add
+ */
+static int ppecfg_port_mgmt_omci_port_add(struct ppecfg_param *param, struct ppecfg_param_in *match)
+{
+	struct nss_ppenl_port_mgmt_info nl_msg = {{0}};
+	struct ppecfg_param *sub_params;
+	int error;
+
+	if (!param || !match) {
+		ppecfg_log_warn("Param or match table is NULL\n");
+		return -EINVAL;
+	}
+
+	error = ppecfg_param_iter_tbl(param, match);
+	if (error) {
+		ppecfg_log_arg_error(param);
+		goto done;
+	}
+
+	nss_ppenl_rule_port_mgmt_init(&nl_msg, NSS_PPE_PORT_MGMT_OMCI_PORT_ADD_MSG);
+
+	sub_params = &param->sub_params[PPECFG_PORT_MGMT_OMCI_PORT_SET_DEV];
+	error = ppecfg_param_get_str(sub_params->data, IFNAMSIZ, nl_msg.omci_port.port_name);
+	if (error) {
+		ppecfg_log_arg_error(sub_params);
+		goto done;
+	}
+
+	error = nss_ppenl_port_mgmt_omci_port_add(&nl_msg);
+	if (error < 0) {
+		ppecfg_log_warn("Unable to send OMCI port add message\n");
+		goto done;
+	}
+
+	ppecfg_log_info("OMCI port add configured successfully\n");
+done:
+	return error;
+}
+
+/*
+ * ppecfg_port_mgmt_omci_port_del()
+ *	Handle PORT_MGMT OMCI port del
+ */
+static int ppecfg_port_mgmt_omci_port_del(struct ppecfg_param *param, struct ppecfg_param_in *match)
+{
+	struct nss_ppenl_port_mgmt_info nl_msg = {{0}};
+	struct ppecfg_param *sub_params;
+	int error;
+
+	if (!param || !match) {
+		ppecfg_log_warn("Param or match table is NULL\n");
+		return -EINVAL;
+	}
+
+	error = ppecfg_param_iter_tbl(param, match);
+	if (error) {
+		ppecfg_log_arg_error(param);
+		goto done;
+	}
+
+	nss_ppenl_rule_port_mgmt_init(&nl_msg, NSS_PPE_PORT_MGMT_OMCI_PORT_DEL_MSG);
+
+	sub_params = &param->sub_params[PPECFG_PORT_MGMT_OMCI_PORT_SET_DEV];
+	error = ppecfg_param_get_str(sub_params->data, IFNAMSIZ, nl_msg.omci_port.port_name);
+	if (error) {
+		ppecfg_log_arg_error(sub_params);
+		goto done;
+	}
+
+	error = nss_ppenl_port_mgmt_omci_port_del(&nl_msg);
+	if (error < 0) {
+		ppecfg_log_warn("Unable to send OMCI port del message\n");
+		goto done;
+	}
+
+	ppecfg_log_info("OMCI port del configured successfully\n");
+done:
+	return error;
+}
+
+/*
+ * ppecfg_port_mgmt_omci_port_flush()
+ *	Handle PORT_MGMT OMCI port flush
+ */
+static int ppecfg_port_mgmt_omci_port_flush(struct ppecfg_param *param, struct ppecfg_param_in *match)
+{
+	struct nss_ppenl_port_mgmt_info nl_msg = {{0}};
+	int error;
+
+	nss_ppenl_rule_port_mgmt_init(&nl_msg, NSS_PPE_PORT_MGMT_OMCI_PORT_FLUSH_MSG);
+
+	error = nss_ppenl_port_mgmt_omci_port_flush(&nl_msg);
+	if (error < 0) {
+		ppecfg_log_warn("Unable to send OMCI port flush message\n");
+		goto done;
+	}
+
+	ppecfg_log_info("OMCI port flush configured successfully\n");
 done:
 	return error;
 }

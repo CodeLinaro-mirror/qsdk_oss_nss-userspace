@@ -19,6 +19,9 @@ enum ppecfg_port_mgmt_cmd {
 	PPECFG_PORT_MGMT_CMD_MAC_LEARN_LIMIT_SET,		/* Mac learn limit */
 	PPECFG_PORT_MGMT_CMD_MAC_FILTER_SET,			/* Mac Filter set */
 	PPECFG_PORT_MGMT_CMD_MAC_FILTER_CLR,			/* MAc Filter clear */
+	PPECFG_PORT_MGMT_CMD_OMCI_PORT_ADD,			/* OMCI port add */
+	PPECFG_PORT_MGMT_CMD_OMCI_PORT_DEL,			/* OMCI port delete */
+	PPECFG_PORT_MGMT_CMD_OMCI_PORT_FLUSH,			/* OMCI port flush */
 	PPECFG_PORT_MGMT_CMD_MAX
 };
 
@@ -70,4 +73,14 @@ enum ppecfg_port_mgmt_mac_filter_clr {
 	PPECFG_PORT_MGMT_MAC_FILTER_CLR_FID_NAME,		/* Specify filter ID */
         PPECFG_PORT_MGMT_MAC_FILTER_CLR_MAX
 };
+
+/**
+ * ppecfg_port_mgmt_omci_port_set
+ *	Parameters for OMCI port add/del commands.
+ */
+enum ppecfg_port_mgmt_omci_port_set {
+	PPECFG_PORT_MGMT_OMCI_PORT_SET_DEV,			/* Device name (dev=<ifname>) */
+	PPECFG_PORT_MGMT_OMCI_PORT_SET_MAX
+};
+
 #endif /* __PPECFG_PORT_MGMT_H*/
