@@ -52,7 +52,7 @@ static struct ppecfg_param interface_type_tcont_params[PPECFG_QOS_TCONT_MAX] = {
  * reset_port_queues params
  */
 static struct ppecfg_param flush_interface_queues_params[PPECFG_QOS_INTERFACE_FLUSH_MAX] = {
-	PPECFG_PARAMARR_INIT(PPECFG_QOS_INTERFACE_TYPE_PHYSICAL, "DEV", interface_type_dev_params, ppecfg_param_iter_tbl),
+	PPECFG_PARAMARR_INIT(PPECFG_QOS_INTERFACE_TYPE_PHYSICAL_VP, "DEV", interface_type_dev_params, ppecfg_param_iter_tbl),
 	PPECFG_PARAMARR_INIT(PPECFG_QOS_INTERFACE_TYPE_TCONT, "TCONT", interface_type_tcont_params, ppecfg_param_iter_tbl),
 };
 
@@ -60,7 +60,7 @@ static struct ppecfg_param flush_interface_queues_params[PPECFG_QOS_INTERFACE_FL
  * create_interface_queues params
  */
 static struct ppecfg_param create_interface_queues_params[PPECFG_QOS_INTERFACE_MAX] = {
-	PPECFG_PARAMARR_INIT(PPECFG_QOS_INTERFACE_TYPE_PHYSICAL, "DEV", interface_type_dev_params, ppecfg_param_iter_tbl),
+	PPECFG_PARAMARR_INIT(PPECFG_QOS_INTERFACE_TYPE_PHYSICAL_VP, "DEV", interface_type_dev_params, ppecfg_param_iter_tbl),
 	PPECFG_PARAMARR_INIT(PPECFG_QOS_INTERFACE_TYPE_TCONT, "TCONT", interface_type_tcont_params, ppecfg_param_iter_tbl),
 	PPECFG_PARAM_INIT(PPECFG_QOS_INTERFACE_NUM_QUEUES, "num_queues="),
 	PPECFG_PARAM_INIT(PPECFG_QOS_INTERFACE_QUEUE_TYPE, "queue_type="),
@@ -342,7 +342,7 @@ static int ppecfg_qos_set_mcast_prio_map(struct ppecfg_param *param, struct ppec
 	/*
 	 * Set interface type to physical
 	 */
-	nl_msg.msg.mcast_prio_map_info.if_data.type = PPE_QOS_INTERFACE_TYPE_PHYSICAL;
+	nl_msg.msg.mcast_prio_map_info.if_data.type = PPE_QOS_INTERFACE_TYPE_PHYSICAL_VP;
 
 	/*
 	 * Process prio_map parameter - comma-separated list of 16 values
@@ -441,7 +441,7 @@ static int ppecfg_qos_set_interface_queue_ctrl(struct ppecfg_param *param, struc
 					ppecfg_log_arg_error(sub_params);
 					goto done;
 				}
-				nl_msg.msg.queue_ctrl_info.if_data.type = PPE_QOS_INTERFACE_TYPE_PHYSICAL;
+				nl_msg.msg.queue_ctrl_info.if_data.type = PPE_QOS_INTERFACE_TYPE_PHYSICAL_VP;
 			}
 			count++;
 			break;
@@ -603,15 +603,15 @@ static int ppecfg_qos_create_interface_queues(struct ppecfg_param *param, struct
 
 	nss_ppenl_qos_init_req(&nl_msg, NSS_PPE_QOS_CREATE_INTERFACE_QUEUES);
 
-	for (int index = PPECFG_QOS_INTERFACE_TYPE_PHYSICAL; index < PPECFG_QOS_INTERFACE_MAX; index++) {
+	for (int index = PPECFG_QOS_INTERFACE_TYPE_PHYSICAL_VP; index < PPECFG_QOS_INTERFACE_MAX; index++) {
 		sub_params = &param->sub_params[index];
 		if (sub_params->valid == false) {
 			continue;
 		}
 
 		switch (index) {
-		case PPECFG_QOS_INTERFACE_TYPE_PHYSICAL:
-			sub_params = param->sub_params[PPECFG_QOS_INTERFACE_TYPE_PHYSICAL].sub_params;
+		case PPECFG_QOS_INTERFACE_TYPE_PHYSICAL_VP:
+			sub_params = param->sub_params[PPECFG_QOS_INTERFACE_TYPE_PHYSICAL_VP].sub_params;
 			data = sub_params[PPECFG_QOS_INTERFACE_DEV_NAME].data;
 			if (data) {
 				error = ppecfg_param_get_str(data, sizeof(nl_msg.msg.if_info.if_data.interface.dev), &nl_msg.msg.if_info.if_data.interface.dev);
@@ -621,7 +621,7 @@ static int ppecfg_qos_create_interface_queues(struct ppecfg_param *param, struct
 				}
 			}
 
-			nl_msg.msg.if_info.if_data.type = PPE_QOS_INTERFACE_TYPE_PHYSICAL;
+			nl_msg.msg.if_info.if_data.type = PPE_QOS_INTERFACE_TYPE_PHYSICAL_VP;
 			count++;
 			break;
 
@@ -730,15 +730,15 @@ static int ppecfg_qos_flush_interface_queues(struct ppecfg_param *param, struct 
 
 	nss_ppenl_qos_init_req(&nl_msg, NSS_PPE_QOS_FLUSH_INTERFACE_QUEUES);
 
-	for (int index = PPECFG_QOS_INTERFACE_TYPE_PHYSICAL; index < PPECFG_QOS_INTERFACE_FLUSH_MAX; index++) {
+	for (int index = PPECFG_QOS_INTERFACE_TYPE_PHYSICAL_VP; index < PPECFG_QOS_INTERFACE_FLUSH_MAX; index++) {
 		sub_params = &param->sub_params[index];
 		if (sub_params->valid == false) {
 			continue;
 		}
 
 		switch (index) {
-		case PPECFG_QOS_INTERFACE_TYPE_PHYSICAL:
-			sub_params = param->sub_params[PPECFG_QOS_INTERFACE_TYPE_PHYSICAL].sub_params;
+		case PPECFG_QOS_INTERFACE_TYPE_PHYSICAL_VP:
+			sub_params = param->sub_params[PPECFG_QOS_INTERFACE_TYPE_PHYSICAL_VP].sub_params;
 
 			data = sub_params[PPECFG_QOS_INTERFACE_DEV_NAME].data;
 			if (data) {
@@ -749,7 +749,7 @@ static int ppecfg_qos_flush_interface_queues(struct ppecfg_param *param, struct 
 				}
 			}
 
-			nl_msg.msg.if_info.if_data.type = PPE_QOS_INTERFACE_TYPE_PHYSICAL;
+			nl_msg.msg.if_info.if_data.type = PPE_QOS_INTERFACE_TYPE_PHYSICAL_VP;
 			count++;
 			break;
 
@@ -840,7 +840,7 @@ static int ppecfg_qos_set_interface_shaper(struct ppecfg_param *param, struct pp
 				}
 			}
 
-			nl_msg.msg.if_shaper_info.if_data.type = PPE_QOS_INTERFACE_TYPE_PHYSICAL;
+			nl_msg.msg.if_shaper_info.if_data.type = PPE_QOS_INTERFACE_TYPE_PHYSICAL_VP;
 			count++;
 			break;
 
@@ -1133,7 +1133,7 @@ static int ppecfg_qos_set_queue_tm(struct ppecfg_param *param, struct ppecfg_par
 				}
 			}
 
-			nl_msg.msg.tm_info.if_data.type = PPE_QOS_INTERFACE_TYPE_PHYSICAL;
+			nl_msg.msg.tm_info.if_data.type = PPE_QOS_INTERFACE_TYPE_PHYSICAL_VP;
 			count++;
 			break;
 
@@ -1283,7 +1283,7 @@ static int ppecfg_qos_set_queue_limit(struct ppecfg_param *param, struct ppecfg_
 				}
 			}
 
-			nl_msg.msg.limit_info.if_data.type = PPE_QOS_INTERFACE_TYPE_PHYSICAL;
+			nl_msg.msg.limit_info.if_data.type = PPE_QOS_INTERFACE_TYPE_PHYSICAL_VP;
 			count++;
 			break;
 
@@ -1594,7 +1594,7 @@ static int ppecfg_qos_set_ucast_prio_map(struct ppecfg_param *param, struct ppec
 	/*
 	 * Set interface type to physical
 	 */
-	nl_msg.msg.ucast_prio_map_info.if_data.type = PPE_QOS_INTERFACE_TYPE_PHYSICAL;
+	nl_msg.msg.ucast_prio_map_info.if_data.type = PPE_QOS_INTERFACE_TYPE_PHYSICAL_VP;
 
 	/*
 	 * Process prio_map parameter - comma-separated list of 16 values

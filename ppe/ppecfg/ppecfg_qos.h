@@ -74,7 +74,7 @@ enum ppecfg_qos_tcont {
  * PPECFG QOS INTERFACE QUEUES
  */
 enum ppecfg_qos_interface_queues {
-	PPECFG_QOS_INTERFACE_TYPE_PHYSICAL,		/* interface type physical. */
+	PPECFG_QOS_INTERFACE_TYPE_PHYSICAL_VP,		/* interface type physical. */
 	PPECFG_QOS_INTERFACE_TYPE_TCONT,		/* interface type T-cont. */
 	PPECFG_QOS_INTERFACE_FLUSH_MAX,	/* Flush max attribute */
 	PPECFG_QOS_INTERFACE_NUM_QUEUES = PPECFG_QOS_INTERFACE_FLUSH_MAX,	/** Number of queues. */
