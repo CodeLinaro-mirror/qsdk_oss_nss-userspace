@@ -1317,7 +1317,7 @@ static int ppecfg_qos_set_queue_limit(struct ppecfg_param *param, struct ppecfg_
 			nl_msg.msg.limit_info.queue_type = PPE_QOS_QUEUE_TYPE_UCAST;
 			data = sub_params->data;
 			if (data) {
-				if (!strcmp(data, "mcast")) {
+				if (!strcmp(data, "ucast")) {
 					nl_msg.msg.limit_info.queue_type = PPE_QOS_QUEUE_TYPE_UCAST;
 				} else if (!strcmp(data, "mcast")) {
 					nl_msg.msg.limit_info.queue_type = PPE_QOS_QUEUE_TYPE_MCAST;
