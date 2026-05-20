@@ -5,12 +5,99 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <json-c/json.h>
 
 #include "ppecfg_hlos.h"
 #include <nss_ppenl_base.h>
 #include "ppecfg_param.h"
 #include "ppecfg_acl_json_parser.h"
+
+#define PPECFG_PPE_IF_MAP_CMD  "/usr/bin/ppe_if_map"
+#define PPECFG_PPE_IF_MAP_MAX  64
+
+/*
+ * PPE_DRV_PORT_FLAG_PORT_GEM - port flag indicating a GEM/PON virtual port.
+ * Must match the kernel definition in ppe_drv_port.h.
+ */
+#define PPECFG_PPE_DRV_PORT_FLAG_PORT_GEM  0x2000
+
+/*
+ * Port map cache - built once on first use to avoid repeated popen() calls.
+ * The cache stores netdev names and their port_flags for all interfaces.
+ */
+static char g_port_netdev_map[PPECFG_PPE_IF_MAP_MAX][IFNAMSIZ];
+static uint32_t g_port_flags_map[PPECFG_PPE_IF_MAP_MAX];
+static bool g_port_map_loaded = false;
+
+/*
+ * ppecfg_acl_json_load_port_map()
+ *	Build the port map once by running /usr/bin/ppe_if_map.
+ *	Subsequent calls are no-ops (cache already populated).
+ */
+static void ppecfg_acl_json_load_port_map(void)
+{
+	FILE *fp;
+	char line[256];
+	int iface_num;
+	char netdev_name[IFNAMSIZ];
+	uint32_t port_flags_val;
+
+	if (g_port_map_loaded) {
+		return;
+	}
+
+	fp = popen(PPECFG_PPE_IF_MAP_CMD, "r");
+	if (!fp) {
+		ppecfg_log_error("Failed to run %s\n", PPECFG_PPE_IF_MAP_CMD);
+		return;
+	}
+
+	while (fgets(line, sizeof(line), fp)) {
+		if (sscanf(line, "Interface.%d.netdev_name=%15s", &iface_num, netdev_name) == 2) {
+			if (iface_num >= 0 && iface_num < PPECFG_PPE_IF_MAP_MAX) {
+				strlcpy(g_port_netdev_map[iface_num], netdev_name, IFNAMSIZ);
+			}
+		} else if (sscanf(line, "Interface.%d.port_flags=%u", &iface_num, &port_flags_val) == 2) {
+			if (iface_num >= 0 && iface_num < PPECFG_PPE_IF_MAP_MAX) {
+				g_port_flags_map[iface_num] = port_flags_val;
+			}
+		}
+	}
+
+	pclose(fp);
+	g_port_map_loaded = true;
+}
+
+/*
+ * ppecfg_acl_json_is_gem_port()
+ *	Check whether the given net-device is a GEM/PON port.
+ *	The port map is built once on the first call and cached for
+ *	subsequent calls, avoiding repeated popen() overhead.
+ *
+ *	Returns true if the port has PPE_DRV_PORT_FLAG_PORT_GEM set,
+ *	false otherwise (including if the device is not found).
+ */
+static bool ppecfg_acl_json_is_gem_port(const char *dev_name)
+{
+	int i;
+
+	ppecfg_acl_json_load_port_map();
+
+	for (i = 0; i < PPECFG_PPE_IF_MAP_MAX; i++) {
+		if (g_port_netdev_map[i][0] != '\0' &&
+		    strcmp(g_port_netdev_map[i], dev_name) == 0) {
+			if (g_port_flags_map[i] & PPECFG_PPE_DRV_PORT_FLAG_PORT_GEM) {
+				ppecfg_log_info("Port %s is a GEM port (flags=0x%x)\n",
+						dev_name, g_port_flags_map[i]);
+				return true;
+			}
+			return false;
+		}
+	}
+
+	return false;
+}
 
 /*
  * ppecfg_acl_json_get_smac_obj()
@@ -1769,6 +1856,36 @@ int ppecfg_acl_json_rule_add(struct json_object *rule_obj)
 		ppecfg_log_info("SRC DEV : %s\n", val);
 	} else {
 		goto done;
+	}
+
+	/*
+	 * Extracting SKIP_GEM_PORT_ACL - optional, default is 1 (skip ACL for GEM/PON port).
+	 * When set to 0, ACL rule is applied even for GEM/PON ports.
+	 */
+	uint8_t skip_gem_port_acl = 1;
+	val = ppecfg_json_object_handler(rule_obj, "skip_gem_port_acl");
+	if (val) {
+		error = ppecfg_param_get_int(val, sizeof(uint8_t), &skip_gem_port_acl);
+		if (error) {
+			ppecfg_log_error("skip_gem_port_acl, %s\n", val);
+			goto done;
+		}
+		ppecfg_log_info("SKIP GEM PORT ACL : %s\n", val);
+	}
+
+	/*
+	 * If the src_dev is a GEM/PON port, check skip_gem_port_acl:
+	 * - skip_gem_port_acl=1 (default): skip the rule entirely in userspace
+	 * - skip_gem_port_acl=0: apply the rule even for GEM ports (set NON_PON_PORT flag)
+	 */
+	if (nl_msg.rule.dev_type == PPE_ACL_RULE_DEV_TYPE_SRC_DEV &&
+	    ppecfg_acl_json_is_gem_port(nl_msg.rule.dev.dev_name)) {
+		if (skip_gem_port_acl) {
+			ppecfg_log_info("Skipping ACL rule for GEM port: %s\n",
+					nl_msg.rule.dev.dev_name);
+			return 0;
+		}
+		/* skip_gem_port_acl=0: apply rule even for GEM port, proceed normally */
 	}
 
 	/*
