@@ -339,6 +339,23 @@ static int ppecfg_tun_rps_json_process_rule(struct json_object *rule_obj,
 		}
 
 		/*
+		 * Validate header length upper bound
+		 */
+		if (nl_msg.rule.hdr_len > PPECFG_TUN_RPS_TPR_MAX_OFFSET) {
+			ppecfg_log_warn("hdr_len %d exceeds maximum allowed value of %d\n",
+					nl_msg.rule.hdr_len, PPECFG_TUN_RPS_TPR_MAX_OFFSET);
+			return -EINVAL;
+		}
+
+		/*
+		 * Validate that header length is even (multiple of 2) as required by hardware/SSDK
+		 */
+		if (nl_msg.rule.hdr_len % 2 != 0) {
+			ppecfg_log_warn("hdr_len %d must be an even number (multiple of 2)\n", nl_msg.rule.hdr_len);
+			return -EINVAL;
+		}
+
+		/*
 		 * Header length type — validate before assigning to struct field
 		 */
 		hdr_len_type = ppecfg_tun_rps_json_get_hdr_len_type(rule_obj);
@@ -357,6 +374,39 @@ static int ppecfg_tun_rps_json_process_rule(struct json_object *rule_obj,
 			return -EINVAL;
 		}
 		nl_msg.rule.inner_pkt_type = inner_pkt_type;
+
+		/*
+		 * Validate UDF offsets and masks for consistency with Netlink and Driver
+		 */
+		for (int i = 0; i < 3; i++) {
+			if (nl_msg.rule.usr_data.udf[i].data_en) {
+				if (nl_msg.rule.usr_data.udf[i].data_offset > PPECFG_TUN_RPS_TPR_MAX_OFFSET) {
+					ppecfg_log_warn("usr_data%d_offset %d exceeds maximum of %d\n",
+							i + 1, nl_msg.rule.usr_data.udf[i].data_offset, PPECFG_TUN_RPS_TPR_MAX_OFFSET);
+					return -EINVAL;
+				}
+				if (nl_msg.rule.usr_data.udf[i].data_offset % 2 != 0) {
+					ppecfg_log_warn("usr_data%d_offset %d must be an even number (multiple of 2)\n",
+							i + 1, nl_msg.rule.usr_data.udf[i].data_offset);
+					return -EINVAL;
+				}
+				if (nl_msg.rule.usr_data.udf[i].data_mask == 0) {
+					ppecfg_log_warn("usr_data%d_mask cannot be zero when enabled\n", i + 1);
+					return -EINVAL;
+				}
+				if (nl_msg.rule.usr_data.udf[i].data_offset + 2 > nl_msg.rule.hdr_len) {
+					ppecfg_log_warn("usr_data%d_offset %d + 2 exceeds hdr_len %d\n",
+							i + 1, nl_msg.rule.usr_data.udf[i].data_offset, nl_msg.rule.hdr_len);
+					return -EINVAL;
+				}
+				if (hdr_len_type == PPECFG_TUN_RPS_HDR_LEN_TYPE_ETH &&
+				    nl_msg.rule.usr_data.udf[i].data_offset < 14) {
+					ppecfg_log_warn("usr_data%d_offset %d is within Ethernet header (< 14)\n",
+							i + 1, nl_msg.rule.usr_data.udf[i].data_offset);
+					return -EINVAL;
+				}
+			}
+		}
 
 		/*
 		 * WAN interface
@@ -390,11 +440,6 @@ static int ppecfg_tun_rps_json_process_rule(struct json_object *rule_obj,
 		obj = ppecfg_get_json_object(rule_obj, "inner_ipv4_proto_mask");
 		if (obj) {
 			nl_msg.rule.inner_ip_proto.ip_proto_ipv4_mask = json_object_get_int(obj);
-		} else if (ppecfg_get_json_object(rule_obj, "inner_ipv4_proto_val")) {
-			/*
-			 * Default mask when value is provided but mask is not
-			 */
-			nl_msg.rule.inner_ip_proto.ip_proto_ipv4_mask = 0xFFFF;
 		}
 
 		obj = ppecfg_get_json_object(rule_obj, "inner_ipv6_proto_val");
@@ -405,14 +450,11 @@ static int ppecfg_tun_rps_json_process_rule(struct json_object *rule_obj,
 		obj = ppecfg_get_json_object(rule_obj, "inner_ipv6_proto_mask");
 		if (obj) {
 			nl_msg.rule.inner_ip_proto.ip_proto_ipv6_mask = json_object_get_int(obj);
-		} else if (ppecfg_get_json_object(rule_obj, "inner_ipv6_proto_val")) {
-			/*
-			 * Default mask when value is provided but mask is not
-			 */
-			nl_msg.rule.inner_ip_proto.ip_proto_ipv6_mask = 0xFFFF;
 		}
 
 		if (inner_pkt_type == PPECFG_TUN_RPS_INNER_PKT_TYPE_IP) {
+			uint16_t default_mask = 0xFFFF;
+
 			/*
 			 * user_data3 cannot be enabled when inner_pkt_type=ip
 			 */
@@ -430,11 +472,73 @@ static int ppecfg_tun_rps_json_process_rule(struct json_object *rule_obj,
 			}
 
 			/*
-			 * At least one of ipv4_val or ipv6_val must be provided
+			 * Either IPv4, IPv6 protocol or both needs to be matched
 			 */
-			if (!ppecfg_get_json_object(rule_obj, "inner_ipv4_proto_val") &&
-			    !ppecfg_get_json_object(rule_obj, "inner_ipv6_proto_val")) {
-				ppecfg_log_warn("At least one of inner_ipv4_proto_val or inner_ipv6_proto_val must be provided when inner_pkt_type=ip\n");
+			if (nl_msg.rule.inner_ip_proto.ip_proto_ipv4_value == 0 &&
+			    nl_msg.rule.inner_ip_proto.ip_proto_ipv6_value == 0) {
+				ppecfg_log_warn("At least one inner IP protocol value must be matched when inner_pkt_type=ip\n");
+				return -EINVAL;
+			}
+
+			/*
+			 * Ensure both masks are non-zero as required by hardware.
+			 * If one mask is provided and the other is not, propagate the configured side's mask.
+			 * If neither mask is provided, use 0xFFFF.
+			 */
+			if (ppecfg_get_json_object(rule_obj, "inner_ipv4_proto_mask")) {
+				default_mask = nl_msg.rule.inner_ip_proto.ip_proto_ipv4_mask;
+			} else if (ppecfg_get_json_object(rule_obj, "inner_ipv6_proto_mask")) {
+				default_mask = nl_msg.rule.inner_ip_proto.ip_proto_ipv6_mask;
+			}
+
+			if (!ppecfg_get_json_object(rule_obj, "inner_ipv4_proto_mask")) {
+				nl_msg.rule.inner_ip_proto.ip_proto_ipv4_mask = default_mask;
+				if (!ppecfg_get_json_object(rule_obj, "inner_ipv4_proto_val")) {
+					nl_msg.rule.inner_ip_proto.ip_proto_ipv4_value = 0;
+				}
+			}
+
+			if (!ppecfg_get_json_object(rule_obj, "inner_ipv6_proto_mask")) {
+				nl_msg.rule.inner_ip_proto.ip_proto_ipv6_mask = default_mask;
+				if (!ppecfg_get_json_object(rule_obj, "inner_ipv6_proto_val")) {
+					nl_msg.rule.inner_ip_proto.ip_proto_ipv6_value = 0;
+				}
+			}
+
+			/*
+			 * Validate offset bounds
+			 */
+			if (nl_msg.rule.inner_ip_proto.ip_proto_offset > PPECFG_TUN_RPS_TPR_MAX_OFFSET) {
+				ppecfg_log_warn("inner_ip_proto_offset %d exceeds maximum of %d\n",
+						nl_msg.rule.inner_ip_proto.ip_proto_offset, PPECFG_TUN_RPS_TPR_MAX_OFFSET);
+				return -EINVAL;
+			}
+
+			/*
+			 * Validate that inner IP protocol offset is an even number (multiple of 2)
+			 */
+			if (nl_msg.rule.inner_ip_proto.ip_proto_offset % 2 != 0) {
+				ppecfg_log_warn("inner_ip_proto_offset %d must be an even number (multiple of 2)\n",
+						nl_msg.rule.inner_ip_proto.ip_proto_offset);
+				return -EINVAL;
+			}
+
+			/*
+			 * Validate that inner IP protocol offset does not exceed header length
+			 */
+			if (nl_msg.rule.inner_ip_proto.ip_proto_offset + 2 > nl_msg.rule.hdr_len) {
+				ppecfg_log_warn("inner_ip_proto_offset %d + 2 exceeds hdr_len %d\n",
+						nl_msg.rule.inner_ip_proto.ip_proto_offset, nl_msg.rule.hdr_len);
+				return -EINVAL;
+			}
+
+			/*
+			 * Validate that inner IP protocol offset is not within Ethernet header if type is eth
+			 */
+			if (hdr_len_type == PPECFG_TUN_RPS_HDR_LEN_TYPE_ETH &&
+			    nl_msg.rule.inner_ip_proto.ip_proto_offset < 14) {
+				ppecfg_log_warn("inner_ip_proto_offset %d falls within Ethernet header (< 14)\n",
+						nl_msg.rule.inner_ip_proto.ip_proto_offset);
 				return -EINVAL;
 			}
 		}

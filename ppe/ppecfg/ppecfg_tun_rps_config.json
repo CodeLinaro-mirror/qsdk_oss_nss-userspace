@@ -42,6 +42,8 @@
         "inner_ip_proto_offset": 6,
         "inner_ipv4_proto_val": 6,
         "inner_ipv4_proto_mask": "0xff",
+        "inner_ipv6_proto_val": 59,
+        "inner_ipv6_proto_mask": "0xff",
         "wan_if": "eth0"
       }
     },

@@ -9,6 +9,13 @@
 #define PPECFG_TUN_RPS_HDR_VERSION 1
 
 /*
+ * PPE Tunnel Program Parser (TPR) maximum offset and header length bounds (in bytes).
+ * SSDK TPR offset registers (e.g. UDF0_OFFSET) are 6-bit fields operating in 2-byte steps,
+ * the maximum representable offset is 63 * 2 = 126.
+ */
+#define PPECFG_TUN_RPS_TPR_MAX_OFFSET 126
+
+/*
  * PPE CFG RPS header length definitions
  */
 #define PPECFG_TUN_RPS_HDR_LEN_TYPE_INVALID -1
