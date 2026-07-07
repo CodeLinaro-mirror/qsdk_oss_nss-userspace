@@ -47,6 +47,17 @@ static void nss_ppenl_edma_ddrq_resp(void *user_ctx, struct nss_ppenl_edma_ddrq_
 		nss_ppenl_sock_log_info("EDMA DDRQ group configuration set successful\n");
 		break;
 
+	case NSS_PPE_EDMA_DDRQ_BYPASS_CFG_RULE_MSG:
+		ret = edma_rule->msg.ddrq_bypass_cfg.ret;
+		if (ret != DDRQ_RET_SUCCESS) {
+			nss_ppenl_sock_log_error("EDMA ddrq bypass config failed with error: %d\n", ret);
+			return;
+		}
+
+		nss_ppenl_sock_log_info("EDMA DDRQ bypass configuration successful\n");
+		break;
+
+
 	default:
 		nss_ppenl_sock_log_error("unsupported message cmd type(%d)", cmd);
 	}
@@ -73,6 +84,7 @@ int nss_ppenl_edma_ddrq_sock_cb(struct nl_msg *msg, void *arg)
 	switch (cmd) {
 	case NSS_PPE_EDMA_DDRQ_CFG_RULE_MSG:
 	case NSS_PPE_EDMA_DDRQ_GRP_CFG_RULE_MSG:
+	case NSS_PPE_EDMA_DDRQ_BYPASS_CFG_RULE_MSG:
 		void *cb_data = nss_ppenl_cmn_get_cb_data(&rule->cm, sock->family_id);
 		if (!cb_data) {
 			nss_ppenl_sock_log_error("%d: failed to get cb data\n", pid);
