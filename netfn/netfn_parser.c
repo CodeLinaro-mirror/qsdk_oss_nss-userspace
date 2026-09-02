@@ -58,7 +58,12 @@ bool netfn_parse_json(json_t *root, struct nl_msg *msg)
 				return false;
 			}
 
-			netfn_parse_json(sub_root, msg);
+			if (!netfn_parse_json(sub_root, msg)) {
+				json_decref(sub_root);
+				return false;
+			}
+
+			json_decref(sub_root);
 			continue;
 		}
 
@@ -78,7 +83,8 @@ bool netfn_parse_json(json_t *root, struct nl_msg *msg)
 			 */
 			json_array_foreach(value, index, element) {
 				if (!json_is_string(element)) {
-					netfn_log_error("\nInvalid value (%s, %ld)\n", key, index);
+					netfn_log_error("\nInvalid value (%s, %zu)\n", key, index);
+					continue;
 				}
 
 				str_val = json_string_value(element);
@@ -101,7 +107,10 @@ bool netfn_parse_json(json_t *root, struct nl_msg *msg)
 			/*
 			 * Build the nested data from the sub scope
 			 */
-			netfn_parse_json(value, msg);
+			if (!netfn_parse_json(value, msg)) {
+				nla_nest_end(msg, data);
+				return false;
+			}
 
 			nla_nest_end(msg, data);
 			continue;
