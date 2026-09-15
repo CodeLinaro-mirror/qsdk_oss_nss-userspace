@@ -66,6 +66,10 @@
 #include <nss_ppenl_mcast_if.h>
 #include <nss_ppenl_mcast_api.h>
 #endif
+#ifdef NSS_PPE_PORT_MIRROR_FEATURE
+#include <nss_ppenl_port_mirror_if.h>
+#include <nss_ppenl_port_mirror_api.h>
+#endif
 #ifdef NSS_PPE_TUN_RPS_FEATURE
 #include <nss_ppenl_tun_rps_if.h>
 #include <nss_ppenl_tun_rps_api.h>

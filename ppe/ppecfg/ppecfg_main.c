@@ -41,6 +41,9 @@ static struct ppecfg_param cfg_param[] = {
 #ifdef NSS_PPE_GEMPORT_FEATURE
 	PPECFG_PARAMLIST_INIT("family=gem_port", ppecfg_gem_port_params, ppecfg_param_iter_tbl),
 #endif
+#ifdef NSS_PPE_PORT_MIRROR_FEATURE
+	PPECFG_PARAMLIST_INIT("family=port_mirror", ppecfg_port_mirror_params, ppecfg_param_iter_tbl),
+#endif
 #ifdef NSS_EDMA_DDRQ_FEATURE
 	PPECFG_PARAMLIST_INIT("family=ddrq", ppecfg_edma_ddrq_params, ppecfg_param_iter_tbl),
 #endif
