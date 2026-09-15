@@ -29,6 +29,9 @@
 #ifdef NSS_PPE_GEMPORT_FEATURE
 #include "ppecfg_gemport.h"
 #endif
+#ifdef NSS_PPE_PORT_MIRROR_FEATURE
+#include "ppecfg_port_mirror.h"
+#endif
 #ifdef NSS_EDMA_DDRQ_FEATURE
 #include "ppecfg_edma_ddrq.h"
 #endif
@@ -62,6 +65,9 @@ extern struct ppecfg_param ppecfg_dot1p_params[PPECFG_DOT1P_CMD_MAX];
 #endif
 #ifdef NSS_PPE_GEMPORT_FEATURE
 extern struct ppecfg_param ppecfg_gem_port_params[PPECFG_GEM_PORT_CMD_MAX];
+#endif
+#ifdef NSS_PPE_PORT_MIRROR_FEATURE
+extern struct ppecfg_param ppecfg_port_mirror_params[PPECFG_PORT_MIRROR_CMD_MAX];
 #endif
 #ifdef NSS_EDMA_DDRQ_FEATURE
 extern struct ppecfg_param ppecfg_edma_ddrq_params[PPECFG_EDMA_DDRQ_CMD_MAX];

@@ -17,12 +17,14 @@ EXTRA_CFLAGS += -DNSS_PPE_PM_FEATURE
 EXTRA_CFLAGS += -DNSS_PPE_EXT_VLAN_FEATURE
 EXTRA_CFLAGS += -DNSS_PPE_PORT_MGMT_FEATURE
 EXTRA_CFLAGS += -DNSS_EDMA_DDRQ_FEATURE
+EXTRA_CFLAGS += -DNSS_PPE_PORT_MIRROR_FEATURE
 else
 SOURCES := $(filter-out $(SRCDIR)/ppecfg_dscp.c, $(SOURCES))
 SOURCES := $(filter-out $(SRCDIR)/ppecfg_pm.c, $(SOURCES))
 SOURCES := $(filter-out $(SRCDIR)/ppecfg_vlan.c, $(SOURCES))
 SOURCES := $(filter-out $(SRCDIR)/ppecfg_port_mgmt.c, $(SOURCES))
 SOURCES := $(filter-out $(SRCDIR)/ppecfg_edma_ddrq.c, $(SOURCES))
+SOURCES := $(filter-out $(SRCDIR)/ppecfg_port_mirror.c, $(SOURCES))
 endif
 
 ifneq ($(filter $(SoC),ipq52xx),)
