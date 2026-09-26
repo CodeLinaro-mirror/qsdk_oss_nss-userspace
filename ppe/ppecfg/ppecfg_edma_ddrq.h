@@ -24,6 +24,7 @@
 enum ppecfg_edma_ddrq_cmd {
 	PPECFG_EDMA_DDRQ_CMD_CFG,			/* EDMA per DDRQ configuration command */
 	PPECFG_EDMA_DDRQ_CMD_GRP_CFG,			/* EDMA DDRQ group configuration command */
+	PPECFG_EDMA_DDRQ_CMD_BYPASS_CFG,		/* EDMA DDRQ bypass configuration command */
 	PPECFG_EDMA_DDRQ_CMD_MAX			/* EDMA DDRQ Maximum command */
 };
 
@@ -74,4 +75,12 @@ enum ppecfg_edma_ddrq_rule_ddrq_grp_cfg {
 	PPECFG_EDMA_DDRQ_GRP_CFG_RULE_MAX,			/* Maximum configuration */
 };
 
+/*
+ * PPECFG EDMA DDRQ bypass configuration rule parameters
+ */
+enum ppecfg_edma_ddrq_rule_ddrq_bypass_cfg {
+	PPECFG_EDMA_DDRQ_BYPASS_CFG_RULE_QUEUE_ID,	/* Queue id */
+	PPECFG_EDMA_DDRQ_BYPASS_CFG_RULE_SET,		/* Bypass set configuration knob (set/reset) */
+	PPECFG_EDMA_DDRQ_BYPASS_CFG_RULE_MAX,		/* Maximum configuration */
+};
 #endif /* __PPECFG_EDMA_DDRQ_H */
