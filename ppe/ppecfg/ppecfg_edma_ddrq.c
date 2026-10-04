@@ -15,6 +15,7 @@
 
 static int ppecfg_edma_ddrq_config(struct ppecfg_param *param, struct ppecfg_param_in *match);
 static int ppecfg_edma_ddrq_grp_config(struct ppecfg_param *param, struct ppecfg_param_in *match);
+static int ppecfg_edma_ddrq_bypass_config(struct ppecfg_param *param, struct ppecfg_param_in *match);
 
 /*
  * EDMA DDRQ configuration parameters
@@ -62,11 +63,20 @@ static struct ppecfg_param ppecfg_edma_ddrq_grp_cfg_params[PPECFG_EDMA_DDRQ_GRP_
 };
 
 /*
+ * EDMA DDRQ bypass configuration parameters
+ */
+static struct ppecfg_param ppecfg_edma_ddrq_bypass_cfg_params[PPECFG_EDMA_DDRQ_BYPASS_CFG_RULE_MAX] = {
+	PPECFG_PARAM_INIT(PPECFG_EDMA_DDRQ_BYPASS_CFG_RULE_QUEUE_ID, "queue_id="),
+	PPECFG_PARAM_INIT(PPECFG_EDMA_DDRQ_BYPASS_CFG_RULE_SET, "is_set="),
+};
+
+/*
  * EDMA parameters
  */
 struct ppecfg_param ppecfg_edma_ddrq_params[PPECFG_EDMA_DDRQ_CMD_MAX] = {
 	PPECFG_PARAMLIST_INIT("cmd=ddrq_config", ppecfg_edma_ddrq_cfg_params, ppecfg_edma_ddrq_config),
 	PPECFG_PARAMLIST_INIT("cmd=ddrq_grp_config", ppecfg_edma_ddrq_grp_cfg_params, ppecfg_edma_ddrq_grp_config),
+	PPECFG_PARAMLIST_INIT("cmd=ddrq_bypass_config", ppecfg_edma_ddrq_bypass_cfg_params, ppecfg_edma_ddrq_bypass_config),
 };
 
 /*
@@ -716,6 +726,94 @@ static int ppecfg_edma_ddrq_grp_config(struct ppecfg_param *param, struct ppecfg
 		goto done;
 	}
 	ppecfg_log_info("Successfully sent EDMA ddrq group configuration message");
+done:
+	return error;
+}
+
+/*
+ * ppecfg_edma_ddrq_bypass_config()
+ *	API to handle EDMA DDRQ bypass configuration rule
+ */
+static int ppecfg_edma_ddrq_bypass_config(struct ppecfg_param *param, struct ppecfg_param_in *match)
+{
+	struct nss_ppenl_edma_ddrq_rule nl_msg = {0};
+	int error;
+	struct ppecfg_param *sub_params;
+	struct nss_ppenl_edma_ddrq_bypass_config *ddrq_bypass_cfg;
+
+	if (!param || !match) {
+		ppecfg_log_warn("Param or match table is NULL");
+		return -EINVAL;
+	}
+
+	error = ppecfg_param_iter_tbl(param, match);
+	if (error < 0) {
+		ppecfg_log_arg_error(param);
+		goto done;
+	}
+
+	nss_ppenl_edma_ddrq_init_rule(&nl_msg, NSS_PPE_EDMA_DDRQ_BYPASS_CFG_RULE_MSG);
+	ddrq_bypass_cfg = &nl_msg.msg.ddrq_bypass_cfg;
+
+	/*
+	 * Set the initial invalid value to all the available parameters
+	 * before commencing the parsing of the user provided inputs.
+	 */
+	ddrq_bypass_cfg->ddrq_obj.cfg_type = NSS_DP_DDRQ_CFG_TYPE_NONE;
+	ddrq_bypass_cfg->set = true;
+
+	for (int index = PPECFG_EDMA_DDRQ_BYPASS_CFG_RULE_QUEUE_ID; index <= PPECFG_EDMA_DDRQ_BYPASS_CFG_RULE_SET; index++) {
+		sub_params = &param->sub_params[index];
+		if (sub_params->valid == false) {
+			continue;
+		}
+
+		switch (index) {
+			case PPECFG_EDMA_DDRQ_BYPASS_CFG_RULE_QUEUE_ID:
+				error = ppecfg_param_get_int(sub_params->data, sizeof(int16_t), &ddrq_bypass_cfg->ddrq_obj.cfg_id);
+				if (error < 0) {
+					ppecfg_log_arg_error(sub_params);
+					goto done;
+				}
+				ddrq_bypass_cfg->ddrq_obj.cfg_type = NSS_DP_DDRQ_CFG_TYPE_QUEUE;
+				break;
+
+			case PPECFG_EDMA_DDRQ_BYPASS_CFG_RULE_SET:
+				error = ppecfg_param_get_bool(sub_params->data, &ddrq_bypass_cfg->set);
+				if (error < 0) {
+					ppecfg_log_arg_error(sub_params);
+					goto done;
+				}
+				break;
+		}
+	}
+
+	/*
+	 * Validate the DDRQ bypass configuration parameters
+	 */
+	if (ddrq_bypass_cfg->ddrq_obj.cfg_type == NSS_DP_DDRQ_CFG_TYPE_QUEUE) {
+		if ((ddrq_bypass_cfg->ddrq_obj.cfg_id < PPECFG_EDMA_DDRQ_QUEUE_ID_MIN) ||
+				 (ddrq_bypass_cfg->ddrq_obj.cfg_id > PPECFG_EDMA_DDRQ_QUEUE_ID_MAX)) {
+			ppecfg_log_error("Invalid DDRQ queue number. Allowed range is %d to %d\n",
+					PPECFG_EDMA_DDRQ_QUEUE_ID_MIN, PPECFG_EDMA_DDRQ_QUEUE_ID_MAX);
+			error = -EINVAL;
+			goto done;
+		}
+	} else {
+		ppecfg_log_error("Invalid queue id configuration type: %d\n", ddrq_bypass_cfg->ddrq_obj.cfg_type);
+		error = -EINVAL;
+		goto done;
+	}
+
+	/*
+	 * Send msg
+	 */
+	error = nss_ppenl_edma_ddrq_send_rule(&nl_msg);
+	if (error < 0) {
+		ppecfg_log_warn("Unable to send message");
+		goto done;
+	}
+	ppecfg_log_info("Successfully sent EDMA ddrq bypass configuration message");
 done:
 	return error;
 }
