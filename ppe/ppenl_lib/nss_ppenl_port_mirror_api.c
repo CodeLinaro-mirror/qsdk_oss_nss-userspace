@@ -13,7 +13,7 @@ static struct nss_ppenl_port_mirror_ctx nss_port_mirror_ctx;
 
 /*
  * nss_ppenl_port_mirror_resp()
- *	Log the response received from the kernel.
+ *	Log the response received from the kernel for CFG messages.
  */
 static void nss_ppenl_port_mirror_resp(void *user_ctx,
 				       struct nss_ppenl_port_mirror_rule *rule,
@@ -30,6 +30,27 @@ static void nss_ppenl_port_mirror_resp(void *user_ctx,
 	}
 
 	nss_ppenl_sock_log_info("PORT_MIRROR cfg successful\n");
+}
+
+/*
+ * nss_ppenl_port_mirror_analyst_resp()
+ *	Log the response received from the kernel for analyst set/clear messages.
+ */
+static void nss_ppenl_port_mirror_analyst_resp(void *user_ctx,
+					       struct nss_ppenl_port_mirror_rule *rule,
+					       void *resp_ctx)
+{
+	if (!rule) {
+		return;
+	}
+
+	if (rule->analyst.ret) {
+		nss_ppenl_sock_log_error("PORT_MIRROR analyst operation failed with error: %d\n",
+					 rule->analyst.ret);
+		return;
+	}
+
+	nss_ppenl_sock_log_info("PORT_MIRROR analyst operation successful\n");
 }
 
 /*
@@ -53,7 +74,10 @@ int nss_ppenl_port_mirror_sock_cb(struct nl_msg *msg, void *arg)
 
 	uint8_t cmd = nss_ppenl_cmn_get_cmd_type(&rule->cm);
 	switch (cmd) {
-	case NSS_PPE_PORT_MIRROR_CFG_MSG: {
+	case NSS_PPE_PORT_MIRROR_ENABLE_MSG:
+	case NSS_PPE_PORT_MIRROR_DISABLE_MSG:
+	case NSS_PPE_PORT_MIRROR_SET_ANALYST_PORT_MSG:
+	case NSS_PPE_PORT_MIRROR_CLR_ANALYST_PORT_MSG: {
 		void *cb_data = nss_ppenl_cmn_get_cb_data(&rule->cm,
 							   sock->family_id);
 		if (!cb_data) {
@@ -161,7 +185,7 @@ int nss_ppenl_port_mirror_sock_send(struct nss_ppenl_port_mirror_ctx *ctx,
 
 /*
  * nss_ppenl_port_mirror_cfg()
- *	Enable or disable egress mirroring on a named port.
+ *	Enable or disable ingress / egress mirroring on a named port.
  */
 int nss_ppenl_port_mirror_cfg(struct nss_ppenl_port_mirror_rule *rule)
 {
@@ -182,7 +206,67 @@ int nss_ppenl_port_mirror_cfg(struct nss_ppenl_port_mirror_rule *rule)
 	error = nss_ppenl_port_mirror_sock_send(&nss_port_mirror_ctx, rule,
 						nss_ppenl_port_mirror_resp);
 	if (error < 0) {
-		nss_ppenl_sock_log_error("Unable to send port-mirror message\n");
+		nss_ppenl_sock_log_error("Unable to send port-mirror cfg message\n");
+	}
+
+	nss_ppenl_port_mirror_sock_close(&nss_port_mirror_ctx);
+	return error;
+}
+
+/*
+ * nss_ppenl_port_mirror_analyst_set()
+ *	Set the mirror analysis port for a given direction.
+ */
+int nss_ppenl_port_mirror_analyst_set(struct nss_ppenl_port_mirror_rule *rule)
+{
+	int error;
+
+	if (!rule) {
+		nss_ppenl_sock_log_error("Invalid port-mirror rule\n");
+		return -EINVAL;
+	}
+
+	error = nss_ppenl_port_mirror_sock_open(&nss_port_mirror_ctx, NULL);
+	if (error < 0) {
+		nss_ppenl_sock_log_error(
+			"Failed to open port-mirror socket; error(%d)\n", error);
+		return error;
+	}
+
+	error = nss_ppenl_port_mirror_sock_send(&nss_port_mirror_ctx, rule,
+						nss_ppenl_port_mirror_analyst_resp);
+	if (error < 0) {
+		nss_ppenl_sock_log_error("Unable to send analyst_set message\n");
+	}
+
+	nss_ppenl_port_mirror_sock_close(&nss_port_mirror_ctx);
+	return error;
+}
+
+/*
+ * nss_ppenl_port_mirror_analyst_clr()
+ *	Clear (disable) the mirror analysis port for a given direction.
+ */
+int nss_ppenl_port_mirror_analyst_clr(struct nss_ppenl_port_mirror_rule *rule)
+{
+	int error;
+
+	if (!rule) {
+		nss_ppenl_sock_log_error("Invalid port-mirror rule\n");
+		return -EINVAL;
+	}
+
+	error = nss_ppenl_port_mirror_sock_open(&nss_port_mirror_ctx, NULL);
+	if (error < 0) {
+		nss_ppenl_sock_log_error(
+			"Failed to open port-mirror socket; error(%d)\n", error);
+		return error;
+	}
+
+	error = nss_ppenl_port_mirror_sock_send(&nss_port_mirror_ctx, rule,
+						nss_ppenl_port_mirror_analyst_resp);
+	if (error < 0) {
+		nss_ppenl_sock_log_error("Unable to send analyst_clr message\n");
 	}
 
 	nss_ppenl_port_mirror_sock_close(&nss_port_mirror_ctx);
